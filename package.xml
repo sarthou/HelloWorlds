@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+
+<package format="3">
+  <name>hello_worlds</name>
+  <version>0.1.5</version>
+  <description>The hello_worlds package</description>
+
+  <maintainer email="gsarthou@laas.fr">Guillaume Sarthou</maintainer>
+
+  <license>LGPLv2</license>
+  
+  <author email="gsarthou@laas.fr">Guillaume Sarthou</author>
+
+  <depend>tinyxml2</depend>
+
+  <!-- ROS1 -->
+  <buildtool_depend condition="$ROS_VERSION == 1">catkin</buildtool_depend>
+
+  <depend condition="$ROS_VERSION == 1">rostest</depend>
+
+  <!-- ROS2 -->
+  <buildtool_depend condition="$ROS_VERSION == 2">ament_cmake</buildtool_depend>
+
+  <export>
+    <build_type condition="$ROS_VERSION == 2">ament_cmake</build_type>
+  </export>
+  
+</package>
