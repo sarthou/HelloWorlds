@@ -1,0 +1,83 @@
+name: ROS2 CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        include:
+          - operating-system: ubuntu-22.04
+            ros_distro: humble
+            distro: jammy
+          - operating-system: ubuntu-24.04
+            ros_distro: jazzy
+            distro: noble
+    env:
+      ROS_CI_DESKTOP: ${{ matrix.distro }}
+      CI_SOURCE_PATH: $(pwd)
+      ROS_DISTRO: ${{ matrix.ros_distro }}
+    steps:
+      - name: Setup ROS
+        uses: ros-tooling/setup-ros@v0.7
+        with:
+          required-ros-distributions: ${{ matrix.ros_distro }}
+
+      - name: Install deps
+        run: |
+            sudo apt install -y libglm-dev libglfw3-dev
+            source /opt/ros/$ROS_DISTRO/setup.bash
+
+      - name: Setup Workspace
+        run: |
+          source /opt/ros/$ROS_DISTRO/setup.bash
+          cmake --version
+          cd $GITHUB_WORKSPACE
+          mkdir -p ros2_ws/src/HelloWorlds
+          cd ros2_ws
+          colcon build --symlink-install
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: ros2_ws/src/HelloWorlds
+
+      - name: Clone PhysX
+        uses: actions/checkout@v4
+        with:
+          repository: NVIDIA-Omniverse/PhysX
+          ref: 106.5-physx-5.5.1
+          path: ros2_ws/src/HelloWorlds/External
+
+      - name: Build PhysX
+        working-directory: ros2_ws/src/HelloWorlds/External/PhysX/physx
+        run: |
+          ./generate_projects.sh linux release
+          cd compiler/linux-gcc-release
+          make
+          make install
+
+      - name: Build
+        working-directory: ros2_ws
+        run: |
+          source install/setup.bash
+          export ROS_LOCALHOST_ONLY=1
+          colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+
+      - name: Lint
+        working-directory: ros2_ws/src/HelloWorlds
+        run: |
+          python3 .github/run_clang_tidy.py . ../../build/
+
+      #- name: Run tests
+      #  run: |
+      #    cd $GITHUB_WORKSPACE/ros2_ws
+      #    source install/setup.bash
+      #    export ROS_LOCALHOST_ONLY=1
+      #    colcon test --event-handlers console_direct+ --return-code-on-test-failure
+#
+      #- name: Test results
+      #  run: |
+      #    cd $GITHUB_WORKSPACE/ros2_ws
+      #    colcon test-result --verbose
