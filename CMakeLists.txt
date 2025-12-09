@@ -59,7 +59,7 @@ function(hws_add_library TARGET)
   target_include_directories(${TARGET}
     PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/External/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/External>
     $<INSTALL_INTERFACE:include>)
 
   set_target_properties(${TARGET}
@@ -104,7 +104,7 @@ target_link_libraries(hello_worlds_engine_common PUBLIC
   ${TinyXML_LIBRARIES}
   ${TinyXML2_LIBRARIES})
 
-hws_add_library(hello_worlds_glad External/src/glad.c)
+hws_add_library(hello_worlds_glad External/glad/glad.c)
 
 hws_add_library(hello_worlds_graphics
   src/Graphics/GLFW/Window.cpp
@@ -125,6 +125,40 @@ target_link_libraries(hello_worlds_graphics PUBLIC
   ${FREETYPE_LIBRARIES})
 target_include_directories(hello_worlds_graphics PRIVATE ${FREETYPE_INCLUDE_DIRS})
 target_compile_options(hello_worlds_graphics PRIVATE $<$<CXX_COMPILER_ID:Clang>:-Wno-unused-function>)
+
+set(PHYSX_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/External/PhysX/physx/install/linux/PhysX")
+set(PHYSX_INCLUDE_DIR "${PHYSX_ROOT_DIR}/include")
+
+if(CMAKE_BUILD_TYPE AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+  message("Building with PhysX in debug configuration")
+  add_compile_definitions(_DEBUG)
+  link_directories("${PHYSX_ROOT_DIR}/bin/linux.x86_64/release") # debug
+else()
+  message("Building with PhysX in release configuration")
+  add_compile_definitions(NDEBUG)
+  link_directories("${PHYSX_ROOT_DIR}/bin/linux.x86_64/release")
+endif()
+
+hws_add_library(hello_worlds_physics
+  src/Physics/PhysX/Actors/Actor.cpp
+  src/Physics/PhysX/Actors/DynamicActor.cpp
+  src/Physics/PhysX/Actors/LinkActor.cpp
+  src/Physics/PhysX/Actors/StaticActor.cpp
+  src/Physics/PhysX/Joint.cpp
+  src/Physics/PhysX/Urdf.cpp
+  src/Physics/PhysX/Context.cpp
+  src/Physics/PhysX/SharedContext.cpp
+  src/Physics/PhysX/World.cpp)
+target_include_directories(hello_worlds_physics PUBLIC ${PHYSX_INCLUDE_DIR})
+target_link_libraries(hello_worlds_physics PUBLIC hello_worlds_engine_common)
+target_link_libraries(hello_worlds_physics
+  PRIVATE
+  PhysX
+  PhysXCommon
+  PhysXCooking
+  PhysXExtensions
+  PhysXFoundation
+  PhysXPvdSDK)
 
 # --- Installation ---
 install(DIRECTORY include/

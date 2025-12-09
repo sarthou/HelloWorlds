@@ -14,7 +14,86 @@ Regarding 3D visualization, a dedicated OpenGL-based solution has been implement
 
 In sum: If you like PyBullet, you will prefer HelloWorld.
 
-## Build
+## Build PhysX
+
+HelloWorlds uses PhysX. Here bellow we explain how to build it.
+
+Once you have cloned HelloWorlds, go into the `External` folder qnd clone PhysX.
+
+```bash
+cd hello_worlds/External
+git clone --depth 1 --branch 106.5-physx-5.5.1 https://github.com/NVIDIA-Omniverse/PhysX.git
+```
+
+```
+hello_worlds/
+├── CMakeLists.txt
+├── src/
+└── External/
+    └── PhysX/
+        ├── physx/
+        │   ├── generate_projects.sh
+        │   ├── compiler/
+        │   └── include/
+        ├── blast/
+        └── flow/
+```
+
+We then have to generate the projects depending on your platform. Here bellow you assume a GCC use but you can freely use Clang.
+
+```bash
+cd PhysX/physx
+./generate_projects.sh
+```
+
+```
+hello_worlds/
+├── CMakeLists.txt
+├── src/
+└── External/
+    └── PhysX/
+        ├── physx/
+        │   ├── generate_projects.sh
+        │   ├── compiler/
+        │   │   ├── linux-gcc-debug
+        │   │   └── linux-gcc-release
+        │   └── include/
+        ├── blast/
+        └── flow/
+```
+
+Once the project generated, we can compile it.
+
+```bash
+cd compiler/linux-gcc-release
+make
+make install
+```
+
+```
+hello_worlds/
+├── CMakeLists.txt
+├── src/
+└── External/
+    └── PhysX/
+        ├── physx/
+        │   ├── install
+        │   │   └── linux
+        │   │       └── PhysX
+        │   │           ├── bin
+        │   │           └── include
+        │   ├── generate_projects.sh
+        │   ├── compiler/
+        │   │   ├── linux-gcc-debug
+        │   │   └── linux-gcc-release
+        │   └── include/
+        ├── blast/
+        └── flow/
+```
+
+## Build HelloWorlds
+
+HelloWorlds is ROS independent but supports to be a ROS package. In such a way it can be built in different way depending on you usage.
 
 ### 1. Standalone Build (No ROS)
 
