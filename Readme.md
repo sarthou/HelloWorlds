@@ -1,6 +1,6 @@
 # HelloWorlds
 
-HelloWorld is a simple PhysX-based 3D world engine with visualization specialized for robotic applications.
+HelloWorlds is a simple PhysX-based 3D world engine with visualization specialized for robotic applications.
 
 Its main features include:
 
@@ -12,7 +12,7 @@ The engine comes with mesh loaders (OBJ, STL, and Collada) and a URDF loader for
 
 Regarding 3D visualization, a dedicated OpenGL-based solution has been implemented. It supports ambient, specular, and normal textures, manages sunlight and point lights, provides skybox functionality, and allows for debug elements (lines and user-oriented text).
 
-In sum: If you like PyBullet, you will prefer HelloWorld.
+In sum: If you like PyBullet, you will prefer HelloWorlds.
 
 ## Build PhysX
 
