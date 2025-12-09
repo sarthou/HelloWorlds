@@ -51,30 +51,9 @@ jobs:
           path: ros2_ws/src/HelloWorlds/External/PhysX
 
       - name: Build PhysX
-        #working-directory: ros2_ws/src/HelloWorlds/External/PhysX/physx
+        working-directory: ros2_ws/src/HelloWorlds/External/PhysX/physx
         run: |
-          echo $GITHUB_WORKSPACE 
-          cd $GITHUB_WORKSPACE
-          ls
-          echo "--cd ros2_ws--"
-          cd ros2_ws
-          ls
-          echo "--cd src--"
-          cd src
-          ls
-          echo "--cd HelloWorlds--"
-          cd HelloWorlds
-          ls
-          echo "--cd External--"
-          cd External
-          ls
-          echo "--cd PhysX--"
-          cd PhysX
-          ls
-          cd physx
-          ls
-          cd $GITHUB_WORKSPACE/ros2_ws/src/HelloWorlds/External/PhysX/physx
-          ./generate_projects.sh linux release
+          ./generate_projects.sh linux-gcc release
           cd compiler/linux-gcc-release
           make
           make install
