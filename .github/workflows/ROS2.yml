@@ -48,7 +48,7 @@ jobs:
         with:
           repository: NVIDIA-Omniverse/PhysX
           ref: 106.5-physx-5.5.1
-          path: ros2_ws/src/HelloWorlds/External
+          path: ros2_ws/src/HelloWorlds/External/PhysX
 
       - name: Build PhysX
         #working-directory: ros2_ws/src/HelloWorlds/External/PhysX/physx
@@ -56,14 +56,19 @@ jobs:
           echo $GITHUB_WORKSPACE 
           cd $GITHUB_WORKSPACE
           ls
+          echo "--cd ros2_ws--"
           cd ros2_ws
           ls
+          echo "--cd src--"
           cd src
           ls
+          echo "--cd HelloWorlds--"
           cd HelloWorlds
           ls
+          echo "--cd External--"
           cd External
           ls
+          echo "--cd PhysX--"
           cd PhysX
           ls
           cd physx
