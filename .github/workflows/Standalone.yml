@@ -1,0 +1,60 @@
+name: ROS2 CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: [ubuntu-22.04, ubuntu-24.04]
+    env:
+      PACKAGE_NAME: HelloWorlds
+      SRC_DIR: ${{ github.workspace }}/src/HelloWorlds
+    steps:
+
+      - name: Install deps
+        run: |
+            sudo apt install -y libglm-dev libglfw3-dev
+            sudo apt install -y libgl1-mesa-dev libxmu-dev libxi-dev libglu1-mesa-dev
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: ${{ env.SRC_DIR }}
+
+      - name: Clone PhysX
+        uses: actions/checkout@v4
+        with:
+          repository: NVIDIA-Omniverse/PhysX
+          ref: 106.5-physx-5.5.1
+          path: ${{ env.SRC_DIR }}/External/PhysX
+
+      - name: Build PhysX
+        working-directory: ${{ env.SRC_DIR }}/External/PhysX/physx
+        run: |
+          ./generate_projects.sh linux-gcc release
+          cd compiler/linux-gcc-release
+          make
+          make install
+
+      - name: Build
+        working-directory: ${{ env.SRC_DIR }}
+        run: |
+          mkdir build & cd build
+          cmake ..
+          make install
+
+      - name: Lint
+        working-directory: ros2_ws/src/HelloWorlds
+        run: |
+          python3 .github/run_clang_tidy.py . buil
+
+      #- name: Run tests
+      #  run: |
+      #    cd $GITHUB_WORKSPACE/ros2_ws
+      #    source install/setup.bash
+      #    export ROS_LOCALHOST_ONLY=1
+      #    colcon test --event-handlers console_direct+ --return-code-on-test-failure
+#
+      #- name: Test results
+      #  run: |
+      #    cd $GITHUB_WORKSPACE/ros2_ws
+      #    colcon test-result --verbose

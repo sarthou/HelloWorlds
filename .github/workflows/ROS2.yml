@@ -66,11 +66,6 @@ jobs:
           export ROS_LOCALHOST_ONLY=1
           colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 
-      - name: Lint
-        working-directory: ros2_ws/src/HelloWorlds
-        run: |
-          python3 .github/run_clang_tidy.py . ../../build/
-
       #- name: Run tests
       #  run: |
       #    cd $GITHUB_WORKSPACE/ros2_ws
