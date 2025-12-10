@@ -1,35 +1,32 @@
 # Minimum CMake version
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.15)
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 project(hello_worlds)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(ament_cmake QUIET)
-
-if(ament_cmake_FOUND)
+if($ENV{ROS_VERSION} AND $ENV{ROS_VERSION} STREQUAL "2")
+  find_package(ament_cmake)
   message(STATUS "Configuring for ROS 2 using ament_cmake...")
   set(ROS_BUILD_TYPE "ROS2")
   ament_package()
 
+elseif($ENV{ROS_VERSION} AND $ENV{ROS_VERSION} STREQUAL "1")
+  find_package(catkin COMPONENTS)
+  message(STATUS "Configuring for ROS 1 using catkin...")
+  set(ROS_BUILD_TYPE "ROS1")
+
+  catkin_package(
+
+    # We don't need to specify LIBRARIES, CATKIN_DEPENDS, or DEPENDS
+    # since your library doesn't depend on other ROS packages
+  )
+
 else()
-  find_package(catkin QUIET COMPONENTS)
-
-  if(catkin_FOUND)
-    message(STATUS "Configuring for ROS 1 using catkin...")
-    set(ROS_BUILD_TYPE "ROS1")
-
-    catkin_package(
-
-      # We don't need to specify LIBRARIES, CATKIN_DEPENDS, or DEPENDS
-      # since your library doesn't depend on other ROS packages
-    )
-
-  else()
-    message(STATUS "Configuring for Standalone (No ROS) build...")
-    set(ROS_BUILD_TYPE "STANDALONE")
-  endif()
+  message(STATUS "Configuring for Standalone (No ROS) build...")
+  set(ROS_BUILD_TYPE "STANDALONE")
+  include(GNUInstallDirs)
 endif()
 
 find_package(glm CONFIG REQUIRED)
@@ -166,10 +163,12 @@ install(DIRECTORY include/
 )
 
 # Install the library (shared or static, depending on default/settings)
-install(TARGETS hello_worlds_utility_lib
+install(TARGETS
+  hello_worlds_utility_lib
   hello_worlds_engine_common
   hello_worlds_glad
   hello_worlds_graphics
+  hello_worlds_physics
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
