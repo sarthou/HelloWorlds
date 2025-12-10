@@ -18,7 +18,7 @@ In sum: If you like PyBullet, you will prefer HelloWorlds.
 
 HelloWorlds uses PhysX. Here bellow we explain how to build it.
 
-Once you have cloned HelloWorlds, go into the `External` folder qnd clone PhysX.
+Once you have cloned HelloWorlds, go into the `External` folder and clone PhysX.
 
 ```bash
 cd hello_worlds/External
@@ -71,7 +71,7 @@ make install
 ```
 
 ```
-hello_worlds/
+HelloWorlds/
 ├── CMakeLists.txt
 ├── src/
 └── External/
@@ -95,6 +95,10 @@ hello_worlds/
 
 HelloWorlds is ROS independent but supports to be a ROS package. In such a way it can be built in different way depending on you usage.
 
+```bash
+sudo apt install -y libglm-dev libglfw3-dev
+```
+
 ### 1. Standalone Build (No ROS)
 
 To build and install the library without ROS, use standard CMake commands:
@@ -104,6 +108,7 @@ mkdir build && cd build
 cmake ..
 make
 sudo make install # Installs to system directories (e.g., /usr/local/lib, /usr/local/include)
+                  # -DCMAKE_INSTALL_PREFIX can also be used
 ```
 
 ### 2. ROS 1 Build
