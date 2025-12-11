@@ -39,7 +39,7 @@ namespace hws {
     }
 
   private:
-    void loadGreyAsRgb(unsigned char* data);
+    void loadGreyAsRgb(unsigned char* data) const;
   };
 
 } // namespace hws

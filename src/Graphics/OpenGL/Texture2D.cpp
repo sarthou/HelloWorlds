@@ -14,7 +14,7 @@ namespace hws {
   {
     glGenTextures(1, &id_);
 
-    stbi_set_flip_vertically_on_load(flip);
+    stbi_set_flip_vertically_on_load(flip ? 1 : 0);
     unsigned char* data = stbi_load(path.c_str(), &width, &height, &nb_channels, 0);
     if(data != nullptr)
     {
@@ -39,7 +39,7 @@ namespace hws {
       }
 
       glBindTexture(GL_TEXTURE_2D, id_);
-      glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, data_format, GL_UNSIGNED_BYTE, data);
+      glTexImage2D(GL_TEXTURE_2D, 0, (int)internal_format, width, height, 0, data_format, GL_UNSIGNED_BYTE, data);
       glGenerateMipmap(GL_TEXTURE_2D);
 
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, internal_format == GL_SRGB_ALPHA ? GL_CLAMP_TO_EDGE : GL_REPEAT);
@@ -74,9 +74,9 @@ namespace hws {
     std::cout << "color texture ceated " << id_ << std::endl;
   }
 
-  void Texture2D::loadGreyAsRgb(unsigned char* data)
+  void Texture2D::loadGreyAsRgb(unsigned char* data) const
   {
-    unsigned char* image = new unsigned char[width * height * 3];
+    unsigned char* image = new unsigned char[(long)width * (long)height * 3l];
     for(int i = 0; i < height; i++)
     {
       for(int j = 0; j < width; j++)

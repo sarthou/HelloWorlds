@@ -25,8 +25,7 @@ namespace hws::physx {
                                                                        body_id_(body_id)
   {}
 
-  LinkActor::~LinkActor() noexcept
-  {}
+  LinkActor::~LinkActor() noexcept = default;
 
   void LinkActor::setup(const std::array<double, 3>& position,
                         const std::array<double, 4>& orientation)

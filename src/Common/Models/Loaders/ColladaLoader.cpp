@@ -51,7 +51,7 @@ namespace hws {
     auto* texture_elem = elem->FirstChildElement("texture");
     if(texture_elem != nullptr)
     {
-      auto* texture_txt = texture_elem->Attribute("texture");
+      const auto* texture_txt = texture_elem->Attribute("texture");
       auto sampler_it = params.find(texture_txt);
       if(sampler_it != params.end())
       {
@@ -155,7 +155,7 @@ namespace hws {
       if(unit != nullptr)
       {
         const char* meter_text = unit->Attribute("meter");
-        unit_meter_scaling_ = std::atof(meter_text);
+        unit_meter_scaling_ = (float)std::atof(meter_text);
       }
 
       auto* up_axis = asset->FirstChildElement("up_axis");
@@ -249,7 +249,7 @@ namespace hws {
 
               auto* shininess = blinn->FirstChildElement("shininess");
               if(shininess != nullptr)
-                material.shininess_ = atof(shininess->FirstChildElement("float")->GetText());
+                material.shininess_ = (float)atof(shininess->FirstChildElement("float")->GetText());
 
               effects.emplace(effect_id, material);
 
@@ -412,13 +412,13 @@ namespace hws {
             readFloatArray(source_it->second, texcoord_array, texcoord_stride);
 
           std::vector<int> cur_indices;
-          cur_indices.reserve(num_indices * index_stride);
+          cur_indices.reserve((size_t)num_indices * (size_t)index_stride);
           TokenIntArray_t adder(cur_indices);
           std::string txt = primitive->FirstChildElement("p")->GetText();
           tokenize(txt, adder);
           assert((int)cur_indices.size() == num_indices * index_stride);
 
-          int index_offset = vertex_positions.size();
+          int index_offset = (int)vertex_positions.size();
 
           for(int index = 0; index < num_indices; index++)
           {
@@ -430,7 +430,7 @@ namespace hws {
                                           position_array[pos_index * 3 + 1],
                                           position_array[pos_index * 3 + 2]);
 
-            if(normal_array.size() && ((int)normal_array.size() > normal_index))
+            if((normal_array.empty() == false) && ((int)normal_array.size() > normal_index))
             {
               vertex_normals.emplace_back(normal_array[normal_index * 3 + 0],
                                           normal_array[normal_index * 3 + 1],
@@ -439,7 +439,7 @@ namespace hws {
             else // add a dummy normal of length zero, so it is easy to detect that it is an invalid normal
               vertex_normals.emplace_back(0, 0, 0);
 
-            if(texcoord_array.size() && ((int)texcoord_array.size() > texcoord_index))
+            if((texcoord_array.empty() == false) && ((int)texcoord_array.size() > texcoord_index))
             {
               vertex_uvs.emplace_back(texcoord_array[texcoord_index * 2 + 0],
                                       texcoord_array[texcoord_index * 2 + 1]);
@@ -448,7 +448,7 @@ namespace hws {
               vertex_uvs.emplace_back(0.5, 0.5);
           }
 
-          int cur_num_indices = indices.size();
+          size_t cur_num_indices = indices.size();
           indices.resize(cur_num_indices + num_indices);
           for(int index = 0; index < num_indices; index++)
             indices[cur_num_indices + index] = index + index_offset;

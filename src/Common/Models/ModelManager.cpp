@@ -10,8 +10,8 @@ namespace hws {
 
   ModelManager& ModelManager::get()
   {
-    static ModelManager mgr{};
-    return mgr;
+    static ModelManager mgr_{};
+    return mgr_;
   }
 
   hws::Model& ModelManager::load(const std::filesystem::path& path)
@@ -19,7 +19,7 @@ namespace hws {
     const auto absolute_path_str = path.string();
 
     mut_.lock();
-    if(!models_.count(absolute_path_str))
+    if(models_.contains(absolute_path_str) == false)
     {
       auto model = model_loader_.load(path);
 

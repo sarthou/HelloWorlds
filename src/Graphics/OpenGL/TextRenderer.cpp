@@ -1,11 +1,10 @@
 #include "hello_worlds/Graphics/OpenGL/TextRenderer.h"
 
+#include <freetype/freetype.h>
 #include <ft2build.h>
-#include FT_FREETYPE_H
 #include FT_GLYPH_H
 // Before Freetype
 
-#include <freetype/freetype.h>
 #include <glm/ext/matrix_float4x4.hpp>
 #include <glm/ext/vector_float3.hpp>
 #include <glm/ext/vector_float4.hpp>
@@ -27,7 +26,7 @@ namespace hws {
     glBindBuffer(GL_ARRAY_BUFFER, vbo_);
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 5, nullptr, GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), nullptr);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -38,15 +37,15 @@ namespace hws {
   {
     characters_.clear();
 
-    FT_Library ft;
+    FT_Library ft = nullptr;
     if(FT_Init_FreeType(&ft) != 0) // all functions return a value different than 0 whenever an error occurred
     {
       ShellDisplay::error("[TextRenderer] Could not init FreeType Library");
       return false;
     }
 
-    FT_Face face;
-    if(FT_New_Face(ft, font.c_str(), 0, &face))
+    FT_Face face = nullptr;
+    if(FT_New_Face(ft, font.c_str(), 0, &face) != 0)
     {
       ShellDisplay::error("[TextRenderer] CFailed to load font " + font);
       return false;
@@ -58,9 +57,9 @@ namespace hws {
 
     for(GLubyte c = 0; c < 128; c++)
     {
-      if(FT_Load_Char(face, c, FT_LOAD_RENDER))
+      if(FT_Load_Char(face, c, FT_LOAD_RENDER) != 0)
       {
-        ShellDisplay::error("[TextRenderer] Failed to load Glyph " + std::string(1, c));
+        ShellDisplay::error("[TextRenderer] Failed to load Glyph " + std::string(1, (char)c));
         continue;
       }
 
@@ -71,8 +70,8 @@ namespace hws {
         GL_TEXTURE_2D,
         0,
         GL_RED,
-        face->glyph->bitmap.width,
-        face->glyph->bitmap.rows,
+        (int)face->glyph->bitmap.width,
+        (int)face->glyph->bitmap.rows,
         0,
         GL_RED,
         GL_UNSIGNED_BYTE,
@@ -137,7 +136,7 @@ namespace hws {
       for(c = text.begin(); c != text.end(); c++)
       {
         Character_t& ch = characters_[*c];
-        width += (ch.advance >> 6) * height; // bitshift by 6 to get value in pixels (1/64th times 2^6 = 64)
+        width += (float)(ch.advance >> 6) * height; // bitshift by 6 to get value in pixels (1/64th times 2^6 = 64)
       }
 
       x -= width / 2.f;
@@ -148,20 +147,20 @@ namespace hws {
     {
       Character_t& ch = characters_[*c];
 
-      float xpos = x + ch.bearing.x * height;
-      float ypos = y - (ch.size.y - ch.bearing.y) * height;
+      float xpos = x + (float)ch.bearing.x * height;
+      float ypos = y - (float)(ch.size.y - ch.bearing.y) * height;
 
-      float w = ch.size.x * height;
-      float h = ch.size.y * height;
+      float w = (float)ch.size.x * height;
+      float h = (float)ch.size.y * height;
 
-      float vertices[6 * 5] = {
-        xpos, ypos + h, z, 0.0f, 0.0f,
-        xpos, ypos, z, 0.0f, 1.0f,
-        xpos + w, ypos, z, 1.0f, 1.0f,
+      float vertices[6 * 5] = {// NOLINT
+                               xpos, ypos + h, z, 0.0f, 0.0f,
+                               xpos, ypos, z, 0.0f, 1.0f,
+                               xpos + w, ypos, z, 1.0f, 1.0f,
 
-        xpos, ypos + h, z, 0.0f, 0.0f,
-        xpos + w, ypos, z, 1.0f, 1.0f,
-        xpos + w, ypos + h, z, 1.0f, 0.0f};
+                               xpos, ypos + h, z, 0.0f, 0.0f,
+                               xpos + w, ypos, z, 1.0f, 1.0f,
+                               xpos + w, ypos + h, z, 1.0f, 0.0f};
 
       glBindTexture(GL_TEXTURE_2D, ch.texture_id_);
       glBindBuffer(GL_ARRAY_BUFFER, vbo_);
@@ -170,7 +169,7 @@ namespace hws {
 
       glDrawArrays(GL_TRIANGLES, 0, 6);
 
-      x += (ch.advance >> 6) * height; // bitshift by 6 to get value in pixels (1/64th times 2^6 = 64)
+      x += (float)(ch.advance >> 6) * height; // bitshift by 6 to get value in pixels (1/64th times 2^6 = 64)
     }
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);

@@ -29,7 +29,7 @@ namespace hws {
       glBindTexture(GL_TEXTURE_CUBE_MAP, depth_cubemap_[id]);
       for(unsigned int i = 0; i < 6; ++i)
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT,
-                     resolution_, resolution_, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+                     (int)resolution_, (int)resolution_, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 
       glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
       glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -37,8 +37,8 @@ namespace hws {
       glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
       glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-      constexpr float bordercolor[] = {1.0f, 1.0f, 1.0f, 1.0f};
-      glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, bordercolor);
+      constexpr std::array<float, 4> bordercolor{1.0f, 1.0f, 1.0f, 1.0f};
+      glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, bordercolor.data());
 
       glBindFramebuffer(GL_FRAMEBUFFER, depth_framebuffer_[id]);
       glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depth_cubemap_[id], 0);
@@ -98,7 +98,7 @@ namespace hws {
   void PointShadow::bindFrameBuffer(size_t id) const
   {
     glBindFramebuffer(GL_FRAMEBUFFER, depth_framebuffer_[id]);
-    glViewport(0, 0, resolution_, resolution_);
+    glViewport(0, 0, (int)resolution_, (int)resolution_);
     glClear(GL_DEPTH_BUFFER_BIT);
   }
 
@@ -107,7 +107,7 @@ namespace hws {
     shader.setFloat("point_lights[" + std::to_string(id) + "].far_plane", far_plane_[id]);
 
     glActiveTexture(GL_TEXTURE0 + texture_offset + id);
-    shader.setInt("point_lights[" + std::to_string(id) + "].depth_map", texture_offset + id);
+    shader.setInt("point_lights[" + std::to_string(id) + "].depth_map", (int)(texture_offset + id));
     glBindTexture(GL_TEXTURE_CUBE_MAP, depth_cubemap_[id]);
 
     // always good practice to set everything back to defaults once configured.

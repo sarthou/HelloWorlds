@@ -13,11 +13,11 @@ namespace hws {
 
     void bindFrameBuffer() const;
 
-    void getImage(uint32_t** data);
+    void getImage(uint32_t** data) const;
 
   private:
-    unsigned int width_;
-    unsigned int height_;
+    int width_;
+    int height_;
 
     unsigned int framebuffer_;
     unsigned int colorbuffer_;

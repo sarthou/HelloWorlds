@@ -87,7 +87,7 @@ namespace hws {
     Camera* getCamera() const { return camera_; }
 
     void processUserKeyboardInput(float delta_time, Key_e key, bool is_down);
-    void processUserMouseBtnInput(float delta_time, char btn, bool is_down);
+    void processUserMouseBtnInput(float delta_time, int btn, bool is_down);
     void processUserMouseInput(float delta_time, float x, float y);
     void processUserMouseScroll(float delta_time, float xoffset, float yoffset);
     void update();

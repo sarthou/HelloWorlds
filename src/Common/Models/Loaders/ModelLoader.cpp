@@ -36,7 +36,7 @@ namespace hws {
         mesh->mNormals[i].y,
         mesh->mNormals[i].z};
 
-      if(mesh->mTextureCoords[0])
+      if(mesh->mTextureCoords[0] != nullptr)
       {
         vertex.uv_ = {
           mesh->mTextureCoords[0][i].x,
@@ -88,7 +88,7 @@ namespace hws {
         aiProcess_GenUVCoords |
         aiProcess_GlobalScale);
 
-    if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+    if((scene == nullptr) || ((scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) != 0) || (scene->mRootNode == nullptr))
     {
       return false;
     }

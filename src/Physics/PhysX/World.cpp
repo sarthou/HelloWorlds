@@ -90,7 +90,7 @@ namespace hws::physx {
     std::unordered_set<int> res;
     const auto& shapes = actor->getShapes();
 
-    for(auto& shape : shapes)
+    for(const auto& shape : shapes)
     {
       ::physx::PxGeometryHolder px_geom = shape->getGeometry();
       if(px_geom.getType() == ::physx::PxGeometryType::eINVALID)
@@ -99,8 +99,8 @@ namespace hws::physx {
       auto local_pose = shape->getLocalPose();
       ::physx::PxTransform world_pose = actor->getGlobalPose() * local_pose;
 
-      ::physx::PxOverlapHit hit_buffer[256];
-      ::physx::PxOverlapBuffer overlap_buffer(hit_buffer, 256);
+      std::array<::physx::PxOverlapHit, 256> hit_buffer;
+      ::physx::PxOverlapBuffer overlap_buffer(hit_buffer.data(), 256);
       ::physx::PxQueryFilterData filter_data;
       filter_data.flags = ::physx::PxQueryFlag::eDYNAMIC | ::physx::PxQueryFlag::eSTATIC;
 
@@ -134,9 +134,9 @@ namespace hws::physx {
             if(data != nullptr)
             {
               if(data->body_id > 0)
-                res.insert(data->body_id);
+                res.insert((int)data->body_id);
               else if(data->actor_id > 0)
-                res.insert(data->actor_id);
+                res.insert((int)data->actor_id);
             }
           }
         }
@@ -159,7 +159,7 @@ namespace hws::physx {
   void World::stepSimulation(const float delta)
   {
     ctx_->physx_mutex_.lock();
-    ctx_->px_scene_->simulate(delta != 0 ? delta : time_step_);
+    ctx_->px_scene_->simulate(delta != 0 ? (float)delta : (float)time_step_);
 
     // if(ctx_->px_scene_->checkResults(true))
     ctx_->px_scene_->fetchResults(true);
@@ -181,8 +181,8 @@ namespace hws::physx {
     ::physx::PxVec3 direction = destination_vec - origin_vec;
     ::physx::PxVec3 unit_dir = direction.getNormalized();
 
-    ::physx::PxRaycastHit raycast_hits[2];
-    ::physx::PxRaycastBuffer hit_buffer(raycast_hits, 2);
+    std::array<::physx::PxRaycastHit, 2> raycast_hits;
+    ::physx::PxRaycastBuffer hit_buffer(raycast_hits.data(), 2);
 
     bool hit = scene->raycast(origin_vec, unit_dir, max_distance, hit_buffer);
 

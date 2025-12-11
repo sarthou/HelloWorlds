@@ -47,8 +47,8 @@ namespace hws {
       return nullptr;
     }
 
-    long result = fread(buffer, 1, file_size, file);
-    if(result != file_size)
+    size_t result = fread(buffer, 1, file_size, file);
+    if(result != (size_t)file_size)
     {
       ShellDisplay::error("[StlLoader] Fail to read file " + path);
       return nullptr;
@@ -73,8 +73,8 @@ namespace hws {
       model->scale_ = {1, 1, 1};
       model->meshes_.emplace_back(Mesh::create());
       Mesh* mesh = &(model->meshes_.front());
-      mesh->indices_.reserve(3 * nb_triangles);
-      mesh->vertices_.reserve(3 * nb_triangles);
+      mesh->indices_.reserve(3l * nb_triangles);
+      mesh->vertices_.reserve(3l * nb_triangles);
 
       Vertex v0, v1, v2;
       v0.uv_[0] = v1.uv_[0] = v2.uv_[0] = 0.5;
@@ -87,7 +87,7 @@ namespace hws {
         Triangle_t triangle;
         memcpy(&triangle, current, sizeof(Triangle_t));
 
-        for(size_t i = 0; i < 3; i++)
+        for(int i = 0; i < 3; i++)
         {
           v0.position_[i] = triangle.vertex0[i];
           v1.position_[i] = triangle.vertex1[i];

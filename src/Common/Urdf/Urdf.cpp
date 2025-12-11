@@ -33,7 +33,7 @@ namespace hws {
   {
     auto it = links_.find(link_name);
     if(it != links_.end())
-      return it->second->unique_id_;
+      return (int)it->second->unique_id_;
     else
       return -1;
   }

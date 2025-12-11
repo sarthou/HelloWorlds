@@ -62,9 +62,9 @@ namespace hws {
     glm::vec3 world_up(0.0f, 0.0f, 1.0f);
 
     glm::vec3 front;
-    front.x = cos(glm::radians(view_angles_.x)) * cos(glm::radians(view_angles_.y));
-    front.y = sin(glm::radians(view_angles_.x)) * cos(glm::radians(view_angles_.y));
-    front.z = sin(glm::radians(view_angles_.y));
+    front.x = (float)(cos(glm::radians(view_angles_.x)) * cos(glm::radians(view_angles_.y)));
+    front.y = (float)(sin(glm::radians(view_angles_.x)) * cos(glm::radians(view_angles_.y)));
+    front.z = (float)sin(glm::radians(view_angles_.y));
 
     world_eye_front_ = glm::normalize(front);
     world_eye_right_ = glm::normalize(glm::cross(world_eye_front_, world_up)); // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
@@ -82,7 +82,10 @@ namespace hws {
       {
         for(unsigned int z = 0; z < 2; ++z)
         {
-          const glm::vec4 pt = inv * glm::vec4(2.0f * x - 1.0f, 2.0f * y - 1.0f, 2.0f * z - 1.0f, 1.0f);
+          const glm::vec4 pt = inv * glm::vec4(2.0f * (float)x - 1.0f,
+                                               2.0f * (float)y - 1.0f,
+                                               2.0f * (float)z - 1.0f,
+                                               1.0f);
           frustum_corners.push_back(pt / pt.w);
         }
       }

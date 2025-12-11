@@ -47,19 +47,19 @@ namespace hws {
                               const tinyobj::Index_t& indexes)
   {
     Vertex vtx;
-    vtx.position_.x = attribute.vertices[3 * indexes.vertex_index];
-    vtx.position_.y = attribute.vertices[3 * indexes.vertex_index + 1];
-    vtx.position_.z = attribute.vertices[3 * indexes.vertex_index + 2];
+    vtx.position_.x = (float)attribute.vertices[3lu * indexes.vertex_index];
+    vtx.position_.y = (float)attribute.vertices[3lu * indexes.vertex_index + 1lu];
+    vtx.position_.z = (float)attribute.vertices[3lu * indexes.vertex_index + 2lu];
 
-    if(attribute.texcoords.size())
+    if(attribute.texcoords.empty())
     {
       int uv0_index = 2 * indexes.texcoord_index;
       int uv1_index = 2 * indexes.texcoord_index + 1;
       if(uv0_index >= 0 && uv1_index >= 0 &&
          (uv1_index < int(attribute.texcoords.size())))
       {
-        vtx.uv_.x = attribute.texcoords[uv0_index];
-        vtx.uv_.y = attribute.texcoords[uv1_index];
+        vtx.uv_.x = (float)attribute.texcoords[uv0_index];
+        vtx.uv_.y = (float)attribute.texcoords[uv1_index];
       }
       else
       {
@@ -99,17 +99,17 @@ namespace hws {
                                                      (float)material.specular[1],
                                                      (float)material.specular[2],
                                                      material.has_specular ? 1.f : 0.f});
-        hws_mesh->material_.shininess_ = material.shininess;
+        hws_mesh->material_.shininess_ = (float)material.shininess;
         hws_mesh->material_.diffuse_texture_ = material.diffuse_texname;
         hws_mesh->material_.specular_texture_ = material.specular_texname;
         hws_mesh->material_.normal_texture_ = material.normal_texname;
       }
 
-      int face_count = tiny_mesh.indices.size();
+      size_t face_count = tiny_mesh.indices.size();
 
-      for(int f = 0; f < face_count; f += 3)
+      for(size_t f = 0; f < face_count; f += 3)
       {
-        int vtx_base_index = hws_mesh->vertices_.size();
+        int vtx_base_index = (int)hws_mesh->vertices_.size();
 
         tinyobj::Index_t v_0 = tiny_mesh.indices[f];
         Vertex vtx0 = getVertex(attribute, v_0);
@@ -158,15 +158,15 @@ namespace hws {
         }
         else
         {
-          vtx0.normal_.x = attribute.normals[3 * n0_index + 0];
-          vtx0.normal_.y = attribute.normals[3 * n0_index + 1];
-          vtx0.normal_.z = attribute.normals[3 * n0_index + 2];
-          vtx1.normal_.x = attribute.normals[3 * n1_index + 0];
-          vtx1.normal_.y = attribute.normals[3 * n1_index + 1];
-          vtx1.normal_.z = attribute.normals[3 * n1_index + 2];
-          vtx2.normal_.x = attribute.normals[3 * n2_index + 0];
-          vtx2.normal_.y = attribute.normals[3 * n2_index + 1];
-          vtx2.normal_.z = attribute.normals[3 * n2_index + 2];
+          vtx0.normal_.x = (float)attribute.normals[3 * n0_index + 0];
+          vtx0.normal_.y = (float)attribute.normals[3 * n0_index + 1];
+          vtx0.normal_.z = (float)attribute.normals[3 * n0_index + 2];
+          vtx1.normal_.x = (float)attribute.normals[3 * n1_index + 0];
+          vtx1.normal_.y = (float)attribute.normals[3 * n1_index + 1];
+          vtx1.normal_.z = (float)attribute.normals[3 * n1_index + 2];
+          vtx2.normal_.x = (float)attribute.normals[3 * n2_index + 0];
+          vtx2.normal_.y = (float)attribute.normals[3 * n2_index + 1];
+          vtx2.normal_.z = (float)attribute.normals[3 * n2_index + 2];
         }
 
         hws_mesh->vertices_.push_back(vtx0);

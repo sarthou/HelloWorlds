@@ -86,7 +86,7 @@ namespace hws {
   std::array<float, 16> VisualActor::getModelMatrix() const
   {
     glm::mat4 translate = glm::translate(glm::mat4(1), glm::vec3(position_[0], position_[1], position_[2]));
-    glm::mat4 rotate = glm::mat4_cast(glm::quat(orientation_[3], orientation_[0], orientation_[1], orientation_[2]));
+    glm::mat4 rotate = glm::mat4_cast(glm::quat((float)orientation_[3], (float)orientation_[0], (float)orientation_[1], (float)orientation_[2]));
     glm::mat4 transform = translate * rotate;
     return fromGlmM4(transform);
   }

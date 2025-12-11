@@ -25,11 +25,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "hello_worlds/Utils/SolarAzEl.h"
+#include "SolarAzEl/SolarAzEl.h"
 
-#include <math.h>
-#include <stdio.h>
-#include <time.h>
+#include <cmath>
+#include <cstdio>
+#include <ctime>
 
 #ifndef M_PI
 #define M_PI (3.14159265358979323846264338327950288)

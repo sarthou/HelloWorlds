@@ -10,7 +10,7 @@
 #include <iostream>
 #include <time.h>
 
-#include "hello_worlds/Utils/SolarAzEl.h"
+#include "SolarAzEl/SolarAzEl.h"
 
 namespace hws {
 

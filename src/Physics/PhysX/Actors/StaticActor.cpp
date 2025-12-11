@@ -6,7 +6,6 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <iostream>
 
-#include "hello_worlds/Physics/PhysX/Actors/StaticActor.h"
 #include "hello_worlds/Physics/PhysX/Context.h"
 #include "hello_worlds/Physics/PhysX/SharedContext.h"
 

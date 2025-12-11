@@ -1,6 +1,7 @@
 #include "hello_worlds/Graphics/OpenGL/AmbientShadow.h"
 
 #include <algorithm>
+#include <array>
 #include <glm/ext/matrix_float4x4.hpp>
 #include <glm/ext/vector_float3.hpp>
 #include <glm/gtc/packing.hpp>
@@ -32,7 +33,7 @@ namespace hws {
     glGenTextures(1, &depth_maps_);
     glBindTexture(GL_TEXTURE_2D_ARRAY, depth_maps_);
     glTexImage3D(
-      GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F, resolution_, resolution_, int(shadow_cascade_levels_.size()) + 1,
+      GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F, (int)resolution_, (int)resolution_, int(shadow_cascade_levels_.size()) + 1,
       0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -40,8 +41,8 @@ namespace hws {
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
-    constexpr float bordercolor[] = {1.0f, 1.0f, 1.0f, 1.0f};
-    glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, bordercolor);
+    constexpr std::array<float, 4> bordercolor{1.0f, 1.0f, 1.0f, 1.0f};
+    glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, bordercolor.data());
 
     glBindFramebuffer(GL_FRAMEBUFFER, depth_framebuffer_);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depth_maps_, 0);
@@ -61,20 +62,20 @@ namespace hws {
   void AmbientShadow::bindFrameBuffer() const
   {
     glBindFramebuffer(GL_FRAMEBUFFER, depth_framebuffer_);
-    glViewport(0, 0, resolution_, resolution_);
+    glViewport(0, 0, (int)resolution_, (int)resolution_);
     glClear(GL_DEPTH_BUFFER_BIT);
   }
 
   void AmbientShadow::setUniforms(const Shader& shader, unsigned int texture_offset) const
   {
     shader.setFloat("far_plane", far_plane_);
-    shader.setInt("cascade_count", shadow_cascade_levels_.size());
+    shader.setInt("cascade_count", (int)shadow_cascade_levels_.size());
     for(size_t i = 0; i < shadow_cascade_levels_.size(); ++i)
       shader.setFloat("cascade_planes_distances[" + std::to_string(i) + "]", shadow_cascade_levels_[i]);
 
     glActiveTexture(GL_TEXTURE0 + texture_offset);
     glBindTexture(GL_TEXTURE_2D_ARRAY, depth_maps_);
-    shader.setInt("shadow_maps", texture_offset);
+    shader.setInt("shadow_maps", (int)texture_offset);
 
     // always good practice to set everything back to defaults once configured.
     glActiveTexture(GL_TEXTURE0);
@@ -84,7 +85,7 @@ namespace hws {
   {
     glBindBuffer(GL_UNIFORM_BUFFER, matrices_uniform_buffer_);
     for(size_t i = 0; i < lightspace_matrices_.size(); ++i)
-      glBufferSubData(GL_UNIFORM_BUFFER, i * sizeof(glm::mat4x4), sizeof(glm::mat4x4), &lightspace_matrices_[i]);
+      glBufferSubData(GL_UNIFORM_BUFFER, (long)(i * sizeof(glm::mat4x4)), sizeof(glm::mat4x4), &lightspace_matrices_[i]);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
   }
 

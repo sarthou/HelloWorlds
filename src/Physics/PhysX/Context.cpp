@@ -30,7 +30,7 @@ namespace hws::physx {
     px_scene_ = shared_ctx_->px_physics_->createScene(scene_desc);
     // px_scene_->setVisualizationParameter(::physx::PxVisualizationParameter::eSCALE, 0.f);
 
-    if(const auto nv_pvd_client = px_scene_->getScenePvdClient(); nv_pvd_client)
+    if(auto* const nv_pvd_client = px_scene_->getScenePvdClient(); nv_pvd_client)
     {
       nv_pvd_client->setScenePvdFlag(::physx::PxPvdSceneFlag::eTRANSMIT_CONSTRAINTS, true);
       nv_pvd_client->setScenePvdFlag(::physx::PxPvdSceneFlag::eTRANSMIT_CONTACTS, true);

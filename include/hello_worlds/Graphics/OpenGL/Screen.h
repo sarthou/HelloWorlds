@@ -15,13 +15,13 @@ namespace hws {
     void setSize(unsigned int width, unsigned int height);
 
     void initBuffers(unsigned int msaa_samples);
-    void reinitBuffers();
+    void reinitBuffers() const;
     void bindFrameBuffer() const;
     void generateColorTexture() const;
     void draw() const;
 
-    unsigned int width_;
-    unsigned int height_;
+    int width_;
+    int height_;
 
   private:
     unsigned int texture_color_buffer_ms_;

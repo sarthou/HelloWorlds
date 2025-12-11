@@ -20,7 +20,7 @@ namespace hws {
     // constructor reads and builds the shader
     Shader(const std::string& vertex_path, const std::string& fragment_path, const std::string& geometry_path = "");
     // use/activate the shader
-    void use();
+    void use() const;
     // utility uniform functions
     void setBool(const std::string& name, bool value) const;
     void setInt(const std::string& name, int value) const;
@@ -30,7 +30,7 @@ namespace hws {
     void setVec4(const std::string& name, const glm::vec4& value) const;
 
   private:
-    void checkCompileErrors(GLuint shader, std::string type);
+    void checkCompileErrors(GLuint shader, const std::string& type);
   };
 
 } // namespace hws

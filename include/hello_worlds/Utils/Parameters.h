@@ -106,7 +106,7 @@ namespace hws {
     {
       process_name_ = std::string(argv[0]);
       size_t pose;
-      while((pose = process_name_.find("/")) != std::string::npos)
+      while((pose = process_name_.find('/')) != std::string::npos)
       {
         process_name_ = process_name_.substr(pose + 1);
       }
@@ -124,7 +124,7 @@ namespace hws {
               break;
             }
 
-          if(param_name == "")
+          if(param_name.empty())
             ShellDisplay::warning("unknow option " + std::string(argv[i]));
           else
           {
@@ -137,7 +137,7 @@ namespace hws {
         }
         else
         {
-          if(default_param_name_ != "")
+          if(default_param_name_.empty() == false)
             parameters_.at(default_param_name_).insert(std::string(argv[i]));
           else
             ShellDisplay::warning("No default parameter");
@@ -151,7 +151,7 @@ namespace hws {
           std::string option_list;
           for(auto& option : param.second.options_)
           {
-            if(option_list != "")
+            if(option_list.empty() == false)
               option_list += ", ";
             option_list += option;
           }

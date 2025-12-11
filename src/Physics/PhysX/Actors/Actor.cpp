@@ -187,7 +187,7 @@ namespace hws::physx {
 
     // assert(PxValidateConvexMesh(params, mesh_desc));
 
-    ::physx::PxTriangleMeshCookingResult::Enum result;
+    ::physx::PxTriangleMeshCookingResult::Enum result = ::physx::PxTriangleMeshCookingResult::Enum::eFAILURE;
 
     // assert(::physx::PxCookTriangleMesh(cooking_params, mesh_desc, buffer, &result));
     PxCookTriangleMesh(cooking_params, mesh_desc, buffer, &result);
@@ -287,7 +287,7 @@ namespace hws::physx {
     ::physx::PxDefaultMemoryInputData read_buffer(write_buffer.getData(), write_buffer.getSize());
 
     const auto& sdk = hws::physx::Context::createContext()->px_physics_;
-    const auto px_mesh = sdk->createTriangleMesh(read_buffer);
+    auto* const px_mesh = sdk->createTriangleMesh(read_buffer);
 
     assert(px_mesh);
 

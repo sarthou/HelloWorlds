@@ -69,11 +69,12 @@ function(hws_add_library TARGET)
     -Wall -Wextra)
 endfunction(hws_add_library)
 
+hws_add_library(hello_worlds_SolarAzEl External/SolarAzEl/SolarAzEl.cpp)
+
 hws_add_library(hello_worlds_utility_lib
   src/Utils/YamlReader.cpp
   src/Utils/RosPackage.cpp
   src/Utils/XmlTokenize.cpp
-  src/Utils/SolarAzEl.cpp
   src/Utils/Wavefront.cpp)
 
 hws_add_library(hello_worlds_engine_common
@@ -97,6 +98,7 @@ hws_add_library(hello_worlds_engine_common
   src/Common/World.cpp)
 target_link_libraries(hello_worlds_engine_common PUBLIC
   hello_worlds_utility_lib
+  hello_worlds_SolarAzEl
   PRIVATE
   ${TinyXML_LIBRARIES}
   ${TinyXML2_LIBRARIES})

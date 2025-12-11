@@ -94,7 +94,7 @@ namespace hws::physx {
     px_joints_[joint.name] = px_joint;
 
     ::physx::PxArticulationAxis::Enum axis(::physx::PxArticulationAxis::eCOUNT);
-    int direction = joint.axis[0] + joint.axis[1] + joint.axis[2];
+    float direction = joint.axis[0] + joint.axis[1] + joint.axis[2];
     switch(joint.type)
     {
     case urdf::JointType_e::joint_revolute:
@@ -112,7 +112,7 @@ namespace hws::physx {
         {
           px_joint->setMotion(axis, ::physx::PxArticulationMotion::eLIMITED);
           ::physx::PxArticulationLimit limit;
-          if(direction > 0)
+          if(direction > 0.f)
           {
             limit.low = joint.limit.first;
             limit.high = joint.limit.second;
@@ -158,7 +158,7 @@ namespace hws::physx {
         {
           px_joint->setMotion(axis, ::physx::PxArticulationMotion::eLIMITED);
           ::physx::PxArticulationLimit limit;
-          if(direction > 0)
+          if(direction > 0.f)
           {
             limit.low = joint.limit.first;
             limit.high = joint.limit.second;
@@ -211,7 +211,7 @@ namespace hws::physx {
       else if((axis == ::physx::PxArticulationAxis::eZ) || (axis == ::physx::PxArticulationAxis::eSWING2))
         int_axis = 2;
 
-      joints_[joint.name] = new ::hws::physx::Joint(ctx_, px_joint, joint.type, int_axis, direction);
+      joints_[joint.name] = new ::hws::physx::Joint(ctx_, px_joint, joint.type, int_axis, (int)direction);
     }
     ctx_.physx_mutex_.unlock();
   }

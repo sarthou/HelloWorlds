@@ -36,7 +36,7 @@
 #include <GLFW/glfw3.h>
 
 void GLAPIENTRY
-MessageCallback(GLenum source,
+messageCallback(GLenum source,
                 GLenum type,
                 GLuint id,
                 GLenum severity,
@@ -56,8 +56,7 @@ MessageCallback(GLenum source,
 
 namespace hws {
 
-  Renderer::~Renderer()
-  {}
+  Renderer::~Renderer() = default;
 
   void Renderer::init()
   {
@@ -65,7 +64,7 @@ namespace hws {
     hws::Window tmp;
     tmp.makeCurrentContext();
 
-    if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    if(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress) == 0)
     {
       std::cout << "Failed to initialize GLAD" << std::endl;
     }
@@ -95,7 +94,7 @@ namespace hws {
 
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-    glDebugMessageCallback(MessageCallback, nullptr);
+    glDebugMessageCallback(messageCallback, nullptr);
     glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
 
     glEnable(GL_MULTISAMPLE);
@@ -162,7 +161,7 @@ namespace hws {
     if(world_ == nullptr)
       return;
 
-    float current_frame = glfwGetTime();
+    float current_frame = (float)glfwGetTime();
     if(last_frame_ <= 0)
       last_frame_ = current_frame;
     delta_time_ = current_frame - last_frame_;
@@ -172,7 +171,7 @@ namespace hws {
 
     float sleep_time = 1.0f / max_fps_ - delta_time_;
     if(sleep_time > 0.0)
-      sleep(sleep_time);
+      sleep((unsigned int)sleep_time);
 
     for(auto& model : current_mesh_batches_)
       for(auto& mesh : model.second)
@@ -188,8 +187,8 @@ namespace hws {
     render_camera_ = *camera;
     if(render_camera_.sizeHasChanged())
     {
-      screen_.setSize(render_camera_.getWidth(), render_camera_.getHeight());
-      glViewport(0, 0, render_camera_.getWidth(), render_camera_.getHeight());
+      screen_.setSize((unsigned int)render_camera_.getWidth(), (unsigned int)render_camera_.getHeight());
+      glViewport(0, 0, (int)render_camera_.getWidth(), (int)render_camera_.getHeight());
       screen_.reinitBuffers();
     }
   }
@@ -410,19 +409,19 @@ namespace hws {
     for(auto& cached : cached_lines_)
       ids.insert(cached.first);
 
-    for(size_t i = 0; i < world_->debug_lines_.size(); i++)
+    for(auto& debug_line : world_->debug_lines_)
     {
-      if(world_->debug_lines_[i].indices_.empty())
+      if(debug_line.indices_.empty())
       {
-        cached_lines_.erase(world_->debug_lines_[i].id_);
+        cached_lines_.erase(debug_line.id_);
         continue;
       }
 
-      auto cache_it = cached_lines_.find(world_->debug_lines_[i].id_);
+      auto cache_it = cached_lines_.find(debug_line.id_);
       if(cache_it == cached_lines_.end())
-        cached_lines_.emplace(world_->debug_lines_[i].id_, world_->debug_lines_[i]);
+        cached_lines_.emplace(debug_line.id_, debug_line);
 
-      ids.erase(world_->debug_lines_[i].id_);
+      ids.erase(debug_line.id_);
     }
 
     for(auto id : ids)
@@ -684,7 +683,7 @@ namespace hws {
 
     text_shader.use();
     text_shader.setMat4("projection", render_camera_.getProjectionMatrix());
-    for(auto debug : world_->debug_texts_)
+    for(const auto& debug : world_->debug_texts_)
     {
       glm::vec4 actor_pose(0., 0., 0., 0.);
       if(debug.linked_actor != nullptr)
@@ -759,7 +758,7 @@ namespace hws {
     glActiveTexture(GL_TEXTURE0);
 
     PointLights& points = world_->point_lights_;
-    for(size_t i = 0; i < points.getNbLightsFloat(); i++)
+    for(size_t i = 0; i < points.getNbLightsSize(); i++)
     {
       std::string name = "point_lights[" + std::to_string(i) + "]";
       shader.setVec4(name + ".ambient", points.getAmbient(i));
@@ -791,7 +790,7 @@ namespace hws {
   Material Renderer::createColisionMaterial(size_t uid)
   {
     Material material;
-    float id = (float)(uid % 60) / 100.f + 0.2;
+    float id = (float)(uid % 60) / 100.f + 0.2f;
     material.diffuse_color_ = Color({id, id, id, 1.f});
     material.specular_color_ = Color({id, id, id, 1.f});
     material.shininess_ = 0;

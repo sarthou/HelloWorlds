@@ -1,5 +1,6 @@
 #include "hello_worlds/Common/Models/Loaders/TinyObjReader.h"
 
+#include <array>
 #include <cassert>
 #include <cctype>
 #include <charconv>
@@ -19,14 +20,14 @@
 
 namespace tinyobj {
 
-  MaterialReader::~MaterialReader() {}
+  MaterialReader::~MaterialReader() = default;
 
-  struct vertex_index_t
+  struct VertexIndex_t
   {
     int v_idx, vt_idx, vn_idx;
-    vertex_index_t() : v_idx(-1), vt_idx(-1), vn_idx(-1) {}
-    explicit vertex_index_t(int idx) : v_idx(idx), vt_idx(idx), vn_idx(idx) {}
-    vertex_index_t(int vidx, int vtidx, int vnidx)
+    VertexIndex_t() : v_idx(-1), vt_idx(-1), vn_idx(-1) {}
+    explicit VertexIndex_t(int idx) : v_idx(idx), vt_idx(idx), vn_idx(idx) {}
+    VertexIndex_t(int vidx, int vtidx, int vnidx)
       : v_idx(vidx), vt_idx(vtidx), vn_idx(vnidx) {}
   };
 
@@ -93,7 +94,7 @@ namespace tinyobj {
     return ss.str();
   }
 
-  struct warning_context
+  struct WarningContext_t
   {
     std::string* warn;
     size_t line_number;
@@ -101,9 +102,9 @@ namespace tinyobj {
 
   // Make index zero-base, and also support relative index.
   static inline bool fixIndex(int idx, int n, int* ret, bool allow_zero,
-                              const warning_context& context)
+                              const WarningContext_t& context)
   {
-    if(!ret)
+    if(ret != nullptr)
     {
       return false;
     }
@@ -117,7 +118,7 @@ namespace tinyobj {
     if(idx == 0)
     {
       // zero is not allowed according to the spec.
-      if(context.warn)
+      if(context.warn != nullptr)
       {
         (*context.warn) +=
           "A zero value index found (will have a value of -1 for normal and "
@@ -216,14 +217,14 @@ namespace tinyobj {
 
   // Parse triples with index offsets: i, i/j/k, i//k, i/j
   static bool parseTriple(const char** token, int vsize, int vnsize, int vtsize,
-                          vertex_index_t* ret, const warning_context& context)
+                          VertexIndex_t* ret, const WarningContext_t& context)
   {
-    if(!ret)
+    if(ret == nullptr)
     {
       return false;
     }
 
-    vertex_index_t vi(-1);
+    VertexIndex_t vi(-1);
 
     if(!fixIndex(atoi((*token)), vsize, &vi.v_idx, false, context))
     {
@@ -351,8 +352,8 @@ namespace tinyobj {
   template<typename T>
   static int pnpoly(int nvert, T* vertx, T* verty, T testx, T testy)
   {
-    int i, j, c = 0;
-    for(i = 0, j = nvert - 1; i < nvert; j = i++)
+    int c = 0;
+    for(int i = 0, j = nvert - 1; i < nvert; j = i++)
     {
       if(((verty[i] > testy) != (verty[j] > testy)) &&
          (testx <
@@ -364,7 +365,7 @@ namespace tinyobj {
   }
 
   // TODO(syoyo): refactor function.
-  static bool exportGroupsToShape(Mesh_t* shape, const std::vector<std::vector<vertex_index_t>>& face_group,
+  static bool exportGroupsToShape(Mesh_t* shape, const std::vector<std::vector<VertexIndex_t>>& face_group,
                                   const std::vector<tag_t>& tags,
                                   const int material_id, const std::string& name,
                                   const std::vector<double>& v, std::string* warn)
@@ -376,16 +377,14 @@ namespace tinyobj {
     if(face_group.empty() == false)
     {
       // Flatten vertices and indices
-      for(size_t i = 0; i < face_group.size(); i++)
+      for(const std::vector<VertexIndex_t>& face : face_group)
       {
-        const std::vector<vertex_index_t>& face = face_group[i];
-
         size_t npolys = face.size();
 
         if(npolys < 3)
         {
           // Face must have 3+ vertices.
-          if(warn)
+          if(warn != nullptr)
           {
             (*warn) += "Degenerated face found\n.";
           }
@@ -396,10 +395,10 @@ namespace tinyobj {
         {
           if(npolys == 4)
           {
-            vertex_index_t i0 = face[0];
-            vertex_index_t i1 = face[1];
-            vertex_index_t i2 = face[2];
-            vertex_index_t i3 = face[3];
+            VertexIndex_t i0 = face[0];
+            VertexIndex_t i1 = face[1];
+            VertexIndex_t i2 = face[2];
+            VertexIndex_t i3 = face[3];
 
             size_t vi0 = size_t(i0.v_idx);
             size_t vi1 = size_t(i1.v_idx);
@@ -411,7 +410,7 @@ namespace tinyobj {
             {
               // Invalid triangle.
               // FIXME(syoyo): Is it ok to simply skip this invalid triangle?
-              if(warn)
+              if(warn != nullptr)
               {
                 (*warn) += "Face with invalid vertex index found.\n";
               }
@@ -499,12 +498,12 @@ namespace tinyobj {
           }
           else
           {
-            vertex_index_t i0 = face[0];
-            vertex_index_t i1(-1);
-            vertex_index_t i2 = face[1];
+            VertexIndex_t i0 = face[0];
+            VertexIndex_t i1(-1);
+            VertexIndex_t i2 = face[1];
 
             // find the two axes to work in
-            size_t axes[2] = {1, 2};
+            std::array<size_t, 2> axes{1, 2};
             for(size_t k = 0; k < npolys; ++k)
             {
               i0 = face[(k + 0) % npolys];
@@ -556,11 +555,11 @@ namespace tinyobj {
               }
             }
 
-            std::vector<vertex_index_t> remaining_face = face; // copy
+            std::vector<VertexIndex_t> remaining_face = face; // copy
             size_t guess_vert = 0;
-            vertex_index_t ind[3];
-            double vx[3];
-            double vy[3];
+            std::array<VertexIndex_t, 3> ind;
+            std::array<double, 3> vx;
+            std::array<double, 3> vy;
 
             // How many iterations can we do without decreasing the remaining
             // vertices.
@@ -628,9 +627,9 @@ namespace tinyobj {
 
               // check all other verts in case they are inside this triangle
               bool overlap = false;
-              for(size_t otherVert = 3; otherVert < npolys; ++otherVert)
+              for(size_t other_vert = 3; other_vert < npolys; ++other_vert)
               {
-                size_t idx = (guess_vert + otherVert) % npolys;
+                size_t idx = (guess_vert + other_vert) % npolys;
 
                 if(idx >= remaining_face.size())
                   continue;
@@ -643,7 +642,7 @@ namespace tinyobj {
 
                 double tx = v[ovi * 3 + axes[0]];
                 double ty = v[ovi * 3 + axes[1]];
-                if(pnpoly(3, vx, vy, tx, ty))
+                if(pnpoly(3, vx.data(), vy.data(), tx, ty) != 0)
                 {
                   overlap = true;
                   break;
@@ -731,15 +730,14 @@ namespace tinyobj {
 
   // Split a string with specified delimiter character and escape character.
   // https://rosettacode.org/wiki/Tokenize_a_string_with_escaping#C.2B.2B
-  static void SplitString(const std::string& s, char delim, char escape,
+  static void splitString(const std::string& s, char delim, char escape,
                           std::vector<std::string>& elems)
   {
     std::string token;
 
     bool escaping = false;
-    for(size_t i = 0; i < s.size(); ++i)
+    for(char ch : s)
     {
-      char ch = s[i];
       if(escaping)
       {
         escaping = false;
@@ -764,7 +762,7 @@ namespace tinyobj {
     elems.push_back(token);
   }
 
-  static std::string JoinPath(const std::string& dir,
+  static std::string joinPath(const std::string& dir,
                               const std::string& filename)
   {
     if(dir.empty())
@@ -774,8 +772,8 @@ namespace tinyobj {
     else
     {
       // check '/'
-      char lastChar = *dir.rbegin();
-      if(lastChar != '/')
+      char last_char = *dir.rbegin();
+      if(last_char != '/')
       {
         return dir + std::string("/") + filename;
       }
@@ -811,18 +809,18 @@ namespace tinyobj {
       line_no++;
 
       // Trim trailing whitespace.
-      if(linebuf.size() > 0)
+      if(linebuf.empty() == false)
       {
         linebuf = linebuf.substr(0, linebuf.find_last_not_of(" \t") + 1);
       }
 
       // Trim newline '\r\n' or '\n'
-      if(linebuf.size() > 0)
+      if(linebuf.empty() == false)
       {
         if(linebuf[linebuf.size() - 1] == '\n')
           linebuf.erase(linebuf.size() - 1);
       }
-      if(linebuf.size() > 0)
+      if(linebuf.empty() == false)
       {
         if(linebuf[linebuf.size() - 1] == '\r')
           linebuf.erase(linebuf.size() - 1);
@@ -866,7 +864,7 @@ namespace tinyobj {
           // TODO: empty name check?
           if(namebuf.empty())
           {
-            if(warning)
+            if(warning != nullptr)
             {
               (*warning) += "empty material name in `newmtl`\n";
             }
@@ -882,7 +880,7 @@ namespace tinyobj {
         if(token[1] == 'a')
         {
           token += 2;
-          double r, g, b;
+          double r = NAN, g = NAN, b = NAN;
           parseReal3(&r, &g, &b, &token);
           material.ambient[0] = r;
           material.ambient[1] = g;
@@ -895,7 +893,7 @@ namespace tinyobj {
         if(token[1] == 'd')
         {
           token += 2;
-          double r, g, b;
+          double r = NAN, g = NAN, b = NAN;
           parseReal3(&r, &g, &b, &token);
           material.diffuse[0] = r;
           material.diffuse[1] = g;
@@ -909,7 +907,7 @@ namespace tinyobj {
         if(token[1] == 's')
         {
           token += 2;
-          double r, g, b;
+          double r = NAN, g = NAN, b = NAN;
           parseReal3(&r, &g, &b, &token);
           material.specular[0] = r;
           material.specular[1] = g;
@@ -1096,22 +1094,22 @@ namespace tinyobj {
     material_map->insert(std::pair<std::string, int>(material.name, static_cast<int>(materials->size())));
     materials->push_back(material);
 
-    if(warning)
+    if(warning != nullptr)
     {
       (*warning) = warn_ss.str();
     }
   }
 
-  bool MaterialFileReader::operator()(const std::string& matId,
+  bool MaterialFileReader::operator()(const std::string& mat_id,
                                       std::vector<Material_t>* materials,
-                                      std::map<std::string, int>* matMap,
+                                      std::map<std::string, int>* material_map,
                                       std::string* warn, std::string* err)
   {
-    if(m_mtlBaseDir.empty() == false)
+    if(mlt_base_dir_.empty() == false)
     {
       // https://stackoverflow.com/questions/5167625/splitting-a-c-stdstring-using-tokens-e-g
       std::vector<std::string> paths;
-      std::istringstream f(m_mtlBaseDir);
+      std::istringstream f(mlt_base_dir_);
 
       std::string s;
       while(getline(f, s, ':'))
@@ -1119,23 +1117,23 @@ namespace tinyobj {
         paths.push_back(s);
       }
 
-      for(size_t i = 0; i < paths.size(); i++)
+      for(const auto& path : paths)
       {
-        std::string filepath = JoinPath(paths[i], matId);
+        std::string filepath = joinPath(path, mat_id);
 
-        std::ifstream matIStream(filepath.c_str());
-        if(matIStream)
+        std::ifstream mat_stream(filepath.c_str());
+        if(mat_stream)
         {
-          LoadMtl(matMap, materials, &matIStream, m_mtlBaseDir, warn, err);
+          LoadMtl(material_map, materials, &mat_stream, mlt_base_dir_, warn, err);
 
           return true;
         }
       }
 
       std::stringstream ss;
-      ss << "Material file [ " << matId
-         << " ] not found in a path : " << m_mtlBaseDir << "\n";
-      if(warn)
+      ss << "Material file [ " << mat_id
+         << " ] not found in a path : " << mlt_base_dir_ << "\n";
+      if(warn != nullptr)
       {
         (*warn) += ss.str();
       }
@@ -1143,19 +1141,19 @@ namespace tinyobj {
     }
     else
     {
-      std::string filepath = matId;
-      std::ifstream matIStream(filepath.c_str());
-      if(matIStream)
+      const std::string& filepath = mat_id;
+      std::ifstream mat_stream(filepath.c_str());
+      if(mat_stream)
       {
-        LoadMtl(matMap, materials, &matIStream, m_mtlBaseDir, warn, err);
+        LoadMtl(material_map, materials, &mat_stream, mlt_base_dir_, warn, err);
 
         return true;
       }
 
       std::stringstream ss;
       ss << "Material file [ " << filepath
-         << " ] not found in a path : " << m_mtlBaseDir << "\n";
-      if(warn)
+         << " ] not found in a path : " << mlt_base_dir_ << "\n";
+      if(warn != nullptr)
       {
         (*warn) += ss.str();
       }
@@ -1164,25 +1162,25 @@ namespace tinyobj {
     }
   }
 
-  bool MaterialStreamReader::operator()(const std::string& matId,
+  bool MaterialStreamReader::operator()(const std::string& mat_id,
                                         std::vector<Material_t>* materials,
-                                        std::map<std::string, int>* matMap,
+                                        std::map<std::string, int>* material_map,
                                         std::string* warn, std::string* err)
   {
     (void)err;
-    (void)matId;
+    (void)mat_id;
     if(!m_inStream)
     {
       std::stringstream ss;
       ss << "Material stream in error state. \n";
-      if(warn)
+      if(warn != nullptr)
       {
         (*warn) += ss.str();
       }
       return false;
     }
 
-    LoadMtl(matMap, materials, &m_inStream, "", warn, err);
+    LoadMtl(material_map, materials, &m_inStream, "", warn, err);
 
     return true;
   }
@@ -1202,22 +1200,22 @@ namespace tinyobj {
     if(!ifs)
     {
       errss << "Cannot open file [" << filename << "]\n";
-      if(err)
+      if(err != nullptr)
       {
         (*err) = errss.str();
       }
       return false;
     }
 
-    std::string baseDir = mtl_basedir ? mtl_basedir : "";
-    if(!baseDir.empty())
+    std::string base_dir = (mtl_basedir != nullptr) ? mtl_basedir : "";
+    if(!base_dir.empty())
     {
-      if(baseDir[baseDir.length() - 1] != '/')
-        baseDir += '/';
+      if(base_dir[base_dir.length() - 1] != '/')
+        base_dir += '/';
     }
-    MaterialFileReader matFileReader(baseDir);
+    MaterialFileReader mat_file_reader(base_dir);
 
-    return LoadObj(attrib, shapes, materials, warn, err, &ifs, &matFileReader);
+    return LoadObj(attrib, shapes, materials, warn, err, &ifs, &mat_file_reader);
   }
 
   bool LoadObj(Attrib_t* attrib, std::vector<Mesh_t>* shapes,
@@ -1231,7 +1229,7 @@ namespace tinyobj {
     std::vector<double> vn;
     std::vector<double> vt;
     std::vector<tag_t> tags;
-    std::vector<std::vector<vertex_index_t>> face_group;
+    std::vector<std::vector<VertexIndex_t>> face_group;
     std::string name;
 
     // material
@@ -1254,12 +1252,12 @@ namespace tinyobj {
       line_num++;
 
       // Trim newline '\r\n' or '\n'
-      if(linebuf.size() > 0)
+      if(linebuf.empty() == false)
       {
         if(linebuf[linebuf.size() - 1] == '\n')
           linebuf.erase(linebuf.size() - 1);
       }
-      if(linebuf.size() > 0)
+      if(linebuf.empty() == false)
       {
         if(linebuf[linebuf.size() - 1] == '\r')
           linebuf.erase(linebuf.size() - 1);
@@ -1286,7 +1284,7 @@ namespace tinyobj {
       if(token[0] == 'v' && IS_SPACE((token[1])))
       {
         token += 2;
-        double x, y, z;
+        double x = NAN, y = NAN, z = NAN;
 
         parseReal3(&x, &y, &z, &token); // TODO
 
@@ -1301,7 +1299,7 @@ namespace tinyobj {
       if(token[0] == 'v' && token[1] == 'n' && IS_SPACE((token[2])))
       {
         token += 3;
-        double x, y, z;
+        double x = NAN, y = NAN, z = NAN;
         parseReal3(&x, &y, &z, &token);
         vn.push_back(x);
         vn.push_back(y);
@@ -1313,7 +1311,7 @@ namespace tinyobj {
       if(token[0] == 'v' && token[1] == 't' && IS_SPACE((token[2])))
       {
         token += 3;
-        double x, y;
+        double x = NAN, y = NAN;
         parseReal2(&x, &y, &token);
         vt.push_back(x);
         vt.push_back(y);
@@ -1324,7 +1322,7 @@ namespace tinyobj {
       // if(token[0] == 'v' && token[1] == 'w' && IS_SPACE((token[2])))
       //  continue;
 
-      warning_context context;
+      WarningContext_t context;
       context.warn = warn;
       context.line_number = line_num;
 
@@ -1342,18 +1340,18 @@ namespace tinyobj {
         token += 2;
         token += strspn(token, " \t");
 
-        std::vector<vertex_index_t> face;
+        std::vector<VertexIndex_t> face;
 
         face.reserve(3);
 
         while(!IS_NEW_LINE(token[0]))
         {
-          vertex_index_t vi;
+          VertexIndex_t vi;
           if(!parseTriple(&token, static_cast<int>(v.size() / 3),
                           static_cast<int>(vn.size() / 3),
                           static_cast<int>(vt.size() / 2), &vi, context))
           {
-            if(err)
+            if(err != nullptr)
             {
               (*err) +=
                 "Failed to parse `f' line (e.g. a zero value for vertex index "
@@ -1386,23 +1384,23 @@ namespace tinyobj {
         token += 6;
         std::string namebuf = parseString(&token);
 
-        int newMaterialId = -1;
+        int new_material_id = -1;
         std::map<std::string, int>::const_iterator it =
           material_map.find(namebuf);
         if(it != material_map.end())
         {
-          newMaterialId = it->second;
+          new_material_id = it->second;
         }
         else
         {
           // { error!! material not found }
-          if(warn)
+          if(warn != nullptr)
           {
             (*warn) += "material [ '" + namebuf + "' ] not found in .mtl\n";
           }
         }
 
-        if(newMaterialId != material)
+        if(new_material_id != material)
         {
           // Create per-face material. Thus we don't add `shape` to `shapes` at
           // this time.
@@ -1410,7 +1408,7 @@ namespace tinyobj {
           exportGroupsToShape(&shape, face_group, tags, material, name,
                               v, warn);
           face_group.clear();
-          material = newMaterialId;
+          material = new_material_id;
         }
 
         continue;
@@ -1424,11 +1422,11 @@ namespace tinyobj {
           token += 7;
 
           std::vector<std::string> filenames;
-          SplitString(std::string(token), ' ', '\\', filenames);
+          splitString(std::string(token), ' ', '\\', filenames);
 
           if(filenames.empty())
           {
-            if(warn)
+            if(warn != nullptr)
             {
               std::stringstream ss;
               ss << "Looks like empty filename for mtllib. Use default "
@@ -1441,9 +1439,9 @@ namespace tinyobj {
           else
           {
             bool found = false;
-            for(size_t s = 0; s < filenames.size(); s++)
+            for(auto& filename : filenames)
             {
-              if(material_filenames.count(filenames[s]) > 0)
+              if(material_filenames.contains(filename))
               {
                 found = true;
                 continue;
@@ -1451,14 +1449,14 @@ namespace tinyobj {
 
               std::string warn_mtl;
               std::string err_mtl;
-              bool ok = (*readMatFn)(filenames[s].c_str(), materials,
+              bool ok = (*readMatFn)(filename, materials,
                                      &material_map, &warn_mtl, &err_mtl);
-              if(warn && (!warn_mtl.empty()))
+              if((warn != nullptr) && (!warn_mtl.empty()))
               {
                 (*warn) += warn_mtl;
               }
 
-              if(err && (!err_mtl.empty()))
+              if((err != nullptr) && (!err_mtl.empty()))
               {
                 (*err) += err_mtl;
               }
@@ -1466,14 +1464,14 @@ namespace tinyobj {
               if(ok)
               {
                 found = true;
-                material_filenames.insert(filenames[s]);
+                material_filenames.insert(filename);
                 break;
               }
             }
 
             if(!found)
             {
-              if(warn)
+              if(warn != nullptr)
               {
                 (*warn) +=
                   "Failed to load material file(s). Use default "
@@ -1494,7 +1492,7 @@ namespace tinyobj {
                                        v, warn);
         (void)ret; // return value not used.
 
-        if(shape.indices.size() > 0)
+        if(shape.indices.empty() == false)
           shapes->push_back(shape);
 
         shape = Mesh_t();
@@ -1516,7 +1514,7 @@ namespace tinyobj {
         if(names.size() < 2)
         {
           // 'g' with empty names
-          if(warn)
+          if(warn != nullptr)
           {
             std::stringstream ss;
             ss << "Empty group name. line: " << line_num << "\n";
@@ -1550,7 +1548,7 @@ namespace tinyobj {
                                        v, warn);
         (void)ret; // return value not used.
 
-        if(shape.indices.size() > 0)
+        if(shape.indices.empty() == false)
           shapes->push_back(shape);
 
         material = -1;
@@ -1637,7 +1635,7 @@ namespace tinyobj {
 
     if(greatest_v_idx >= static_cast<int>(v.size() / 3))
     {
-      if(warn)
+      if(warn != nullptr)
       {
         std::stringstream ss;
         ss << "Vertex indices out of bounds (line " << line_num << ".)\n\n";
@@ -1646,7 +1644,7 @@ namespace tinyobj {
     }
     if(greatest_vn_idx >= static_cast<int>(vn.size() / 3))
     {
-      if(warn)
+      if(warn != nullptr)
       {
         std::stringstream ss;
         ss << "Vertex normal indices out of bounds (line " << line_num
@@ -1656,7 +1654,7 @@ namespace tinyobj {
     }
     if(greatest_vt_idx >= static_cast<int>(vt.size() / 2))
     {
-      if(warn)
+      if(warn != nullptr)
       {
         std::stringstream ss;
         ss << "Vertex texcoord indices out of bounds (line " << line_num
@@ -1670,14 +1668,13 @@ namespace tinyobj {
     // line.
     // we also add `shape` to `shapes` when `shape.mesh` has already some
     // faces(indices)
-    if(ret || shape.indices
-                .size())
+    if(ret || (shape.indices.empty() == false))
     { // FIXME(syoyo): Support other prims(e.g. lines)
       shapes->push_back(shape);
     }
     face_group.clear(); // for safety
 
-    if(err)
+    if(err != nullptr)
     {
       (*err) += errss.str();
     }
@@ -1717,7 +1714,7 @@ namespace tinyobj {
     return valid_;
   }
 
-  bool ObjReader::ParseFromString(const std::string& obj_text,
+  bool ObjReader::parseFromString(const std::string& obj_text,
                                   const std::string& mtl_text)
   {
     std::stringbuf obj_buf(obj_text);

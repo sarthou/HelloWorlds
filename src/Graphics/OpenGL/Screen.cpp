@@ -15,15 +15,15 @@ namespace hws {
     glBindBuffer(GL_ARRAY_BUFFER, screen_vbo_);
     glBufferData(GL_ARRAY_BUFFER, sizeof(screen_vertices), &screen_vertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), nullptr);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
   }
 
   void Screen::setSize(unsigned int width, unsigned int height)
   {
-    width_ = width;
-    height_ = height;
+    width_ = (int)width;
+    height_ = (int)height;
   }
 
   void Screen::initBuffers(unsigned int msaa_samples)
@@ -34,13 +34,13 @@ namespace hws {
     // create a multisampled color attachment texture
     glGenTextures(1, &texture_color_buffer_ms_);
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture_color_buffer_ms_);
-    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, (int)msaa_samples, GL_RGB, (int)width_, (int)height_, GL_TRUE);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, (int)msaa_samples, GL_RGB, width_, height_, GL_TRUE);
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, texture_color_buffer_ms_, 0);
     // create a (also multisampled) renderbuffer object for depth and stencil attachments
     glGenRenderbuffers(1, &msaa_renderbuffer_);
     glBindRenderbuffer(GL_RENDERBUFFER, msaa_renderbuffer_);
-    glRenderbufferStorageMultisample(GL_RENDERBUFFER, (int)msaa_samples, GL_DEPTH24_STENCIL8, (int)width_, (int)height_);
+    glRenderbufferStorageMultisample(GL_RENDERBUFFER, (int)msaa_samples, GL_DEPTH24_STENCIL8, width_, height_);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, msaa_renderbuffer_);
 
@@ -54,7 +54,7 @@ namespace hws {
     // create a color attachment texture
     glGenTextures(1, &screen_texture_);
     glBindTexture(GL_TEXTURE_2D, screen_texture_);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, (int)width_, (int)height_, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width_, height_, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screen_texture_, 0); // we only need a color buffer
@@ -66,21 +66,21 @@ namespace hws {
     init_ = true;
   }
 
-  void Screen::reinitBuffers()
+  void Screen::reinitBuffers() const
   {
     if(init_ == false)
       return;
 
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture_color_buffer_ms_);
-    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, (int)msaa_samples_, GL_RGB, (int)width_, (int)height_, GL_TRUE);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, (int)msaa_samples_, GL_RGB, width_, height_, GL_TRUE);
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
 
     glBindRenderbuffer(GL_RENDERBUFFER, msaa_renderbuffer_);
-    glRenderbufferStorageMultisample(GL_RENDERBUFFER, (int)msaa_samples_, GL_DEPTH24_STENCIL8, (int)width_, (int)height_);
+    glRenderbufferStorageMultisample(GL_RENDERBUFFER, (int)msaa_samples_, GL_DEPTH24_STENCIL8, width_, height_);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
     glBindTexture(GL_TEXTURE_2D, screen_texture_);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, (int)width_, (int)height_, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width_, height_, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
   }
 
   void Screen::bindFrameBuffer() const
@@ -93,7 +93,7 @@ namespace hws {
   {
     glBindFramebuffer(GL_READ_FRAMEBUFFER, msaa_framebuffer_);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, intermediate_framebuffer_);
-    glBlitFramebuffer(0, 0, (int)width_, (int)height_, 0, 0, (int)width_, (int)height_, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    glBlitFramebuffer(0, 0, width_, height_, 0, 0, width_, height_, GL_COLOR_BUFFER_BIT, GL_NEAREST);
   }
 
   void Screen::draw() const

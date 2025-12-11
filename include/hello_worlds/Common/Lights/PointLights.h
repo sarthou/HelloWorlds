@@ -125,6 +125,7 @@ namespace hws {
     const glm::vec4& getAttenuation(std::size_t id) const { return attenuations_[id]; }
     float getAttenuationDistance(std::size_t id) const { return attenuation_distances_[id]; }
     float getNbLightsFloat() const { return (float)nb_lights_; }
+    size_t getNbLightsSize() const { return nb_lights_; }
 
   private:
     std::array<bool, MAX_POINT_LIGHTS> available_;

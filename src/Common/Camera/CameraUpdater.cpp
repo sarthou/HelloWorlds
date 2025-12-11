@@ -68,7 +68,7 @@ namespace hws {
     (void)is_down;
   }
 
-  void CameraUpdater::processUserMouseBtnInput(const float delta_time, const char btn, bool is_down)
+  void CameraUpdater::processUserMouseBtnInput(const float delta_time, int btn, bool is_down)
   {
     if(camera_ == nullptr)
       return;
@@ -101,8 +101,6 @@ namespace hws {
     }
 
     (void)delta_time;
-    (void)btn;
-    (void)is_down;
   }
 
   void CameraUpdater::processUserMouseInput(const float delta_time, const float x, const float y)
@@ -220,8 +218,8 @@ namespace hws {
     assert(camera_ && "CameraUpdater work on null pointer");
     // to verify
     camera_->world_eye_position_ = toGlmV3(position);
-    camera_->view_angles_.x = orientation[2]; // yaw
-    camera_->view_angles_.y = orientation[1]; // pitch
+    camera_->view_angles_.x = (float)orientation[2]; // yaw
+    camera_->view_angles_.y = (float)orientation[1]; // pitch
     camera_->recomputeDirectionVector();
   }
 

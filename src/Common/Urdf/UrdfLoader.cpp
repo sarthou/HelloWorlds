@@ -157,7 +157,7 @@ namespace hws {
     if(mass != nullptr)
     {
       const char* value_text = mass->Attribute("value");
-      res.mass = std::atof(value_text);
+      res.mass = (float)std::atof(value_text);
     }
 
     auto* origin = element->FirstChildElement("origin");
@@ -171,19 +171,19 @@ namespace hws {
     if(inertia != nullptr)
     {
       const char* value_text = inertia->Attribute("ixx");
-      res.ix.x = std::atof(value_text);
+      res.ix.x = (float)std::atof(value_text);
       value_text = inertia->Attribute("ixy");
-      res.ix.y = std::atof(value_text);
+      res.ix.y = (float)std::atof(value_text);
       value_text = inertia->Attribute("ixz");
-      res.ix.z = std::atof(value_text);
+      res.ix.z = (float)std::atof(value_text);
 
       value_text = inertia->Attribute("iyy");
-      res.iy.y = std::atof(value_text);
+      res.iy.y = (float)std::atof(value_text);
       value_text = inertia->Attribute("iyz");
-      res.iy.z = std::atof(value_text);
+      res.iy.z = (float)std::atof(value_text);
 
       value_text = inertia->Attribute("izz");
-      res.iz.z = std::atof(value_text);
+      res.iz.z = (float)std::atof(value_text);
     }
 
     return res;
@@ -196,10 +196,10 @@ namespace hws {
     auto* origin = element->FirstChildElement("origin");
     if(origin != nullptr)
     {
-      auto* translation = origin->Attribute("xyz");
+      const auto* translation = origin->Attribute("xyz");
       if(translation != nullptr)
         res.origin_translation = getVector3FromXmlText(translation);
-      auto* rotation = origin->Attribute("rpy");
+      const auto* rotation = origin->Attribute("rpy");
       if(rotation != nullptr)
         res.origin_rotation = getVector3FromXmlText(rotation);
     }
@@ -224,7 +224,7 @@ namespace hws {
       {
         res.type = urdf::GeometryType_e::geometry_mesh;
         res.file_name = geometry_type->Attribute("filename");
-        auto* scale = geometry_type->Attribute("scale");
+        const auto* scale = geometry_type->Attribute("scale");
         if(scale != nullptr)
           res.scale = getVector3FromXmlText(scale);
       }
@@ -237,7 +237,7 @@ namespace hws {
       {
         res.type = urdf::GeometryType_e::geometry_sphere;
         const char* radius_text = geometry_type->Attribute("radius");
-        res.scale.x = std::atof(radius_text);
+        res.scale.x = (float)std::atof(radius_text);
         res.scale.y = 0.;
         res.scale.z = 0.;
       }
@@ -245,9 +245,9 @@ namespace hws {
       {
         res.type = urdf::GeometryType_e::geometry_cylinder;
         const char* radius_text = geometry_type->Attribute("radius");
-        res.scale.x = std::atof(radius_text);
+        res.scale.x = (float)std::atof(radius_text);
         const char* length_text = geometry_type->Attribute("length");
-        res.scale.y = std::atof(length_text);
+        res.scale.y = (float)std::atof(length_text);
         res.scale.z = 0.;
       }
     }
@@ -303,11 +303,11 @@ namespace hws {
       {
         const char* lower_text = limit->Attribute("lower");
         if(lower_text != nullptr)
-          joint.limit.first = std::atof(lower_text);
+          joint.limit.first = (float)std::atof(lower_text);
 
         const char* upper_text = limit->Attribute("upper");
         if(upper_text != nullptr)
-          joint.limit.second = std::atof(upper_text);
+          joint.limit.second = (float)std::atof(upper_text);
         joint.limited = true;
       }
 

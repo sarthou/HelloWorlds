@@ -135,9 +135,9 @@ namespace tinyobj {
     MaterialReader() {}
     virtual ~MaterialReader();
 
-    virtual bool operator()(const std::string& matId,
+    virtual bool operator()(const std::string& mat_id,
                             std::vector<Material_t>* materials,
-                            std::map<std::string, int>* matMap, std::string* warn,
+                            std::map<std::string, int>* material_map, std::string* warn,
                             std::string* err) = 0;
   };
 
@@ -149,15 +149,15 @@ namespace tinyobj {
   public:
     // Path could contain separator(';' in Windows, ':' in Posix)
     explicit MaterialFileReader(const std::string& mtl_basedir)
-      : m_mtlBaseDir(mtl_basedir) {}
+      : mlt_base_dir_(mtl_basedir) {}
     virtual ~MaterialFileReader() override {}
-    virtual bool operator()(const std::string& matId,
+    virtual bool operator()(const std::string& mat_id,
                             std::vector<Material_t>* materials,
-                            std::map<std::string, int>* matMap, std::string* warn,
+                            std::map<std::string, int>* material_map, std::string* warn,
                             std::string* err) override;
 
   private:
-    std::string m_mtlBaseDir;
+    std::string mlt_base_dir_;
   };
 
   ///
@@ -169,9 +169,9 @@ namespace tinyobj {
     explicit MaterialStreamReader(std::istream& inStream)
       : m_inStream(inStream) {}
     virtual ~MaterialStreamReader() override {}
-    virtual bool operator()(const std::string& matId,
+    virtual bool operator()(const std::string& mat_id,
                             std::vector<Material_t>* materials,
-                            std::map<std::string, int>* matMap, std::string* warn,
+                            std::map<std::string, int>* material_map, std::string* warn,
                             std::string* err) override;
 
   private:
@@ -205,7 +205,7 @@ namespace tinyobj {
     /// @param[in] obj_text wavefront .obj filename
     /// @param[in] mtl_text wavefront .mtl filename
     ///
-    bool ParseFromString(const std::string& obj_text, const std::string& mtl_text);
+    bool parseFromString(const std::string& obj_text, const std::string& mtl_text);
 
     ///
     /// .obj was loaded or parsed correctly.

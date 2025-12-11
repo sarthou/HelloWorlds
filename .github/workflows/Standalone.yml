@@ -45,7 +45,7 @@ jobs:
       - name: Lint
         working-directory: ros2_ws/src/HelloWorlds
         run: |
-          python3 .github/run_clang_tidy.py . buil
+          python3 .github/run_clang_tidy.py . build External
 
       #- name: Run tests
       #  run: |

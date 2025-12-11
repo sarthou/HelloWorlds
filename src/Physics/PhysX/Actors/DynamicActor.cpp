@@ -7,7 +7,6 @@
 #include <iostream>
 
 #include "hello_worlds/Common/Models/Model.h"
-#include "hello_worlds/Physics/PhysX/Actors/DynamicActor.h"
 #include "hello_worlds/Physics/PhysX/Context.h"
 #include "hello_worlds/Physics/PhysX/SharedContext.h"
 

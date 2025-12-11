@@ -24,7 +24,7 @@ namespace hws {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 1);
   }
 
   void Window::release()
@@ -37,16 +37,15 @@ namespace hws {
     glfwPollEvents();
   }
 
-  Window::Window(const std::string& name)
+  Window::Window(const std::string& name) : glfw_window_(glfwCreateWindow(640, 480, name.c_str(), nullptr, nullptr))
   {
     // glfwWindowHint(GLFW_SAMPLES, 4);
-    glfw_window_ = glfwCreateWindow(640, 480, name.c_str(), nullptr, nullptr);
 
-    GLFWimage icons[1];
+    GLFWimage icon;
     std::string icon_path(findPackage("overworld") + "/docs/images/overworld_light.png");
-    icons[0].pixels = stbi_load(icon_path.c_str(), &icons[0].width, &icons[0].height, 0, 4); // rgba channels
-    glfwSetWindowIcon(glfw_window_, 1, icons);
-    stbi_image_free(icons[0].pixels);
+    icon.pixels = stbi_load(icon_path.c_str(), &icon.width, &icon.height, nullptr, 4); // rgba channels
+    glfwSetWindowIcon(glfw_window_, 1, &icon);
+    stbi_image_free(icon.pixels);
 
     glfwSetWindowUserPointer(glfw_window_, this);
     glfwSetWindowSizeCallback(glfw_window_, [](GLFWwindow* glfw_window, const int width, const int height) {
@@ -180,7 +179,7 @@ namespace hws {
 
   bool Window::isCloseRequested() const
   {
-    return glfwWindowShouldClose(glfw_window_);
+    return glfwWindowShouldClose(glfw_window_) != 0;
   }
 
   void Window::swapBuffer()

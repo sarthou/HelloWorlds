@@ -53,7 +53,7 @@ namespace hws {
 
       if(std::regex_match(lines[current_line], match, element_regex))
       {
-        if(match[2].str() == "")
+        if(match[2].str().empty())
         {
           config_name = match[1].str();
           res[config_name] = YamlElement();

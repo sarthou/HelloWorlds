@@ -1,5 +1,6 @@
 #include "hello_worlds/Graphics/OpenGL/Shader.h"
 
+#include <array>
 #include <fstream>
 #include <glm/ext/matrix_float4x4.hpp>
 #include <glm/ext/vector_float2.hpp>
@@ -44,7 +45,7 @@ namespace hws {
       vertex_code = v_shader_stream.str();
       fragment_code = f_shader_stream.str();
     }
-    catch(std::ifstream::failure e)
+    catch(std::ifstream::failure& e)
     {
       (void)e;
       std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
@@ -79,7 +80,7 @@ namespace hws {
         g_shader_file.close();
         geometry_code = g_shader_stream.str();
       }
-      catch(std::ifstream::failure e)
+      catch(std::ifstream::failure& e)
       {
         (void)e;
         std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
@@ -107,7 +108,7 @@ namespace hws {
     glDeleteShader(fragment);
   }
 
-  void Shader::use()
+  void Shader::use() const
   {
     glUseProgram(id_);
   }
@@ -142,18 +143,18 @@ namespace hws {
     glUniform4fv(glGetUniformLocation(id_, name.c_str()), 1, &value[0]);
   }
 
-  void Shader::checkCompileErrors(GLuint shader, std::string type)
+  void Shader::checkCompileErrors(GLuint shader, const std::string& type)
   {
     GLint success = 0;
-    GLchar info_log[1024];
+    std::array<GLchar, 1024> info_log;
     if(type != "PROGRAM")
     {
       glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
       if(success == 0)
       {
-        glGetShaderInfoLog(shader, 1024, nullptr, info_log);
+        glGetShaderInfoLog(shader, 1024, nullptr, info_log.data());
         std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n"
-                  << info_log << "\n -- --------------------------------------------------- -- " << std::endl;
+                  << info_log.data() << "\n -- --------------------------------------------------- -- " << std::endl;
       }
     }
     else
@@ -161,9 +162,9 @@ namespace hws {
       glGetProgramiv(shader, GL_LINK_STATUS, &success);
       if(success == 0)
       {
-        glGetProgramInfoLog(shader, 1024, nullptr, info_log);
+        glGetProgramInfoLog(shader, 1024, nullptr, info_log.data());
         std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n"
-                  << info_log << "\n -- --------------------------------------------------- -- " << std::endl;
+                  << info_log.data() << "\n -- --------------------------------------------------- -- " << std::endl;
       }
     }
   }

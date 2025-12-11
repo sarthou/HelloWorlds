@@ -22,7 +22,7 @@ namespace hws {
     camera_.setPlanes({near_plane, far_plane});
     camera_.finalize();
 
-    image_ = new uint32_t[width_ * height_];
+    image_ = new uint32_t[(unsigned long)(width_ * height_)];
   }
 
   VirtualCamera::~VirtualCamera()
