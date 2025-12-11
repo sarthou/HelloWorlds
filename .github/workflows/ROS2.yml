@@ -27,7 +27,14 @@ jobs:
       - name: Install deps
         run: |
             sudo apt install -y libglm-dev libglfw3-dev
-            sudo apt install -y libgl1-mesa-dev libxmu-dev libxi-dev libglu1-mesa-dev
+            sudo apt install -y \
+              libgl1-mesa-dev \
+              libglu1-mesa-dev \
+              libxi-dev \
+              libxmu-dev \
+              libxrandr-dev \
+              libxcb-dri2-0-dev \
+              libxcb-glx0-dev
             source /opt/ros/$ROS_DISTRO/setup.bash
 
       - name: Setup Workspace
