@@ -3,7 +3,6 @@
 #include <array>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/euler_angles.hpp>
-#include <hello_worlds/Utils/BitCast.h>
 #include <iostream>
 
 #include "hello_worlds/Common/Models/Model.h"

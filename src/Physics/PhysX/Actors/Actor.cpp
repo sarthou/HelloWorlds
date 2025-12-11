@@ -102,7 +102,7 @@ namespace hws::physx {
     const auto translation_mat = glm::translate(glm::mat4(1), glm::vec3(px_pose.p.x, px_pose.p.y, px_pose.p.z));
     const auto rotation_mat = glm::mat4_cast(glm::quat(px_pose.q.w, px_pose.q.x, px_pose.q.y, px_pose.q.z));
 
-    return hws::BitCast<std::array<float, 16>>(translation_mat * rotation_mat);
+    return hws::bitCast<std::array<float, 16>>(translation_mat * rotation_mat);
   }
 
   std::pair<std::array<double, 3>, std::array<double, 4>> Actor::getPositionAndOrientation() const

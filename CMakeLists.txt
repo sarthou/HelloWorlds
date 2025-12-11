@@ -72,10 +72,8 @@ endfunction(hws_add_library)
 hws_add_library(hello_worlds_SolarAzEl External/SolarAzEl/SolarAzEl.cpp)
 
 hws_add_library(hello_worlds_utility_lib
-  src/Utils/YamlReader.cpp
   src/Utils/RosPackage.cpp
-  src/Utils/XmlTokenize.cpp
-  src/Utils/Wavefront.cpp)
+  src/Utils/XmlTokenize.cpp)
 
 hws_add_library(hello_worlds_engine_common
   src/Common/Camera/Camera.cpp

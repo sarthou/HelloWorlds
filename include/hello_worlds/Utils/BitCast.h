@@ -9,7 +9,7 @@ namespace hws {
    * An implementation of C++20's std::bit_cast
    */
   template<class T2, class T1>
-  T2 BitCast(T1 t1)
+  T2 bitCast(T1 t1)
   {
     static_assert(sizeof(T1) == sizeof(T2), "Types must match sizes");
     static_assert(std::is_pod_v<T1>, "Requires POD input");
