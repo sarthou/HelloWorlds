@@ -24,11 +24,10 @@ jobs:
         with:
           required-ros-distributions: ${{ matrix.ros_distro }}
 
-      - uses: openrndr/setup-opengl@v1.1
-
       - name: Install deps
         run: |
             sudo apt install -y libglm-dev libglfw3-dev
+            sudo apt install -y libglapi-mesa libxcb-dri3-dev libxcb-dri2-0-dev libxdamage-dev libxfixes-dev
             source /opt/ros/$ROS_DISTRO/setup.bash
 
       - name: Setup Workspace
