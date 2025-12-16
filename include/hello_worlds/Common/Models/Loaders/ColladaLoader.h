@@ -5,7 +5,7 @@
 #include <map>
 #include <memory>
 #include <string>
-#include <tinyxml.h>
+#include <tinyxml2.h>
 #include <vector>
 
 #include "hello_worlds/Common/Models/Mesh.h"
@@ -19,15 +19,15 @@ namespace hws {
     std::unique_ptr<hws::Model> read(const std::string& path);
 
   private:
-    bool getXmlDocument(const std::string& path, TiXmlDocument& doc);
-    void getScalingAndTransform(TiXmlElement* root);
-    std::map<std::string, Material> getMaterialLibrary(TiXmlElement* root);
-    std::map<std::string, Mesh> getMeshLibrary(TiXmlElement* root);
+    bool getXmlDocument(const std::string& path, tinyxml2::XMLDocument& doc);
+    void getScalingAndTransform(tinyxml2::XMLElement* root);
+    std::map<std::string, Material> getMaterialLibrary(tinyxml2::XMLElement* root);
+    std::map<std::string, Mesh> getMeshLibrary(tinyxml2::XMLElement* root);
 
-    std::vector<Mesh> readSceneGeometries(TiXmlElement* root, std::map<std::string, Mesh>& meshes_library);
-    void readNodeHierarchy(TiXmlElement* node, std::map<std::string, Mesh>& meshes_library, std::vector<Mesh>& instances, const glm::mat4& parent_trans_mat);
+    std::vector<Mesh> readSceneGeometries(tinyxml2::XMLElement* root, std::map<std::string, Mesh>& meshes_library);
+    void readNodeHierarchy(tinyxml2::XMLElement* node, std::map<std::string, Mesh>& meshes_library, std::vector<Mesh>& instances, const glm::mat4& parent_trans_mat);
 
-    void readFloatArray(TiXmlElement* source, std::vector<float>& float_array, int& component_stride);
+    void readFloatArray(tinyxml2::XMLElement* source, std::vector<float>& float_array, int& component_stride);
 
     glm::mat3 tr_;
     float unit_meter_scaling_;

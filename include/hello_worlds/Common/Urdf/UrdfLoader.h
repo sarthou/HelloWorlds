@@ -4,7 +4,7 @@
 #include <glm/vec3.hpp>
 #include <map>
 #include <string>
-#include <tinyxml.h>
+#include <tinyxml2.h>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -106,16 +106,16 @@ namespace hws {
     urdf::Urdf_t readRaw(const std::string& content);
 
   private:
-    urdf::Urdf_t read(TiXmlDocument& doc);
+    urdf::Urdf_t read(tinyxml2::XMLDocument& doc);
 
-    bool getXmlDocument(const std::string& path, TiXmlDocument& doc);
-    bool getXmlDocumentRaw(const std::string& content, TiXmlDocument& doc);
-    std::map<std::string, Material> getMaterialLibrary(TiXmlElement* root);
-    std::pair<std::string, Material> getMaterial(TiXmlElement* element);
-    std::map<std::string, urdf::Link_t> getLinks(TiXmlElement* root, const std::map<std::string, Material>& materials);
-    urdf::Inertia_t getInertia(TiXmlElement* element);
-    urdf::Geometry_t getGeometry(TiXmlElement* element, const std::map<std::string, Material>& materials);
-    std::map<std::string, urdf::Joint_t> getJoints(TiXmlElement* root);
+    bool getXmlDocument(const std::string& path, tinyxml2::XMLDocument& doc);
+    bool getXmlDocumentRaw(const std::string& content, tinyxml2::XMLDocument& doc);
+    std::map<std::string, Material> getMaterialLibrary(tinyxml2::XMLElement* root);
+    std::pair<std::string, Material> getMaterial(tinyxml2::XMLElement* element);
+    std::map<std::string, urdf::Link_t> getLinks(tinyxml2::XMLElement* root, const std::map<std::string, Material>& materials);
+    urdf::Inertia_t getInertia(tinyxml2::XMLElement* element);
+    urdf::Geometry_t getGeometry(tinyxml2::XMLElement* element, const std::map<std::string, Material>& materials);
+    std::map<std::string, urdf::Joint_t> getJoints(tinyxml2::XMLElement* root);
     std::unordered_set<std::string> findRootLink(const std::map<std::string, urdf::Joint_t>& joints);
     void getTree(urdf::Urdf_t& model);
   };

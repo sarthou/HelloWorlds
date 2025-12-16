@@ -4,7 +4,7 @@
 #include <glm/vec4.hpp>
 #include <map>
 #include <string>
-#include <tinyxml.h>
+#include <tinyxml2.h>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -18,7 +18,7 @@ namespace hws {
 
   urdf::Urdf_t UrdfLoader::read(const std::string& path)
   {
-    TiXmlDocument doc;
+    tinyxml2::XMLDocument doc;
     if(getXmlDocument(path, doc) == false)
       return urdf::Urdf_t();
     else
@@ -27,14 +27,14 @@ namespace hws {
 
   urdf::Urdf_t UrdfLoader::readRaw(const std::string& content)
   {
-    TiXmlDocument doc;
+    tinyxml2::XMLDocument doc;
     if(getXmlDocumentRaw(content, doc) == false)
       return urdf::Urdf_t();
     else
       return read(doc);
   }
 
-  urdf::Urdf_t UrdfLoader::read(TiXmlDocument& doc)
+  urdf::Urdf_t UrdfLoader::read(tinyxml2::XMLDocument& doc)
   {
     urdf::Urdf_t urdf;
 
@@ -58,7 +58,7 @@ namespace hws {
     return urdf;
   }
 
-  bool UrdfLoader::getXmlDocument(const std::string& path, TiXmlDocument& doc)
+  bool UrdfLoader::getXmlDocument(const std::string& path, tinyxml2::XMLDocument& doc)
   {
     std::string content;
     std::ifstream f(path);
@@ -76,18 +76,18 @@ namespace hws {
     return getXmlDocumentRaw(content, doc);
   }
 
-  bool UrdfLoader::getXmlDocumentRaw(const std::string& content, TiXmlDocument& doc)
+  bool UrdfLoader::getXmlDocumentRaw(const std::string& content, tinyxml2::XMLDocument& doc)
   {
-    doc.Parse((const char*)content.c_str(), nullptr, TIXML_ENCODING_UTF8);
+    doc.Parse((const char*)content.c_str());
 
-    TiXmlElement* root = doc.RootElement();
+    tinyxml2::XMLElement* root = doc.RootElement();
     if(root == nullptr)
       return false;
 
     return true;
   }
 
-  std::map<std::string, Material> UrdfLoader::getMaterialLibrary(TiXmlElement* root)
+  std::map<std::string, Material> UrdfLoader::getMaterialLibrary(tinyxml2::XMLElement* root)
   {
     std::map<std::string, Material> res;
 
@@ -97,7 +97,7 @@ namespace hws {
     return res;
   }
 
-  std::pair<std::string, Material> UrdfLoader::getMaterial(TiXmlElement* element)
+  std::pair<std::string, Material> UrdfLoader::getMaterial(tinyxml2::XMLElement* element)
   {
     Material instance;
     std::string id = std::string(element->Attribute("name"));
@@ -123,7 +123,7 @@ namespace hws {
     return {id, instance};
   }
 
-  std::map<std::string, urdf::Link_t> UrdfLoader::getLinks(TiXmlElement* root, const std::map<std::string, Material>& materials)
+  std::map<std::string, urdf::Link_t> UrdfLoader::getLinks(tinyxml2::XMLElement* root, const std::map<std::string, Material>& materials)
   {
     std::map<std::string, urdf::Link_t> res;
 
@@ -149,7 +149,7 @@ namespace hws {
     return res;
   }
 
-  urdf::Inertia_t UrdfLoader::getInertia(TiXmlElement* element)
+  urdf::Inertia_t UrdfLoader::getInertia(tinyxml2::XMLElement* element)
   {
     urdf::Inertia_t res;
 
@@ -189,7 +189,7 @@ namespace hws {
     return res;
   }
 
-  urdf::Geometry_t UrdfLoader::getGeometry(TiXmlElement* element, const std::map<std::string, Material>& materials)
+  urdf::Geometry_t UrdfLoader::getGeometry(tinyxml2::XMLElement* element, const std::map<std::string, Material>& materials)
   {
     urdf::Geometry_t res;
 
@@ -219,7 +219,7 @@ namespace hws {
     if(geometry_elem != nullptr)
     {
       auto* geometry_type = geometry_elem->FirstChildElement();
-      std::string type = geometry_type->ValueStr();
+      std::string type(geometry_type->Value());
       if(type == "mesh")
       {
         res.type = urdf::GeometryType_e::geometry_mesh;
@@ -255,7 +255,7 @@ namespace hws {
     return res;
   }
 
-  std::map<std::string, urdf::Joint_t> UrdfLoader::getJoints(TiXmlElement* root)
+  std::map<std::string, urdf::Joint_t> UrdfLoader::getJoints(tinyxml2::XMLElement* root)
   {
     std::map<std::string, urdf::Joint_t> res;
 

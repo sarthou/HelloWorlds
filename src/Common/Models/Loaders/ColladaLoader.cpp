@@ -12,7 +12,7 @@
 #include <map>
 #include <memory>
 #include <string>
-#include <tinyxml.h>
+#include <tinyxml2.h>
 #include <vector>
 
 #include "hello_worlds/Common/Models/Mesh.h"
@@ -35,7 +35,7 @@ namespace hws {
     std::string normal_id;
   };
 
-  void getColorAndTexture(TiXmlElement* elem, std::map<std::string, EffectParam_t>& params, std::map<std::string, std::string>& images, Color& color, std::string& texture)
+  void getColorAndTexture(tinyxml2::XMLElement* elem, std::map<std::string, EffectParam_t>& params, std::map<std::string, std::string>& images, Color& color, std::string& texture)
   {
     auto* color_elem = elem->FirstChildElement("color");
     if(color_elem != nullptr)
@@ -78,7 +78,7 @@ namespace hws {
 
   std::unique_ptr<hws::Model> ColladaLoader::read(const std::string& path)
   {
-    TiXmlDocument doc;
+    tinyxml2::XMLDocument doc;
     if(getXmlDocument(path, doc) == false)
       return nullptr;
 
@@ -115,7 +115,7 @@ namespace hws {
     return nullptr;
   }
 
-  bool ColladaLoader::getXmlDocument(const std::string& path, TiXmlDocument& doc)
+  bool ColladaLoader::getXmlDocument(const std::string& path, tinyxml2::XMLDocument& doc)
   {
     std::string content;
     std::ifstream f(path);
@@ -132,9 +132,9 @@ namespace hws {
 
     // removeDocType(response);
 
-    doc.Parse((const char*)content.c_str(), nullptr, TIXML_ENCODING_UTF8);
+    doc.Parse((const char*)content.c_str());
 
-    TiXmlElement* root = doc.RootElement();
+    tinyxml2::XMLElement* root = doc.RootElement();
     if(root == nullptr)
     {
       return false;
@@ -143,7 +143,7 @@ namespace hws {
     return true;
   }
 
-  void ColladaLoader::getScalingAndTransform(TiXmlElement* root)
+  void ColladaLoader::getScalingAndTransform(tinyxml2::XMLElement* root)
   {
     unit_meter_scaling_ = 1.0;
     tr_ = glm::mat3(1.0);
@@ -171,7 +171,7 @@ namespace hws {
     }
   }
 
-  std::map<std::string, Material> ColladaLoader::getMaterialLibrary(TiXmlElement* root)
+  std::map<std::string, Material> ColladaLoader::getMaterialLibrary(tinyxml2::XMLElement* root)
   {
     std::map<std::string, Material> res;
 
@@ -297,10 +297,10 @@ namespace hws {
     return res;
   }
 
-  std::map<std::string, Mesh> ColladaLoader::getMeshLibrary(TiXmlElement* root)
+  std::map<std::string, Mesh> ColladaLoader::getMeshLibrary(tinyxml2::XMLElement* root)
   {
     std::map<std::string, Mesh> res;
-    std::map<std::string, TiXmlElement*> all_sources;
+    std::map<std::string, tinyxml2::XMLElement*> all_sources;
     std::map<std::string, VertexSource_t> vertex_sources;
 
     auto* library = root->FirstChildElement("library_geometries");
@@ -335,7 +335,7 @@ namespace hws {
         }
         vertex_sources.emplace(std::string(vertices_elem->Attribute("id")), vs);
 
-        std::vector<TiXmlElement*> triangles_and_polylists;
+        std::vector<tinyxml2::XMLElement*> triangles_and_polylists;
 
         for(auto* primitive = mesh_elem->FirstChildElement("triangles"); primitive != nullptr; primitive = primitive->NextSiblingElement("triangles"))
           triangles_and_polylists.push_back(primitive);
@@ -476,24 +476,24 @@ namespace hws {
     return res;
   }
 
-  std::vector<Mesh> ColladaLoader::readSceneGeometries(TiXmlElement* root, std::map<std::string, Mesh>& meshes_library)
+  std::vector<Mesh> ColladaLoader::readSceneGeometries(tinyxml2::XMLElement* root, std::map<std::string, Mesh>& meshes_library)
   {
     std::vector<Mesh> res;
-    std::map<std::string, TiXmlElement*> all_instances;
+    std::map<std::string, tinyxml2::XMLElement*> all_instances;
 
-    TiXmlElement* visual_scenes_elem = root->FirstChildElement("library_visual_scenes");
+    tinyxml2::XMLElement* visual_scenes_elem = root->FirstChildElement("library_visual_scenes");
     if(visual_scenes_elem == nullptr)
       return {};
 
-    for(TiXmlElement* scene = visual_scenes_elem->FirstChildElement("visual_scene"); scene != nullptr; scene = scene->NextSiblingElement("visual_scene"))
+    for(tinyxml2::XMLElement* scene = visual_scenes_elem->FirstChildElement("visual_scene"); scene != nullptr; scene = scene->NextSiblingElement("visual_scene"))
       all_instances.emplace(std::string(scene->Attribute("id")), scene);
 
-    TiXmlElement* scene = nullptr;
+    tinyxml2::XMLElement* scene = nullptr;
 
-    TiXmlElement* scenes = root->FirstChildElement("scene");
+    tinyxml2::XMLElement* scenes = root->FirstChildElement("scene");
     if(scenes != nullptr)
     {
-      TiXmlElement* instance_scene_reference = scenes->FirstChildElement("instance_visual_scene");
+      tinyxml2::XMLElement* instance_scene_reference = scenes->FirstChildElement("instance_visual_scene");
       if(instance_scene_reference != nullptr)
       {
         std::string instance_scene_url = std::string(instance_scene_reference->Attribute("url")).erase(0, 1);
@@ -505,7 +505,7 @@ namespace hws {
 
     if(scene != nullptr)
     {
-      for(TiXmlElement* node = scene->FirstChildElement("node"); node != nullptr; node = node->NextSiblingElement("node"))
+      for(tinyxml2::XMLElement* node = scene->FirstChildElement("node"); node != nullptr; node = node->NextSiblingElement("node"))
       {
         glm::mat4 identity(tr_);
         readNodeHierarchy(node, meshes_library, res, identity);
@@ -515,11 +515,11 @@ namespace hws {
     return res;
   }
 
-  void ColladaLoader::readNodeHierarchy(TiXmlElement* node, std::map<std::string, Mesh>& meshes_library, std::vector<Mesh>& instances, const glm::mat4& parent_trans_mat)
+  void ColladaLoader::readNodeHierarchy(tinyxml2::XMLElement* node, std::map<std::string, Mesh>& meshes_library, std::vector<Mesh>& instances, const glm::mat4& parent_trans_mat)
   {
     glm::mat4 node_trans(1.);
 
-    for(TiXmlElement* trans_elem = node->FirstChildElement("matrix"); trans_elem != nullptr; trans_elem = node->NextSiblingElement("matrix"))
+    for(tinyxml2::XMLElement* trans_elem = node->FirstChildElement("matrix"); trans_elem != nullptr; trans_elem = node->NextSiblingElement("matrix"))
     {
       if(trans_elem->GetText() != nullptr)
       {
@@ -540,7 +540,7 @@ namespace hws {
       }
     }
 
-    for(TiXmlElement* trans_elem = node->FirstChildElement("translate"); trans_elem != nullptr; trans_elem = node->NextSiblingElement("translate"))
+    for(tinyxml2::XMLElement* trans_elem = node->FirstChildElement("translate"); trans_elem != nullptr; trans_elem = node->NextSiblingElement("translate"))
     {
       if(trans_elem->GetText() != nullptr)
       {
@@ -549,7 +549,7 @@ namespace hws {
       }
     }
 
-    for(TiXmlElement* scale_elem = node->FirstChildElement("scale"); scale_elem != nullptr; scale_elem = node->NextSiblingElement("scale"))
+    for(tinyxml2::XMLElement* scale_elem = node->FirstChildElement("scale"); scale_elem != nullptr; scale_elem = node->NextSiblingElement("scale"))
     {
       if(scale_elem->GetText() != nullptr)
       {
@@ -558,7 +558,7 @@ namespace hws {
       }
     }
 
-    for(TiXmlElement* rotate_elem = node->FirstChildElement("rotate"); rotate_elem != nullptr; rotate_elem = node->NextSiblingElement("rotate"))
+    for(tinyxml2::XMLElement* rotate_elem = node->FirstChildElement("rotate"); rotate_elem != nullptr; rotate_elem = node->NextSiblingElement("rotate"))
     {
       if(rotate_elem->GetText() != nullptr)
       {
@@ -570,7 +570,7 @@ namespace hws {
 
     node_trans = parent_trans_mat * node_trans;
 
-    for(TiXmlElement* instance_geom = node->FirstChildElement("instance_geometry"); instance_geom != nullptr; instance_geom = instance_geom->NextSiblingElement("instance_geometry"))
+    for(tinyxml2::XMLElement* instance_geom = node->FirstChildElement("instance_geometry"); instance_geom != nullptr; instance_geom = instance_geom->NextSiblingElement("instance_geometry"))
     {
       std::string geom_url = std::string(instance_geom->Attribute("url")).erase(0, 1);
       auto geom_it = meshes_library.find(geom_url);
@@ -601,18 +601,18 @@ namespace hws {
         ShellDisplay::error("[ColladaLoader] geom " + geom_url + " not found");
     }
 
-    for(TiXmlElement* child_node = node->FirstChildElement("node"); child_node != nullptr; child_node = child_node->NextSiblingElement("node"))
+    for(tinyxml2::XMLElement* child_node = node->FirstChildElement("node"); child_node != nullptr; child_node = child_node->NextSiblingElement("node"))
       readNodeHierarchy(child_node, meshes_library, instances, node_trans);
   }
 
-  void ColladaLoader::readFloatArray(TiXmlElement* source, std::vector<float>& float_array, int& component_stride)
+  void ColladaLoader::readFloatArray(tinyxml2::XMLElement* source, std::vector<float>& float_array, int& component_stride)
   {
-    TiXmlElement* array = source->FirstChildElement("float_array");
+    tinyxml2::XMLElement* array = source->FirstChildElement("float_array");
     if(array != nullptr)
     {
       int stride = 0;
       component_stride = 1;
-      if(source->FirstChildElement("technique_common")->FirstChildElement("accessor")->QueryIntAttribute("stride", &stride) != TIXML_NO_ATTRIBUTE)
+      if(source->FirstChildElement("technique_common")->FirstChildElement("accessor")->QueryIntAttribute("stride", &stride) != tinyxml2::XML_NO_ATTRIBUTE)
         component_stride = stride;
 
       int count = 0;
