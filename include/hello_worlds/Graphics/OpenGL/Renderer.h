@@ -36,6 +36,7 @@ namespace hws {
     static void release();
 
     bool initialize(Window& window);
+    void addSkyBox(const std::string& images_folder); // TODO: method to set default background color ?
     void attachWorld(World* world) { world_ = world; }
 
     void commit();
@@ -57,6 +58,7 @@ namespace hws {
     float last_frame_ = 0;
 
     bool render_collision_models_ = false;
+    bool use_sky_box_ = false;
 
     std::unordered_map<std::string, Texture2D> loaded_textures_;
     std::unordered_map<Model::Id, std::unordered_map<Mesh::Id, MeshHandle>> cached_models_;

@@ -119,13 +119,8 @@ namespace hws {
     if(render_camera_.getAASetting() != ViewAntiAliasing_e::off)
       setAntiAliasing(render_camera_.getAASetting());
 
-    std::string hws_path = findPackage("overworld");
-
     shaders_.insert({
       "default", {"light_shader_vs_data", "light_shader_fs_data"}
-    });
-    shaders_.insert({
-      "sky", {"sky_shader_vs_data", "sky_shader_fs_data"}
     });
     shaders_.insert({
       "screen", {"screen_shader_vs_data", "screen_shader_fs_data"}
@@ -142,8 +137,6 @@ namespace hws {
     shaders_.insert({
       "color", {"color_shader_vs_data", "color_shader_fs_data"}
     });
-
-    sky_.init(hws_path + "/models/textures/skybox/Footballfield/");
 
     shadow_.init(render_camera_.getNearPlane(), render_camera_.getFarPlane());
     point_shadows_.init();
@@ -170,6 +163,17 @@ namespace hws {
     shaders_.at("screen").setInt("screenTexture", 0);
 
     return true;
+  }
+
+  void Renderer::addSkyBox(const std::string& images_folder)
+  {
+    if(sky_.init(images_folder))
+    {
+      shaders_.insert({
+        "sky", {"sky_shader_vs_data", "sky_shader_fs_data"}
+      });
+      use_sky_box_ = true;
+    }
   }
 
   void Renderer::commit()
@@ -466,12 +470,11 @@ namespace hws {
     glDisable(GL_BLEND);
 
     auto& light_shader = shaders_.at("default");
-    auto& sky_shader = shaders_.at("sky");
 
     // 1. draw scene as normal in multisampled buffers
 
     screen_.bindFrameBuffer();
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
     glEnable(GL_DEPTH_TEST);
     // glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     glEnable(GL_FRAMEBUFFER_SRGB);
@@ -496,13 +499,17 @@ namespace hws {
 
     // 1.2 draw background
 
-    sky_shader.use();
-    glm::mat4 view = glm::mat4(glm::mat3(render_camera_.getViewMatrix()));
-    sky_shader.setMat4("view", view);
-    sky_shader.setMat4("projection", render_camera_.getProjectionMatrix());
-    sky_shader.setVec4("color", world_->ambient_light_.getColor());
+    if(use_sky_box_)
+    {
+      auto& sky_shader = shaders_.at("sky");
+      sky_shader.use();
+      glm::mat4 view = glm::mat4(glm::mat3(render_camera_.getViewMatrix()));
+      sky_shader.setMat4("view", view);
+      sky_shader.setMat4("projection", render_camera_.getProjectionMatrix());
+      sky_shader.setVec4("color", world_->ambient_light_.getColor());
 
-    sky_.draw(sky_shader);
+      sky_.draw(sky_shader);
+    }
 
     if(render_camera_.shouldRenderDebug())
       renderDebug();
@@ -549,10 +556,9 @@ namespace hws {
   void Renderer::renderOffscreenRgb(Camera* camera, bool render_shadows)
   {
     auto& light_shader = shaders_.at("default");
-    auto& sky_shader = shaders_.at("sky");
 
     // 1. draw scene as normal in multisampled buffers
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_FRAMEBUFFER_SRGB);
     glDisable(GL_BLEND);
@@ -574,14 +580,17 @@ namespace hws {
     renderModels(light_shader, 2);
 
     // 1.2 draw background
+    if(use_sky_box_)
+    {
+      auto& sky_shader = shaders_.at("sky");
+      sky_shader.use();
+      glm::mat4 view = glm::mat4(glm::mat3(camera->getViewMatrix()));
+      sky_shader.setMat4("view", view);
+      sky_shader.setMat4("projection", camera->getProjectionMatrix());
+      sky_shader.setVec4("color", world_->ambient_light_.getColor());
 
-    sky_shader.use();
-    glm::mat4 view = glm::mat4(glm::mat3(camera->getViewMatrix()));
-    sky_shader.setMat4("view", view);
-    sky_shader.setMat4("projection", camera->getProjectionMatrix());
-    sky_shader.setVec4("color", world_->ambient_light_.getColor());
-
-    sky_.draw(sky_shader);
+      sky_.draw(sky_shader);
+    }
   }
 
   void Renderer::renderOffscreenSegmented(Camera* camera)

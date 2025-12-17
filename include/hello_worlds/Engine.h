@@ -79,7 +79,7 @@ namespace hws {
     WorldEngine* getWorld() { return &world; }
 
   private:
-    Renderer renderer_;
+    Renderer renderer_; // TODO find way to expose addSkyBox function
     std::string name_;
     Window* window_;
     std::atomic<bool> run_;
