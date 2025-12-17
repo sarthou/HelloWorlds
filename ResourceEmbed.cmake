@@ -6,7 +6,7 @@ function(embed_resource input_file output_header_file variable_name)
 
     # 1. Get size
     string(LENGTH "${RESOURCE_DATA}" HEX_LENGTH)
-    math(EXPR FILE_SIZE "${HEX_LENGTH} / 2")
+    math(EXPR FILE_SIZE "(${HEX_LENGTH} / 2) + 1")
 
     # 2. Format Hex: Convert "aabbcc" into "0xaa, 0xbb, 0xcc, "
     # We match every 2 characters and append '0x' and ', '
@@ -19,7 +19,7 @@ function(embed_resource input_file output_header_file variable_name)
 
     # Using 'inline' ensures no linker errors if included in multiple .cpp files
     set(HEADER_CONTENT "${HEADER_CONTENT}namespace resources {\n")
-    set(HEADER_CONTENT "${HEADER_CONTENT}    inline const unsigned char ${variable_name}_data[] = {\n        ${FORMATTED_DATA}\n    };\n")
+    set(HEADER_CONTENT "${HEADER_CONTENT}    inline const char ${variable_name}_data[] = {\n        ${FORMATTED_DATA} 0x00\n    };\n")
     set(HEADER_CONTENT "${HEADER_CONTENT}    inline const std::size_t ${variable_name}_size = ${FILE_SIZE};\n")
     set(HEADER_CONTENT "${HEADER_CONTENT}}\n")
 

@@ -19,6 +19,7 @@ namespace hws {
 
     // constructor reads and builds the shader
     Shader(const std::string& vertex_path, const std::string& fragment_path, const std::string& geometry_path = "");
+    Shader(const char* v_shader_code, const char* f_shader_code, const char* g_shader_code = nullptr);
     // use/activate the shader
     void use() const;
     // utility uniform functions
@@ -31,6 +32,7 @@ namespace hws {
 
   private:
     void checkCompileErrors(GLuint shader, const std::string& type);
+    void compileShader(const char* v_shader_code, const char* f_shader_code, const char* g_shader_code);
   };
 
 } // namespace hws

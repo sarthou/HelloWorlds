@@ -120,27 +120,27 @@ namespace hws {
       setAntiAliasing(render_camera_.getAASetting());
 
     std::string hws_path = findPackage("overworld");
-    Shader::shaders_directory = hws_path + "/shaders/";
+
     shaders_.insert({
-      "default", {"light_shader.vs", "light_shader.fs"}
+      "default", {"light_shader_vs_data", "light_shader_fs_data"}
     });
     shaders_.insert({
-      "sky", {"sky_shader.vs", "sky_shader.fs"}
+      "sky", {"sky_shader_vs_data", "sky_shader_fs_data"}
     });
     shaders_.insert({
-      "screen", {"screen_shader.vs", "screen_shader.fs"}
+      "screen", {"screen_shader_vs_data", "screen_shader_fs_data"}
     });
     shaders_.insert({
-      "depth", {"depth_shader.vs", "depth_shader.fs", "depth_shader.gs"}
+      "depth", {"depth_shader_vs_data", "depth_shader_fs_data", "depth_shader_gs_data"}
     });
     shaders_.insert({
-      "depthcube", {"depthcube_shader.vs", "depthcube_shader.fs", "depthcube_shader.gs"}
+      "depthcube", {"depthcube_shader_vs_data", "depthcube_shader_fs_data", "depthcube_shader_gs_data"}
     });
     shaders_.insert({
-      "text", {"text_shader.vs", "text_shader.fs"}
+      "text", {"text_shader_vs_data", "text_shader_fs_data"}
     });
     shaders_.insert({
-      "color", {"color_shader.vs", "color_shader.fs"}
+      "color", {"color_shader_vs_data", "color_shader_fs_data"}
     });
 
     sky_.init(hws_path + "/models/textures/skybox/Footballfield/");

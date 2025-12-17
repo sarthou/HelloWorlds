@@ -53,20 +53,6 @@ namespace hws {
     const char* v_shader_code = vertex_code.c_str();
     const char* f_shader_code = fragment_code.c_str();
 
-    // 2. compile shaders
-    // vertex Shader
-    unsigned int vertex = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex, 1, &v_shader_code, nullptr);
-    glCompileShader(vertex);
-    checkCompileErrors(vertex, "VERTEX");
-
-    // similiar for Fragment Shader
-    unsigned int fragment = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment, 1, &f_shader_code, nullptr);
-    glCompileShader(fragment);
-    checkCompileErrors(fragment, "FRAGMENT");
-
-    unsigned int geometry = 0;
     if(geometry_path.empty() == false)
     {
       std::string geometry_code;
@@ -87,6 +73,34 @@ namespace hws {
       }
       const char* g_shader_code = geometry_code.c_str();
 
+      compileShader(v_shader_code, f_shader_code, g_shader_code);
+    }
+    else
+      compileShader(v_shader_code, f_shader_code, nullptr);
+  }
+
+  Shader::Shader(const char* v_shader_code, const char* f_shader_code, const char* g_shader_code)
+  {
+    compileShader(v_shader_code, f_shader_code, g_shader_code);
+  }
+
+  void Shader::compileShader(const char* v_shader_code, const char* f_shader_code, const char* g_shader_code)
+  {
+    // vertex Shader
+    unsigned int vertex = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertex, 1, &v_shader_code, nullptr);
+    glCompileShader(vertex);
+    checkCompileErrors(vertex, "VERTEX");
+
+    // similiar for Fragment Shader
+    unsigned int fragment = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragment, 1, &f_shader_code, nullptr);
+    glCompileShader(fragment);
+    checkCompileErrors(fragment, "FRAGMENT");
+
+    unsigned int geometry = 0;
+    if(g_shader_code != nullptr)
+    {
       // similiar for Geometry Shader
       geometry = glCreateShader(GL_GEOMETRY_SHADER);
       glShaderSource(geometry, 1, &g_shader_code, nullptr);
@@ -98,7 +112,7 @@ namespace hws {
     id_ = glCreateProgram();
     glAttachShader(id_, vertex);
     glAttachShader(id_, fragment);
-    if(geometry_path.empty() == false)
+    if(g_shader_code != nullptr)
       glAttachShader(id_, geometry);
     glLinkProgram(id_);
     checkCompileErrors(id_, "PROGRAM");
@@ -106,6 +120,8 @@ namespace hws {
     // delete the shaders as they're linked into our program now and no longer necessary
     glDeleteShader(vertex);
     glDeleteShader(fragment);
+    if(g_shader_code != nullptr)
+      glDeleteShader(geometry);
   }
 
   void Shader::use() const
