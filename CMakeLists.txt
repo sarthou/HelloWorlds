@@ -39,7 +39,63 @@ pkg_search_module(CURL REQUIRED libcurl IMPORTED_TARGET GLOBAL)
 include(FetchContent)
 include(CheckLanguage)
 
-# include(BuildPhysX.cmake)
+set(CAD_FILES
+  models/basic_shapes/cube.obj
+  models/basic_shapes/cylinder.obj
+  models/basic_shapes/sphere.obj
+)
+
+set(SHADER_FILES
+  shaders/color_shader.fs
+  shaders/color_shader.vs
+  shaders/depth_shader.fs
+  shaders/depth_shader.gs
+  shaders/depth_shader.vs
+  shaders/depthcube_shader.fs
+  shaders/depthcube_shader.gs
+  shaders/depthcube_shader.vs
+  shaders/light_shader.fs
+  shaders/light_shader.vs
+  shaders/screen_shader.fs
+  shaders/screen_shader.vs
+  shaders/sky_shader.fs
+  shaders/sky_shader.vs
+  shaders/text_shader.fs
+  shaders/text_shader.vs
+)
+
+set(EMBEDDED_SUBDIR "hello_worlds_embedded")
+set(EMBEDDED_DIR "${CMAKE_CURRENT_BINARY_DIR}/${EMBEDDED_SUBDIR}")
+file(MAKE_DIRECTORY "${EMBEDDED_DIR}")
+
+set(CAD_HEADERS "")
+set(SHADER_HEADERS "")
+
+function(embed_file_list file_list output_header_list_name)
+  foreach(RESOURCE_PATH ${${file_list}})
+    get_filename_component(BASE_NAME "${RESOURCE_PATH}" NAME)
+    string(REPLACE "." "_" VAR_NAME "${BASE_NAME}")
+
+    set(GENERATED_HEADER "${EMBEDDED_DIR}/embedded_${BASE_NAME}.h")
+
+    add_custom_command(
+      OUTPUT ${GENERATED_HEADER}
+      COMMAND ${CMAKE_COMMAND} -DINPUT_FILE="${CMAKE_CURRENT_SOURCE_DIR}/${RESOURCE_PATH}"
+      -DOUTPUT_HEADER=${GENERATED_HEADER}
+      -DVAR_NAME=${VAR_NAME}
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/ResourceEmbed.cmake"
+      DEPENDS "${RESOURCE_PATH}"
+      COMMENT "Embedding resource: ${BASE_NAME}"
+    )
+
+    list(APPEND ${output_header_list_name} ${GENERATED_HEADER})
+  endforeach()
+
+  set(${output_header_list_name} ${${output_header_list_name}} PARENT_SCOPE)
+endfunction()
+
+embed_file_list(CAD_FILES CAD_HEADERS)
+embed_file_list(SHADER_FILES SHADER_HEADERS)
 
 # --- Libraries Compilation ---
 function(hws_add_library TARGET)
@@ -93,13 +149,15 @@ hws_add_library(hello_worlds_engine_common
   src/Common/Urdf/Actor.cpp
   src/Common/Urdf/VisualActor.cpp
   src/Common/Urdf/Joint.cpp
-  src/Common/World.cpp)
+  src/Common/World.cpp
+  ${CAD_HEADERS})
 target_link_libraries(hello_worlds_engine_common PUBLIC
   hello_worlds_utility_lib
   hello_worlds_SolarAzEl
   PRIVATE
   ${TinyXML_LIBRARIES}
   ${TinyXML2_LIBRARIES})
+target_include_directories(hello_worlds_engine_common PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
 hws_add_library(hello_worlds_glad External/glad/glad.c)
 
@@ -113,14 +171,15 @@ hws_add_library(hello_worlds_graphics
   src/Graphics/OpenGL/Shader.cpp
   src/Graphics/OpenGL/TextRenderer.cpp
   src/Graphics/OpenGL/AmbientShadow.cpp
-  src/Graphics/OpenGL/Texture2D.cpp)
+  src/Graphics/OpenGL/Texture2D.cpp
+  ${SHADER_HEADERS})
 target_link_libraries(hello_worlds_graphics PUBLIC
   hello_worlds_engine_common
   hello_worlds_glad
   assimp
   glfw
   ${FREETYPE_LIBRARIES})
-target_include_directories(hello_worlds_graphics PRIVATE ${FREETYPE_INCLUDE_DIRS})
+target_include_directories(hello_worlds_graphics PRIVATE ${FREETYPE_INCLUDE_DIRS} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 target_compile_options(hello_worlds_graphics PRIVATE $<$<CXX_COMPILER_ID:Clang>:-Wno-unused-function>)
 
 set(PHYSX_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/External/PhysX/physx/install/linux/PhysX")

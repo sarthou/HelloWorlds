@@ -31,6 +31,22 @@
 #include "hello_worlds/Graphics/OpenGL/Texture2D.h"
 #include "hello_worlds/Utils/GlmMath.h"
 #include "hello_worlds/Utils/RosPackage.h"
+#include "hello_worlds_embedded/embedded_color_shader.fs.h"
+#include "hello_worlds_embedded/embedded_color_shader.vs.h"
+#include "hello_worlds_embedded/embedded_depth_shader.fs.h"
+#include "hello_worlds_embedded/embedded_depth_shader.gs.h"
+#include "hello_worlds_embedded/embedded_depth_shader.vs.h"
+#include "hello_worlds_embedded/embedded_depthcube_shader.fs.h"
+#include "hello_worlds_embedded/embedded_depthcube_shader.gs.h"
+#include "hello_worlds_embedded/embedded_depthcube_shader.vs.h"
+#include "hello_worlds_embedded/embedded_light_shader.fs.h"
+#include "hello_worlds_embedded/embedded_light_shader.vs.h"
+#include "hello_worlds_embedded/embedded_screen_shader.fs.h"
+#include "hello_worlds_embedded/embedded_screen_shader.vs.h"
+#include "hello_worlds_embedded/embedded_sky_shader.fs.h"
+#include "hello_worlds_embedded/embedded_sky_shader.vs.h"
+#include "hello_worlds_embedded/embedded_text_shader.fs.h"
+#include "hello_worlds_embedded/embedded_text_shader.vs.h"
 
 // should be after glad
 #include <GLFW/glfw3.h>
@@ -61,7 +77,7 @@ namespace hws {
   void Renderer::init()
   {
     hws::Window::init();
-    hws::Window tmp;
+    hws::Window tmp("HelloWorlds");
     tmp.makeCurrentContext();
 
     if(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress) == 0)

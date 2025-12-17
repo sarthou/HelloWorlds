@@ -37,6 +37,9 @@
 #include "hello_worlds/Common/WorldTypes.h"
 #include "hello_worlds/Utils/GlmMath.h"
 #include "hello_worlds/Utils/RosPackage.h"
+#include "hello_worlds_embedded/embedded_cube.obj.h"
+#include "hello_worlds_embedded/embedded_cylinder.obj.h"
+#include "hello_worlds_embedded/embedded_sphere.obj.h"
 
 namespace hws {
 
