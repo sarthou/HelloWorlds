@@ -21,7 +21,7 @@ namespace hws {
     static void release();
     static void pollEvent();
 
-    Window(const std::string& name = "Overworld");
+    Window(const std::string& name, const std::string& icon_path = "");
     ~Window();
 
     void makeCurrentContext() const;

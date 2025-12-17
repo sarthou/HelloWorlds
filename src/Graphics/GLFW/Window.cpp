@@ -37,15 +37,18 @@ namespace hws {
     glfwPollEvents();
   }
 
-  Window::Window(const std::string& name) : glfw_window_(glfwCreateWindow(640, 480, name.c_str(), nullptr, nullptr))
+  Window::Window(const std::string& name,
+                 const std::string& icon_path) : glfw_window_(glfwCreateWindow(640, 480, name.c_str(), nullptr, nullptr))
   {
     // glfwWindowHint(GLFW_SAMPLES, 4);
 
-    GLFWimage icon;
-    std::string icon_path(findPackage("overworld") + "/docs/images/overworld_light.png");
-    icon.pixels = stbi_load(icon_path.c_str(), &icon.width, &icon.height, nullptr, 4); // rgba channels
-    glfwSetWindowIcon(glfw_window_, 1, &icon);
-    stbi_image_free(icon.pixels);
+    if(icon_path.empty() == false)
+    {
+      GLFWimage icon;
+      icon.pixels = stbi_load(icon_path.c_str(), &icon.width, &icon.height, nullptr, 4); // rgba channels
+      glfwSetWindowIcon(glfw_window_, 1, &icon);
+      stbi_image_free(icon.pixels);
+    }
 
     glfwSetWindowUserPointer(glfw_window_, this);
     glfwSetWindowSizeCallback(glfw_window_, [](GLFWwindow* glfw_window, const int width, const int height) {
