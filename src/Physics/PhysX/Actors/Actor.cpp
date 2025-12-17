@@ -243,7 +243,7 @@ namespace hws::physx {
       if(Actor::use_cache_input == false)
       {
         Actor::use_cache_input = true;
-        std::cout << "Cooked mesh successfully loaded from /tmp/overworld " << std::endl;
+        std::cout << "Cooked mesh successfully loaded from /tmp/hello_worlds " << std::endl;
       }
       return triangle_mesh;
     }
@@ -268,7 +268,7 @@ namespace hws::physx {
     if(Actor::use_cache_output == false)
     {
       Actor::use_cache_output = true;
-      std::cout << "Cooked mesh saved to /tmp/overworld" << std::endl;
+      std::cout << "Cooked mesh saved to /tmp/hello_worlds" << std::endl;
     }
     return true;
   }
@@ -333,7 +333,7 @@ namespace hws::physx {
 
     for(const auto& mesh : shape.custom_model_.get().meshes_)
     {
-      std::string bin_path = "/tmp/overworld/" + model_name;
+      std::string bin_path = "/tmp/hello_worlds/" + model_name;
       if(mesh.name_.empty() == false)
         bin_path += "_" + mesh.name_ + ".bin";
 
