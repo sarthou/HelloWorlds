@@ -216,6 +216,9 @@ target_link_libraries(hello_worlds_physics
   PhysXFoundation
   PhysXPvdSDK)
 
+hws_add_library(hello_worlds src/Engine.cpp)
+target_link_libraries(hello_worlds PUBLIC hello_worlds_physics hello_worlds_graphics)
+
 # --- Installation ---
 install(DIRECTORY include/
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}

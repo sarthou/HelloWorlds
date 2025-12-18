@@ -1,9 +1,7 @@
 #ifndef HWS_ENGINE_H
 #define HWS_ENGINE_H
 
-#include "hello_worlds/Compat/ROS.h"
-// should be first
-
+#include <array>
 #include <string>
 
 #include "hello_worlds/Common/Camera/Camera.h"
@@ -27,52 +25,21 @@ namespace hws {
   class Engine
   {
   public:
-    Engine(const std::string& name, Window* window) : world(compat::hws_ros::getShareDirectory("overworld")),
+    Engine(const std::string& name, Window* window) : world("TODO path"), // TODO: remove ref to overworld
                                                       name_(name), window_(window), run_(true)
     {}
 
     WorldEngine world;
 
-    void initView(float screen_width = 640, float screen_height = 480)
-    {
-      auto& cam = window_->getCamera();
-      cam.setFieldOfView(60.f);
-      cam.setOutputAA(hws::ViewAntiAliasing_e::msaa_x4);
-      cam.setOutputResolution({screen_width, screen_height});
-      cam.setPositionAndLookAt({6, 6, 1.7}, {0, 0, 0});
-      cam.setPlanes({0.1, 60.});
-      cam.finalize();
+    void initView(float screen_width = 640, float screen_height = 480);
 
-      renderer_.initialize(*window_);
-    }
+    void setVizualizerCamera(const std::array<double, 3>& position, const std::array<double, 3>& target);
 
-    void setVizualizerCamera(const std::array<double, 3>& position, const std::array<double, 3>& target)
-    {
-      window_->getCamera().setPositionAndLookAt(position, target);
-    }
+    void finalise(double fps = 1. / 60.);
 
-    void finalise(double fps = 1. / 60.)
-    {
-      renderer_.attachWorld(&world);
-      world.setTimeStep(fps);
-    }
+    void stop();
 
-    void stop()
-    {
-      run_ = false;
-    }
-
-    void run(bool simulate = false)
-    {
-      while(!window_->isCloseRequested() && run_)
-      {
-        window_->doPollEvents(renderer_);
-        if(simulate)
-          world.stepSimulation();
-        renderer_.commit();
-        window_->swapBuffer();
-      }
-    }
+    void run(bool simulate = false);
 
     void setKeyCallback(const std::function<void(Key_e, bool)>& callback) { window_->setKeyCallback(callback); }
 
