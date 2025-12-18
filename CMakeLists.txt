@@ -231,6 +231,7 @@ install(TARGETS
   hello_worlds_glad
   hello_worlds_graphics
   hello_worlds_physics
+  hello_worlds
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
