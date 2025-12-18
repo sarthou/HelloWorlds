@@ -15,12 +15,6 @@ namespace hws {
 
   std::string findPackage(const std::string& pkg_name);
 
-  std::vector<std::string> listPackagesRos1();
-
-  std::vector<std::string> listPackagesRos2();
-
-  std::vector<std::string> listPackages();
-
   std::string getFullPath(const std::string& file_name);
 
 } // namespace hws

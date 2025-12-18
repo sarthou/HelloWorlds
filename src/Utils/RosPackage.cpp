@@ -82,38 +82,6 @@ namespace hws {
     return res;
   }
 
-  std::vector<std::string> listPackagesRos1()
-  {
-    std::string results = execCmd("rospack list-names");
-    if(results.empty() == false)
-    {
-      auto split_res = split(results, "\n");
-      return split_res;
-    }
-    else
-      return {};
-  }
-
-  std::vector<std::string> listPackagesRos2()
-  {
-    std::string results = execCmd("ros2 pkg list");
-    if(results.empty() == false)
-    {
-      auto split_res = split(results, "\n");
-      return split_res;
-    }
-    else
-      return {};
-  }
-
-  std::vector<std::string> listPackages()
-  {
-    std::vector<std::string> res = listPackagesRos1();
-    if(res.empty())
-      res = listPackagesRos2();
-    return res;
-  }
-
   std::string getFullPath(const std::string& file_name)
   {
     std::string package_pattern = "package://";
