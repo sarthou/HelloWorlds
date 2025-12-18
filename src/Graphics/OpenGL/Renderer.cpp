@@ -120,22 +120,22 @@ namespace hws {
       setAntiAliasing(render_camera_.getAASetting());
 
     shaders_.insert({
-      "default", {"light_shader_vs_data", "light_shader_fs_data"}
+      "default", {resources::light_shader_vs_data, resources::light_shader_fs_data}
     });
     shaders_.insert({
-      "screen", {"screen_shader_vs_data", "screen_shader_fs_data"}
+      "screen", {resources::screen_shader_vs_data, resources::screen_shader_fs_data}
     });
     shaders_.insert({
-      "depth", {"depth_shader_vs_data", "depth_shader_fs_data", "depth_shader_gs_data"}
+      "depth", {resources::depth_shader_vs_data, resources::depth_shader_fs_data, resources::depth_shader_gs_data}
     });
     shaders_.insert({
-      "depthcube", {"depthcube_shader_vs_data", "depthcube_shader_fs_data", "depthcube_shader_gs_data"}
+      "depthcube", {resources::depthcube_shader_vs_data, resources::depthcube_shader_fs_data, resources::depthcube_shader_gs_data}
     });
     shaders_.insert({
-      "text", {"text_shader_vs_data", "text_shader_fs_data"}
+      "text", {resources::text_shader_vs_data, resources::text_shader_fs_data}
     });
     shaders_.insert({
-      "color", {"color_shader_vs_data", "color_shader_fs_data"}
+      "color", {resources::color_shader_vs_data, resources::color_shader_fs_data}
     });
 
     shadow_.init(render_camera_.getNearPlane(), render_camera_.getFarPlane());
@@ -170,7 +170,7 @@ namespace hws {
     if(sky_.init(images_folder))
     {
       shaders_.insert({
-        "sky", {"sky_shader_vs_data", "sky_shader_fs_data"}
+        "sky", {resources::sky_shader_vs_data, resources::sky_shader_fs_data}
       });
       use_sky_box_ = true;
     }
