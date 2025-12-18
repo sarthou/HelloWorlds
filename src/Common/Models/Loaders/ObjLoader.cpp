@@ -1,17 +1,21 @@
 #include "hello_worlds/Common/Models/Loaders/ObjLoader.h"
 
+#include <algorithm>
 #include <cfloat>
 #include <cmath>
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
 #include <glm/ext/vector_float3.hpp>
+#include <glm/geometric.hpp>
 #include <glm/gtc/packing.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
 #include <string>
 #include <vector>
 
+#include "hello_worlds/Common/Models/Color.h"
+#include "hello_worlds/Common/Models/Loaders/TinyObjReader.h"
 #include "hello_worlds/Common/Models/Material.h"
 #include "hello_worlds/Common/Models/Mesh.h"
 #include "hello_worlds/Common/Models/Model.h"
@@ -90,7 +94,7 @@ namespace hws {
 
       if(tiny_mesh.material_id >= 0)
       {
-        tinyobj::Material_t& material = materials[tiny_mesh.material_id];
+        const tinyobj::Material_t& material = materials[tiny_mesh.material_id];
         hws_mesh->material_.diffuse_color_ = Color({(float)material.diffuse[0],
                                                     (float)material.diffuse[1],
                                                     (float)material.diffuse[2],
@@ -129,15 +133,15 @@ namespace hws {
         {
           unsigned int max_index = 0;
 
-          max_index = std::max(max_index, 3 * n0_index + 0);
-          max_index = std::max(max_index, 3 * n0_index + 1);
-          max_index = std::max(max_index, 3 * n0_index + 2);
-          max_index = std::max(max_index, 3 * n1_index + 0);
-          max_index = std::max(max_index, 3 * n1_index + 1);
-          max_index = std::max(max_index, 3 * n1_index + 2);
-          max_index = std::max(max_index, 3 * n2_index + 0);
-          max_index = std::max(max_index, 3 * n2_index + 1);
-          max_index = std::max(max_index, 3 * n2_index + 2);
+          max_index = std::max(max_index, (3 * n0_index) + 0);
+          max_index = std::max(max_index, (3 * n0_index) + 1);
+          max_index = std::max(max_index, (3 * n0_index) + 2);
+          max_index = std::max(max_index, (3 * n1_index) + 0);
+          max_index = std::max(max_index, (3 * n1_index) + 1);
+          max_index = std::max(max_index, (3 * n1_index) + 2);
+          max_index = std::max(max_index, (3 * n2_index) + 0);
+          max_index = std::max(max_index, (3 * n2_index) + 1);
+          max_index = std::max(max_index, (3 * n2_index) + 2);
 
           has_normals = (max_index < attribute.normals.size());
         }
@@ -158,15 +162,15 @@ namespace hws {
         }
         else
         {
-          vtx0.normal_.x = (float)attribute.normals[3 * n0_index + 0];
-          vtx0.normal_.y = (float)attribute.normals[3 * n0_index + 1];
-          vtx0.normal_.z = (float)attribute.normals[3 * n0_index + 2];
-          vtx1.normal_.x = (float)attribute.normals[3 * n1_index + 0];
-          vtx1.normal_.y = (float)attribute.normals[3 * n1_index + 1];
-          vtx1.normal_.z = (float)attribute.normals[3 * n1_index + 2];
-          vtx2.normal_.x = (float)attribute.normals[3 * n2_index + 0];
-          vtx2.normal_.y = (float)attribute.normals[3 * n2_index + 1];
-          vtx2.normal_.z = (float)attribute.normals[3 * n2_index + 2];
+          vtx0.normal_.x = (float)attribute.normals[(3 * n0_index) + 0];
+          vtx0.normal_.y = (float)attribute.normals[(3 * n0_index) + 1];
+          vtx0.normal_.z = (float)attribute.normals[(3 * n0_index) + 2];
+          vtx1.normal_.x = (float)attribute.normals[(3 * n1_index) + 0];
+          vtx1.normal_.y = (float)attribute.normals[(3 * n1_index) + 1];
+          vtx1.normal_.z = (float)attribute.normals[(3 * n1_index) + 2];
+          vtx2.normal_.x = (float)attribute.normals[(3 * n2_index) + 0];
+          vtx2.normal_.y = (float)attribute.normals[(3 * n2_index) + 1];
+          vtx2.normal_.z = (float)attribute.normals[(3 * n2_index) + 2];
         }
 
         hws_mesh->vertices_.push_back(vtx0);

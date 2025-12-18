@@ -846,7 +846,7 @@ namespace hws {
         throw std::runtime_error("Could not open file for writing: " + target_path.string());
       }
 
-      outfile.write(data, size);
+      outfile.write(data, (long)size);
       outfile.close();
 
       return target_path.string();

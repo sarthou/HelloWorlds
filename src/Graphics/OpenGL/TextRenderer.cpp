@@ -135,7 +135,7 @@ namespace hws {
       std::string::const_iterator c;
       for(c = text.begin(); c != text.end(); c++)
       {
-        Character_t& ch = characters_[*c];
+        const Character_t& ch = characters_[*c];
         width += (float)(ch.advance >> 6) * height; // bitshift by 6 to get value in pixels (1/64th times 2^6 = 64)
       }
 
@@ -145,7 +145,7 @@ namespace hws {
     std::string::const_iterator c;
     for(c = text.begin(); c != text.end(); c++)
     {
-      Character_t& ch = characters_[*c];
+      const Character_t& ch = characters_[*c];
 
       float xpos = x + (float)ch.bearing.x * height;
       float ypos = y - (float)(ch.size.y - ch.bearing.y) * height;
