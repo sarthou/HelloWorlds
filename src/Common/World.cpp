@@ -5,11 +5,13 @@
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
+#include <fstream>
 #include <glm/ext/matrix_float4x4.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/quaternion_float.hpp>
 #include <glm/ext/vector_float3.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <iostream>
 #include <string>
 #include <unistd.h>
 #include <unordered_set>
@@ -45,11 +47,11 @@ namespace hws {
 
   World::World(const std::filesystem::path& base_assets_path) : base_assets_path_(base_assets_path),
                                                                 preloaded_box_model_(hws::ModelManager::get().load(
-                                                                  base_assets_path / "models/basic_shapes/cube.obj")),
+                                                                  exportEmbeddedToTmp("cube.obj", resources::cube_obj_data, resources::cube_obj_size))),
                                                                 preloaded_cylinder_model_(hws::ModelManager::get().load(
-                                                                  base_assets_path / "models/basic_shapes/cylinder.obj")),
+                                                                  exportEmbeddedToTmp("cylinder.obj", resources::cylinder_obj_data, resources::cylinder_obj_size))),
                                                                 preloaded_sphere_model_(hws::ModelManager::get().load(
-                                                                  base_assets_path / "models/basic_shapes/sphere.obj"))
+                                                                  exportEmbeddedToTmp("sphere.obj", resources::sphere_obj_data, resources::sphere_obj_size)))
   {}
 
   World::~World()
@@ -820,6 +822,39 @@ namespace hws {
     }
     default:
       return ShapeDummy();
+    }
+  }
+
+  std::string World::exportEmbeddedToTmp(const std::string& filename, const char* data, std::size_t size)
+  {
+    std::filesystem::path temp_dir = std::filesystem::temp_directory_path() / "hello_world";
+    std::filesystem::path target_path = temp_dir / filename;
+
+    try
+    {
+      std::filesystem::create_directories(temp_dir);
+
+      if(std::filesystem::exists(target_path))
+      {
+        if(std::filesystem::file_size(target_path) == size)
+          return target_path.string();
+      }
+
+      std::ofstream outfile(target_path, std::ios::out | std::ios::binary);
+      if(!outfile)
+      {
+        throw std::runtime_error("Could not open file for writing: " + target_path.string());
+      }
+
+      outfile.write(data, size);
+      outfile.close();
+
+      return target_path.string();
+    }
+    catch(const std::exception& e)
+    {
+      std::cerr << "Error exporting resource: " << e.what() << std::endl;
+      return "";
     }
   }
 

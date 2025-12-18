@@ -228,6 +228,8 @@ namespace hws {
                                            const std::vector<std::array<double, 3>>& destinations,
                                            float max_distance,
                                            std::vector<RaycastHitResult_t>& results) = 0;
+
+    std::string exportEmbeddedToTmp(const std::string& filename, const char* data, std::size_t size);
   };
 } // namespace hws
 
