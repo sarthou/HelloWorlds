@@ -117,7 +117,7 @@ namespace hws {
     if(texture != nullptr)
     {
       std::string filename = std::string(texture->Attribute("filename"));
-      instance.diffuse_texture_ = getFullPath(filename);
+      instance.diffuse_texture_ = getFullPath(filename); // TODO: find a way to be able to be independent of ROS
     }
 
     return {id, instance};

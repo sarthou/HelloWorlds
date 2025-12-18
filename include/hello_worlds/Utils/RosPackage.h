@@ -7,14 +7,6 @@
 
 namespace hws {
 
-  std::string execCmd(std::string cmd);
-
-  std::string findPackageRos1(const std::string& pkg_name);
-
-  std::string findPackageRos2(const std::string& pkg_name);
-
-  std::string findPackage(const std::string& pkg_name);
-
   std::string getFullPath(const std::string& file_name);
 
 } // namespace hws

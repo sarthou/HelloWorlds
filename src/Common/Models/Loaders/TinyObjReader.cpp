@@ -364,7 +364,6 @@ namespace tinyobj {
     return c;
   }
 
-  // TODO(syoyo): refactor function.
   static bool exportGroupsToShape(Mesh_t* shape, const std::vector<std::vector<VertexIndex_t>>& face_group,
                                   const std::vector<tag_t>& tags,
                                   const int material_id, const std::string& name,
@@ -433,7 +432,7 @@ namespace tinyobj {
             // There are two candidates to split the quad into two triangles.
             //
             // Choose the shortest edge.
-            // TODO: Is it better to determine the edge to split by calculating
+            // Is it better to determine the edge to split by calculating
             // the area of each triangle?
             //
             // +---+
@@ -861,7 +860,7 @@ namespace tinyobj {
         token += 7;
         {
           std::string namebuf = parseString(&token);
-          // TODO: empty name check?
+          // empty name check?
           if(namebuf.empty())
           {
             if(warning != nullptr)
@@ -1286,7 +1285,7 @@ namespace tinyobj {
         token += 2;
         double x = NAN, y = NAN, z = NAN;
 
-        parseReal3(&x, &y, &z, &token); // TODO
+        parseReal3(&x, &y, &z, &token);
 
         v.push_back(x);
         v.push_back(y);
