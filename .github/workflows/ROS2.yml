@@ -66,14 +66,14 @@ jobs:
           export ROS_LOCALHOST_ONLY=1
           colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 
-      #- name: Run tests
-      #  run: |
-      #    cd $GITHUB_WORKSPACE/ros2_ws
-      #    source install/setup.bash
-      #    export ROS_LOCALHOST_ONLY=1
-      #    colcon test --event-handlers console_direct+ --return-code-on-test-failure
-#
-      #- name: Test results
-      #  run: |
-      #    cd $GITHUB_WORKSPACE/ros2_ws
-      #    colcon test-result --verbose
+      - name: Run tests
+        working-directory: ros2_ws
+        run: |
+          source install/setup.bash
+          export ROS_LOCALHOST_ONLY=1
+          colcon test --event-handlers console_direct+ --return-code-on-test-failure
+
+      - name: Test results
+        working-directory: ros2_ws
+        run: |
+          colcon test-result --verbose
