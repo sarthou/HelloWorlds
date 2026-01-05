@@ -10,7 +10,6 @@ if($ENV{ROS_VERSION} AND $ENV{ROS_VERSION} STREQUAL "2")
   find_package(ament_cmake)
   message(STATUS "Configuring for ROS 2 using ament_cmake...")
   set(ROS_BUILD_TYPE "ROS2")
-  ament_package()
 
 elseif($ENV{ROS_VERSION} AND $ENV{ROS_VERSION} STREQUAL "1")
   find_package(catkin COMPONENTS)
@@ -64,6 +63,7 @@ set(SHADER_FILES
   shaders/text_shader.vs
 )
 
+# --- Embeded files ---
 set(EMBEDDED_SUBDIR "hello_worlds_embedded")
 set(EMBEDDED_DIR "${CMAKE_CURRENT_BINARY_DIR}/${EMBEDDED_SUBDIR}")
 file(MAKE_DIRECTORY "${EMBEDDED_DIR}")
@@ -96,6 +96,28 @@ endfunction()
 
 embed_file_list(CAD_FILES CAD_HEADERS)
 embed_file_list(SHADER_FILES SHADER_HEADERS)
+
+# --- Registry file generation ---
+set(REGISTRY_FILE "${EMBEDDED_DIR}/resource_registry.cpp")
+set(REGISTRY_CONTENT "#include <vector>\n#include <string>\n#include <cstddef>\n")
+
+foreach(HEADER ${CAD_HEADERS} ${SHADER_HEADERS})
+  get_filename_component(FNAME ${HEADER} NAME)
+  string(APPEND REGISTRY_CONTENT "#include \"${FNAME}\"\n")
+endforeach()
+
+string(APPEND REGISTRY_CONTENT "\nstruct ResourceEntry_t { std::string name; const char* data; size_t size; };\n")
+string(APPEND REGISTRY_CONTENT "std::vector<ResourceEntry_t> getAllResources() {\n    return {\n")
+
+foreach(FILE_PATH ${CAD_FILES} ${SHADER_FILES})
+  get_filename_component(FNAME ${FILE_PATH} NAME)
+  string(MAKE_C_IDENTIFIER ${FNAME} VAR_NAME)
+  string(APPEND REGISTRY_CONTENT "        {\"${FNAME}\", resources::${VAR_NAME}_data, resources::${VAR_NAME}_size},\n")
+endforeach()
+
+string(APPEND REGISTRY_CONTENT "    };\n}\n")
+
+file(WRITE ${REGISTRY_FILE} "${REGISTRY_CONTENT}")
 
 # --- Libraries Compilation ---
 function(hws_add_library TARGET)
@@ -157,7 +179,7 @@ target_link_libraries(hello_worlds_engine_common PUBLIC
   PRIVATE
   ${TinyXML_LIBRARIES}
   ${TinyXML2_LIBRARIES})
-target_include_directories(hello_worlds_engine_common PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(hello_worlds_engine_common PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 hws_add_library(hello_worlds_glad External/glad/glad.c)
 
@@ -179,7 +201,7 @@ target_link_libraries(hello_worlds_graphics PUBLIC
   assimp
   glfw
   ${FREETYPE_LIBRARIES})
-target_include_directories(hello_worlds_graphics PRIVATE ${FREETYPE_INCLUDE_DIRS} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(hello_worlds_graphics PRIVATE ${FREETYPE_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})
 target_compile_options(hello_worlds_graphics PRIVATE $<$<CXX_COMPILER_ID:Clang>:-Wno-unused-function>)
 
 set(PHYSX_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/External/PhysX/physx/install/linux/PhysX")
@@ -205,10 +227,19 @@ hws_add_library(hello_worlds_physics
   src/Physics/PhysX/Context.cpp
   src/Physics/PhysX/SharedContext.cpp
   src/Physics/PhysX/World.cpp)
-target_include_directories(hello_worlds_physics PUBLIC ${PHYSX_INCLUDE_DIR})
+target_include_directories(hello_worlds_physics PUBLIC
+
+  # While BUILDING your project, use these local absolute paths
+  $<BUILD_INTERFACE:${PHYSX_INCLUDE_DIR}>
+
+  # After INSTALLING your project, consumers should look in the install folder
+  # We will put the PhysX headers in a subfolder called 'PhysXExternal'
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/PhysXExternal>
+)
+
 target_link_libraries(hello_worlds_physics PUBLIC hello_worlds_engine_common)
 target_link_libraries(hello_worlds_physics
-  PRIVATE
+  PUBLIC
   PhysX
   PhysXCommon
   PhysXCooking
@@ -219,69 +250,104 @@ target_link_libraries(hello_worlds_physics
 hws_add_library(hello_worlds src/Engine.cpp)
 target_link_libraries(hello_worlds PUBLIC hello_worlds_physics hello_worlds_graphics)
 
-# --- Installation ---
+# --- Testing ---
+option(BUILD_TESTING "Build tests" ON)
+
+if(BUILD_TESTING)
+  # 1. Find GTest
+  if(ROS_BUILD_TYPE STREQUAL "ROS1")
+    # ROS 1 handles GTest through catkin
+    find_package(GTest REQUIRED)
+  elseif(ROS_BUILD_TYPE STREQUAL "ROS2")
+    # ROS 2 uses ament_cmake_gtest
+    find_package(ament_cmake_gtest REQUIRED)
+  else()
+    # Standalone: Try to find installed GTest or use FetchContent as a backup
+    find_package(GTest QUIET)
+
+    if(NOT GTest_FOUND)
+      include(FetchContent)
+      FetchContent_Declare(
+        googletest
+        URL https://github.com/google/googletest/archive/refs/heads/main.zip
+      )
+      set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+      FetchContent_MakeAvailable(googletest)
+    endif()
+  endif()
+
+  # 2. Register the Test
+  if(ROS_BUILD_TYPE STREQUAL "ROS1")
+    # This macro creates the executable and registers it with catkin/ctest
+    catkin_add_gtest(ResourceTests tests/resource_embedding.cpp ${REGISTRY_FILE})
+    target_include_directories(ResourceTests PRIVATE "${EMBEDDED_DIR}")
+
+  elseif(ROS_BUILD_TYPE STREQUAL "ROS2")
+    # This macro handles the ament-specific test registration
+    ament_add_gtest(ResourceTests tests/resource_embedding.cpp ${REGISTRY_FILE})
+    target_include_directories(ResourceTests PRIVATE "${EMBEDDED_DIR}")
+
+  else()
+    # Standalone standard CMake
+    enable_testing()
+    add_executable(ResourceTests tests/resource_embedding.cpp ${REGISTRY_FILE})
+    target_link_libraries(ResourceTests PRIVATE GTest::gtest_main)
+    target_include_directories(ResourceTests PRIVATE "${EMBEDDED_DIR}")
+
+    include(GoogleTest)
+    gtest_discover_tests(ResourceTests)
+  endif()
+endif()
+
+# --- 7. ROS-Specific Installation/Setup ---
+include(GNUInstallDirs)
+
 install(DIRECTORY include/
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
-# Install the library (shared or static, depending on default/settings)
+install(DIRECTORY "${PHYSX_INCLUDE_DIR}"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/PhysXExternal"
+)
+
 install(TARGETS
+  hello_worlds_SolarAzEl
   hello_worlds_utility_lib
   hello_worlds_engine_common
   hello_worlds_glad
   hello_worlds_graphics
   hello_worlds_physics
   hello_worlds
+  EXPORT ${PROJECT_NAME}Targets
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
-# --- Testing ---
-# enable_testing()
-# file(GLOB MY_TEST_SOURCES "test/*.cpp")
-#
-# # Add the test executable
-# add_executable(my_test_runner ${MY_TEST_SOURCES})
-#
-# # Link the test executable to your library
-# target_link_libraries(my_test_runner PRIVATE my_library)
-#
-# # Add the test to CTest
-# add_test(
-# NAME my_library_unit_tests
-# COMMAND my_test_runner
-# )
-
-# --- 7. ROS-Specific Installation/Setup ---
-
-# Only install the test executable if NOT a ROS 1 build (ROS 1 typically doesn't install test executables)
-if(NOT ROS_BUILD_TYPE STREQUAL "ROS1")
-  # install(TARGETS my_test_runner
-  # RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-  # )
-endif()
-
-# For ROS 2, we need to export the library targets explicitly
+# ROS 2 Specific Exports
 if(ROS_BUILD_TYPE STREQUAL "ROS2")
-  install(
-    TARGETS hello_worlds_utility_lib EXPORT ${PROJECT_NAME}Targets
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  )
+  # This tells ament to export the targets we defined above
+  ament_export_targets(${PROJECT_NAME}Targets HAS_LIBRARY_TARGET)
 
-  # For the consumer to be able to find and use your library:
+  # This installs the generated CMake files for ament
   install(EXPORT ${PROJECT_NAME}Targets
     FILE ${PROJECT_NAME}Targets.cmake
     NAMESPACE ${PROJECT_NAME}::
     DESTINATION share/${PROJECT_NAME}/cmake
   )
+endif()
 
-  install(FILES
-
-    # You would typically generate/write a custom Find<ProjectName>.cmake
-    # or a <ProjectName>Config.cmake for a non-ROS consumer here.
-    # For ament, using the target exports is generally sufficient.
-    # An explicit config file is a good practice for STANDALONE consumers.
+# Standalone Specific Exports (Optional but professional)
+if(ROS_BUILD_TYPE STREQUAL "STANDALONE")
+  install(EXPORT ${PROJECT_NAME}Targets
+    FILE ${PROJECT_NAME}Config.cmake
+    NAMESPACE ${PROJECT_NAME}::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
   )
+endif()
+
+# IMPORTANT: This must be the very last line for ROS 2
+if(ROS_BUILD_TYPE STREQUAL "ROS2")
+  ament_package()
 endif()
