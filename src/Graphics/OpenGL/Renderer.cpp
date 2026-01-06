@@ -19,6 +19,7 @@
 #include "hello_worlds/Common/Debug/DebugLine.h"
 #include "hello_worlds/Common/Lights/AmbientLight.h"
 #include "hello_worlds/Common/Lights/PointLights.h"
+#include "hello_worlds/Common/Models/Color.h"
 #include "hello_worlds/Common/Models/Mesh.h"
 #include "hello_worlds/Common/Models/Model.h"
 #include "hello_worlds/Common/Shapes/Shape.h"
@@ -163,6 +164,11 @@ namespace hws {
     shaders_.at("screen").setInt("screenTexture", 0);
 
     return true;
+  }
+
+  void Renderer::setBackgroundColor(float r, float g, float b)
+  {
+    background_color_ = std::array<float, 3>{r, g, b};
   }
 
   void Renderer::addSkyBox(const std::string& images_folder)
@@ -474,7 +480,7 @@ namespace hws {
     // 1. draw scene as normal in multisampled buffers
 
     screen_.bindFrameBuffer();
-    glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+    glClearColor(background_color_[0], background_color_[1], background_color_[2], 1.0f);
     glEnable(GL_DEPTH_TEST);
     // glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     glEnable(GL_FRAMEBUFFER_SRGB);
@@ -519,7 +525,7 @@ namespace hws {
 
     // 3. now render quad with scene's visuals as its texture image
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClearColor(background_color_[0], background_color_[1], background_color_[2], 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_FRAMEBUFFER_SRGB);
@@ -558,7 +564,7 @@ namespace hws {
     auto& light_shader = shaders_.at("default");
 
     // 1. draw scene as normal in multisampled buffers
-    glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+    glClearColor(background_color_[0], background_color_[1], background_color_[2], 1.0f);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_FRAMEBUFFER_SRGB);
     glDisable(GL_BLEND);
