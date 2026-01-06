@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.10)
+project(ConsumerTest)
+
+find_package(hello_worlds REQUIRED)
+
+add_executable(consumer_app consumer_test.cpp)
+target_link_libraries(consumer_app PRIVATE hello_worlds::hello_worlds)

@@ -3,3 +3,5 @@ build/*
 install/*
 log/*
 External/PhysX/
+tests/Integration/Standalone/build/*
+tests/Integration/Standalone/CMakeLists.txt
