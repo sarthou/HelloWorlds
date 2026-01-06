@@ -208,14 +208,16 @@ set(PHYSX_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/External/PhysX/physx/install/lin
 set(PHYSX_INCLUDE_DIR "${PHYSX_ROOT_DIR}/include")
 
 if(CMAKE_BUILD_TYPE AND CMAKE_BUILD_TYPE STREQUAL "Debug")
-  message("Building with PhysX in debug configuration")
+  message(VERBOSE "Building with PhysX in debug configuration")
   add_compile_definitions(_DEBUG)
-  link_directories("${PHYSX_ROOT_DIR}/bin/linux.x86_64/release") # debug
+  set(PHYSX_BIN_PATH "${PHYSX_ROOT_DIR}/bin/linux.x86_64/release")
 else()
-  message("Building with PhysX in release configuration")
+  message(VERBOSE "Building with PhysX in release configuration")
   add_compile_definitions(NDEBUG)
-  link_directories("${PHYSX_ROOT_DIR}/bin/linux.x86_64/release")
+  set(PHYSX_BIN_PATH "${PHYSX_ROOT_DIR}/bin/linux.x86_64/release")
 endif()
+
+link_directories("${PHYSX_BIN_PATH}")
 
 hws_add_library(hello_worlds_physics
   src/Physics/PhysX/Actors/Actor.cpp
@@ -279,18 +281,18 @@ if(BUILD_TESTING)
   # 2. Register the Test
   if(ROS_BUILD_TYPE STREQUAL "ROS1")
     # This macro creates the executable and registers it with catkin/ctest
-    catkin_add_gtest(ResourceTests tests/resource_embedding.cpp ${REGISTRY_FILE})
+    catkin_add_gtest(ResourceTests tests/resource_embedding.cpp ${REGISTRY_FILE} ${CAD_HEADERS} ${SHADER_HEADERS})
     target_include_directories(ResourceTests PRIVATE "${EMBEDDED_DIR}")
 
   elseif(ROS_BUILD_TYPE STREQUAL "ROS2")
     # This macro handles the ament-specific test registration
-    ament_add_gtest(ResourceTests tests/resource_embedding.cpp ${REGISTRY_FILE})
+    ament_add_gtest(ResourceTests tests/resource_embedding.cpp ${REGISTRY_FILE} ${CAD_HEADERS} ${SHADER_HEADERS})
     target_include_directories(ResourceTests PRIVATE "${EMBEDDED_DIR}")
 
   else()
     # Standalone standard CMake
     enable_testing()
-    add_executable(ResourceTests tests/resource_embedding.cpp ${REGISTRY_FILE})
+    add_executable(ResourceTests tests/resource_embedding.cpp ${REGISTRY_FILE} ${CAD_HEADERS} ${SHADER_HEADERS})
     target_link_libraries(ResourceTests PRIVATE GTest::gtest_main)
     target_include_directories(ResourceTests PRIVATE "${EMBEDDED_DIR}")
 
