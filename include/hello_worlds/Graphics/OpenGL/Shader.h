@@ -5,8 +5,6 @@
 #include <glm/glm.hpp>
 #include <string>
 
-#include "glad/glad.h" // include glad to get all the required OpenGL headers
-
 namespace hws {
 
   class Shader
@@ -31,7 +29,6 @@ namespace hws {
     void setVec4(const std::string& name, const glm::vec4& value) const;
 
   private:
-    void checkCompileErrors(GLuint shader, const std::string& type);
     void compileShader(const char* v_shader_code, const char* f_shader_code, const char* g_shader_code);
   };
 
