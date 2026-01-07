@@ -11,6 +11,7 @@ namespace hws {
   public:
     glm::mat4 mvp_;
     hws::Color rgba_;
+    uint32_t object_id_;
   };
 } // namespace hws
 

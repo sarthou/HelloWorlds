@@ -217,6 +217,7 @@ namespace hws {
       step();
       renderOffScreens();
     }
+    glFinish();
   }
 
   void Renderer::setRenderCamera(Camera* camera)
@@ -274,9 +275,9 @@ namespace hws {
     const auto model_mat = shape.shape_transform_ * ToM4(actor->getModelMatrix()) * size_mat;
 
     if(default_material == false)
-      loadInstance(shape.box_model_, {"", shape.diffuse_color_, shape.diffuse_color_, 0., "", "", ""}, model_mat);
+      loadInstance(shape.box_model_, {"", shape.diffuse_color_, shape.diffuse_color_, 0., "", "", ""}, model_mat), actor->unique_id_;
     else
-      loadInstance(shape.box_model_, createColisionMaterial(actor->unique_id_), model_mat);
+      loadInstance(shape.box_model_, createColisionMaterial(actor->unique_id_), model_mat, actor->unique_id_);
   }
 
   void Renderer::loadActor(Actor* actor, const ShapeCapsule& shape, bool default_material)
@@ -292,9 +293,9 @@ namespace hws {
     const auto model_mat = ToM4(actor->getModelMatrix()) * shape.shape_transform_ * size_mat;
 
     if(default_material == false)
-      loadInstance(shape.custom_model_, shape.material_, model_mat);
+      loadInstance(shape.custom_model_, shape.material_, model_mat, actor->unique_id_);
     else
-      loadInstance(shape.custom_model_, createColisionMaterial(actor->unique_id_), model_mat);
+      loadInstance(shape.custom_model_, createColisionMaterial(actor->unique_id_), model_mat, actor->unique_id_);
   }
 
   void Renderer::loadActor(Actor* actor, const ShapeCylinder& shape, bool default_material)
@@ -303,9 +304,9 @@ namespace hws {
     const auto model_mat = ToM4(actor->getModelMatrix()) * shape.shape_transform_ * size_mat;
 
     if(default_material == false)
-      loadInstance(shape.cylinder_model_, {"", shape.diffuse_color_, shape.diffuse_color_, 0., "", "", ""}, model_mat);
+      loadInstance(shape.cylinder_model_, {"", shape.diffuse_color_, shape.diffuse_color_, 0., "", "", ""}, model_mat, actor->unique_id_);
     else
-      loadInstance(shape.cylinder_model_, createColisionMaterial(actor->unique_id_), model_mat);
+      loadInstance(shape.cylinder_model_, createColisionMaterial(actor->unique_id_), model_mat, actor->unique_id_);
   }
 
   void Renderer::loadActor(Actor* actor, const ShapeDummy& shape, bool default_material)
@@ -322,12 +323,12 @@ namespace hws {
     (void)default_material;
   }
 
-  void Renderer::loadInstance(const Model& model, const Material& material, const glm::mat4& model_mat)
+  void Renderer::loadInstance(const Model& model, const Material& material, const glm::mat4& model_mat, uint32_t object_id)
   {
     loadModel(model, material);
 
     for(const auto& mesh : model.meshes_)
-      current_mesh_batches_[model.id_][mesh.id_].emplace_back(InstanceData{model_mat, {}}); // TODO add instance data ?
+      current_mesh_batches_[model.id_][mesh.id_].emplace_back(InstanceData{model_mat, {}, object_id}); // TODO add instance data ?
   }
 
   Material Renderer::combineMaterials(const Material& shape_material, const Material& model_material)
@@ -772,7 +773,7 @@ namespace hws {
         for(const auto& transform : transforms)
         {
           shader.setMat4("model", transform.mvp_);
-          mesh.drawId(shader, (uint32_t)model_id);
+          mesh.drawId(shader, (uint32_t)transform.object_id_);
         }
       }
     }
