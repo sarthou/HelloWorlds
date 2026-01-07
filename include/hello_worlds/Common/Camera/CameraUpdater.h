@@ -103,6 +103,7 @@ namespace hws {
     void setCameraView(hws::CameraView_e view_type);
     void setProjection(hws::CameraProjection_e proj);
     void setFieldOfView(float fov);
+    void setFieldOfViewRad(float fov);
     void setOutputAA(hws::ViewAntiAliasing_e aa_setting);
     void setOutputFPS(std::uint64_t desired_target_fps);
     void setOutputResolution(const std::array<float, 2>& resolution);

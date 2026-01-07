@@ -179,6 +179,12 @@ namespace hws {
     camera_->field_of_view_ = glm::radians(fov);
   }
 
+  void CameraUpdater::setFieldOfViewRad(float fov)
+  {
+    assert(camera_ && "CameraUpdater work on null pointer");
+    camera_->field_of_view_ = fov;
+  }
+
   void CameraUpdater::setOutputAA(const hws::ViewAntiAliasing_e aa_setting)
   {
     assert(camera_ && "CameraUpdater work on null pointer");
