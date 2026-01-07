@@ -186,6 +186,8 @@ hws_add_library(hello_worlds_glad External/glad/glad.c)
 hws_add_library(hello_worlds_graphics
   src/Graphics/GLFW/Window.cpp
   src/Graphics/OpenGL/Cubemap.cpp
+  src/Graphics/OpenGL/LinesHandle.cpp
+  src/Graphics/OpenGL/MeshHandle.cpp
   src/Graphics/OpenGL/OffScreen.cpp
   src/Graphics/OpenGL/PointShadow.cpp
   src/Graphics/OpenGL/Renderer.cpp

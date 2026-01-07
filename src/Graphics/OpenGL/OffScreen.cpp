@@ -1,6 +1,7 @@
 #include "hello_worlds/Graphics/OpenGL/OffScreen.h"
 
 #include <cstdint>
+#include <cstring>
 #include <iostream>
 
 #include "glad/glad.h"
@@ -9,8 +10,8 @@ namespace hws {
 
   void OffScreen::init(unsigned int width, unsigned int height)
   {
-    width_ = width;
-    height_ = height;
+    width_ = (int)width;
+    height_ = (int)height;
 
     glGenFramebuffers(1, &framebuffer_);
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_);

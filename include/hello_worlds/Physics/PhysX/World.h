@@ -29,6 +29,7 @@ namespace hws::physx {
 
     [[nodiscard]] std::string getBackendName() const override;
     [[nodiscard]] std::string getFullyQualifiedBackendName() const override;
+    void setSubstepping(size_t sub_step) override;
 
     using hws::World::createActor;
     using hws::World::createStaticActor;
