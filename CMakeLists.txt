@@ -158,6 +158,8 @@ hws_add_library(hello_worlds_engine_common
   src/Common/Camera/CameraUpdater.cpp
   src/Common/Camera/VirtualCamera.cpp
   src/Common/Debug/DebugLine.cpp
+  src/Common/Lights/AmbientLight.cpp
+  src/Common/Lights/PointLights.cpp
   src/Common/Models/Loaders/ColladaLoader.cpp
   src/Common/Models/Loaders/ObjLoader.cpp
   src/Common/Models/Loaders/StlLoader.cpp
