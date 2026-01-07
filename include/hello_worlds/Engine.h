@@ -31,7 +31,7 @@ namespace hws {
 
     WorldEngine world;
 
-    void initView(float screen_width = 640, float screen_height = 480);
+    void initView(float max_fps = 30, float screen_width = 640, float screen_height = 480);
 
     void setVizualizerCamera(const std::array<double, 3>& position, const std::array<double, 3>& target);
 

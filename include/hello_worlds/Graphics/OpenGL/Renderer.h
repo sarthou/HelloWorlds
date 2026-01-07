@@ -36,7 +36,7 @@ namespace hws {
     static void init();
     static void release();
 
-    bool initialize(Window& window);
+    bool initialize(Window& window, float max_fps = 30);
     void setBackgroundColor(float r, float g, float b);
     void addSkyBox(const std::string& images_folder); // TODO: method to set default background color ?
     void attachWorld(World* world) { world_ = world; }

@@ -94,8 +94,9 @@ namespace hws {
     hws::Window::release();
   }
 
-  bool Renderer::initialize(Window& window)
+  bool Renderer::initialize(Window& window, float max_fps)
   {
+    max_fps_ = max_fps;
     window.makeCurrentContext();
 
     setRenderCamera(window.getUpdatedCamera());

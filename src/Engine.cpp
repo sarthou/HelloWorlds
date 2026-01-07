@@ -5,7 +5,7 @@
 
 namespace hws {
 
-  void Engine::initView(float screen_width, float screen_height)
+  void Engine::initView(float max_fps, float screen_width, float screen_height)
   {
     auto& cam = window_->getCamera();
     cam.setFieldOfView(60.f);
@@ -15,7 +15,7 @@ namespace hws {
     cam.setPlanes({0.1, 60.});
     cam.finalize();
 
-    renderer_.initialize(*window_);
+    renderer_.initialize(*window_, max_fps);
   }
 
   void Engine::setVizualizerCamera(const std::array<double, 3>& position, const std::array<double, 3>& target)
