@@ -556,6 +556,7 @@ namespace hws {
         else
           renderOffscreenSegmented(camera);
 
+        glFlush();
         off_screens_[i].getImage(virtual_camera.getImageData());
       }
       world_->has_render_request_ = false;
