@@ -41,6 +41,7 @@ namespace hws {
     void addSkyBox(const std::string& images_folder); // TODO: method to set default background color ?
     void attachWorld(World* world) { world_ = world; }
 
+    bool shouldRender();
     void commit();
 
     void setRenderCamera(Camera* camera);
@@ -55,7 +56,7 @@ namespace hws {
     AmbientShadow shadow_;
     PointShadow point_shadows_;
     TextRenderer text_renderer_;
-    float max_fps_ = 120;
+    float max_fps_ = 30;
     float delta_time_;
     float last_frame_ = 0;
 
