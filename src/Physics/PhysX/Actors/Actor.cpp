@@ -74,7 +74,10 @@ namespace hws::physx {
 
   hws::AABB_t Actor::getLocalAABB()
   {
+    assert(px_shapes_.empty() == false && "[Actor] actor with no shape cannot have AABB.");
+
     ::physx::PxBounds3 px_aabb;
+    bool set = false;
     for(auto& shape : px_shapes_)
     {
       ::physx::PxGeometryHolder px_geom = shape->getGeometry();
@@ -82,15 +85,23 @@ namespace hws::physx {
       ::physx::PxBounds3 geom_bounds;
       ::physx::PxGeometryQuery::computeGeomBounds(geom_bounds, px_geom.any(), ::physx::PxTransform(::physx::PxIdentity));
       ::physx::PxBounds3 shape_local_bounds = ::physx::PxBounds3::transformSafe(local_pose, geom_bounds);
-      if(px_aabb.isValid())
+      if(set)
         px_aabb.include(shape_local_bounds);
       else
+      {
         px_aabb = shape_local_bounds;
+        set = true;
+      }
     }
 
-    AABB_t aabb({px_aabb.minimum.x, px_aabb.minimum.y, px_aabb.minimum.z},
-                {px_aabb.maximum.x, px_aabb.maximum.y, px_aabb.maximum.z});
-    return aabb;
+    if(set)
+    {
+      AABB_t aabb({px_aabb.minimum.x, px_aabb.minimum.y, px_aabb.minimum.z},
+                  {px_aabb.maximum.x, px_aabb.maximum.y, px_aabb.maximum.z});
+      return aabb;
+    }
+    else
+      return AABB_t();
   }
 
   std::array<float, 16> Actor::getModelMatrix() const
