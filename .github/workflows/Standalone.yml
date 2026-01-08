@@ -40,8 +40,9 @@ jobs:
         working-directory: ${{ env.SRC_DIR }}
         run: |
           mkdir build
+          mkdir install
           cd build
-          cmake ..
+          cmake -DCMAKE_INSTALL_PREFIX=../install ..
           make install
 
       - name: Integrate
@@ -50,7 +51,7 @@ jobs:
           cd tests/Integration/Standalone
           mv standalone_CMakeLists.txt CMakeLists.txt
           mkdir build && cd build
-          cmake ..
+          cmake .. -DCMAKE_PREFIX_PATH=${{ env.SRC_DIR }}/install
           make
           ./consumer_app
 

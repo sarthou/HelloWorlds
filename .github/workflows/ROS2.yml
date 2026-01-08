@@ -74,6 +74,7 @@ jobs:
           ./deploy.sh $SRC_DIR
           cd $SRC_DIR
           cd ..
+          source install/setup.bash
           colcon build --packages-select hello_worlds_consumer --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
           ros2 run hello_worlds_consumer consumer_app
 
