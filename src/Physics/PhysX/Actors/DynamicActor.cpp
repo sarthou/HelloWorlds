@@ -3,9 +3,10 @@
 #include <array>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/euler_angles.hpp>
-#include <iostream>
 
 #include "hello_worlds/Common/Models/Model.h"
+#include "hello_worlds/Common/Shapes/Shape.h"
+#include "hello_worlds/Physics/PhysX/Actors/Actor.h"
 #include "hello_worlds/Physics/PhysX/Context.h"
 #include "hello_worlds/Physics/PhysX/SharedContext.h"
 
@@ -139,7 +140,7 @@ namespace hws::physx {
       }
       else if(pending_steps_ != 0)
       {
-        ::physx::PxTransform smoothed_pose = interpolateTransform(px_base_->getGlobalPose(), goal_pose_, 1. / (float)pending_steps_);
+        ::physx::PxTransform smoothed_pose = interpolateTransform(px_base_->getGlobalPose(), goal_pose_, 1.f / (float)pending_steps_);
         px_actor_->setKinematicTarget(smoothed_pose);
         pending_steps_--;
       }
@@ -164,7 +165,7 @@ namespace hws::physx {
       }
       else if(pending_steps_ != 0)
       {
-        ::physx::PxTransform smoothed_pose = interpolateTransform(px_base_->getGlobalPose(), goal_pose_, 1. / (float)pending_steps_);
+        ::physx::PxTransform smoothed_pose = interpolateTransform(px_base_->getGlobalPose(), goal_pose_, 1.f / (float)pending_steps_);
         px_actor_->setKinematicTarget(smoothed_pose);
         pending_steps_--;
       }

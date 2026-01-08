@@ -7,7 +7,6 @@
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 #include <iostream>
-#include <time.h>
 
 #include "SolarAzEl/SolarAzEl.h"
 

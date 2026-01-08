@@ -19,9 +19,9 @@ namespace hws {
 
     LinesHandle(const DebugLine& lines);
 
-    LinesHandle(const std::vector<glm::vec3>& vertices,
-                const std::vector<unsigned int>& indices,
-                const glm::vec3& color);
+    LinesHandle(const std::vector<glm::vec3>& line_vertices,
+                const std::vector<unsigned int>& line_indices,
+                const glm::vec3& line_color);
 
     ~LinesHandle();
 

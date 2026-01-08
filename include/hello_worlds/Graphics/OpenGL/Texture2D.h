@@ -2,6 +2,7 @@
 #define HWS_GRAPHICS_OPENGL_TEXTURE2D_H
 
 #include <array>
+#include <cstdint>
 #include <iostream>
 #include <string>
 

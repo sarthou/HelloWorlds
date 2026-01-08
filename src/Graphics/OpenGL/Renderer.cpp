@@ -1,5 +1,7 @@
 #include "hello_worlds/Graphics/OpenGL/Renderer.h"
 
+#include <array>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <glm/ext/matrix_float3x3.hpp>
@@ -191,7 +193,7 @@ namespace hws {
 
   bool Renderer::shouldRender()
   {
-    float current_frame = glfwGetTime();
+    float current_frame = (float)glfwGetTime();
     if(last_frame_ <= 0)
       last_frame_ = current_frame;
     delta_time_ = current_frame - last_frame_;
@@ -199,7 +201,7 @@ namespace hws {
     if(world_->has_render_request_)
       return true;
     else
-      return (1.0f / max_fps_ - delta_time_ <= 0);
+      return ((1.0f / max_fps_) - delta_time_ <= 0);
   }
 
   void Renderer::commit()
@@ -207,11 +209,11 @@ namespace hws {
     if(world_ == nullptr)
       return;
 
-    last_frame_ = glfwGetTime();
+    last_frame_ = (float)glfwGetTime();
 
     world_->processDebugLifeTime((double)delta_time_);
 
-    float sleep_time = 1.0f / max_fps_ - delta_time_;
+    float sleep_time = (1.0f / max_fps_) - delta_time_;
     if(sleep_time > 0.0)
       sleep((unsigned int)sleep_time);
 
@@ -265,7 +267,7 @@ namespace hws {
         double dist = world_->point_lights_.getAttenuationDistance(i);
         auto pose = world_->point_lights_.getPosition(i);
         auto color = world_->point_lights_.getDiffuse(i);
-        if(debug_lights_.find(i) == debug_lights_.end())
+        if(debug_lights_.contains(i) == false)
         {
           debug_lights_.emplace(i,
                                 DebugLine({glm::vec3(pose.x, pose.y, pose.z),
@@ -282,7 +284,7 @@ namespace hws {
   void Renderer::loadActor(Actor* actor, const ShapeBox& shape, bool default_material)
   {
     const auto size_mat = glm::scale(glm::mat4(1.f), toGlmV3(shape.half_extents_));
-    const auto model_mat = shape.shape_transform_ * ToM4(actor->getModelMatrix()) * size_mat;
+    const auto model_mat = shape.shape_transform_ * toM4(actor->getModelMatrix()) * size_mat;
 
     if(default_material == false)
       loadInstance(shape.box_model_, {"", shape.diffuse_color_, shape.diffuse_color_, 0., "", "", ""}, model_mat, actor->unique_id_);
@@ -300,7 +302,7 @@ namespace hws {
   void Renderer::loadActor(Actor* actor, const ShapeCustomMesh& shape, bool default_material)
   {
     const auto size_mat = glm::scale(glm::mat4(1.f), shape.scale_);
-    const auto model_mat = ToM4(actor->getModelMatrix()) * shape.shape_transform_ * size_mat;
+    const auto model_mat = toM4(actor->getModelMatrix()) * shape.shape_transform_ * size_mat;
 
     if(default_material == false)
       loadInstance(shape.custom_model_, shape.material_, model_mat, actor->unique_id_);
@@ -311,7 +313,7 @@ namespace hws {
   void Renderer::loadActor(Actor* actor, const ShapeCylinder& shape, bool default_material)
   {
     const auto size_mat = glm::scale(glm::mat4(1.f), glm::vec3(shape.radius_, shape.height_, shape.radius_));
-    const auto model_mat = ToM4(actor->getModelMatrix()) * shape.shape_transform_ * size_mat;
+    const auto model_mat = toM4(actor->getModelMatrix()) * shape.shape_transform_ * size_mat;
 
     if(default_material == false)
       loadInstance(shape.cylinder_model_, {"", shape.diffuse_color_, shape.diffuse_color_, 0., "", "", ""}, model_mat, actor->unique_id_);
@@ -735,7 +737,7 @@ namespace hws {
     double aspect = (double)screen_.width_ / (double)screen_.height_;
     double trans = tan(render_camera_.getFov() / 2.);
     double trans_x = trans - 0.05;
-    double trans_y = trans - 0.05 * aspect;
+    double trans_y = trans - (0.05 * aspect);
     glm::mat4 view_translation = glm::translate(glm::mat4(1), glm::vec3(trans_x * aspect, -trans_y, -1.));
     view = view_translation * view;
 
@@ -813,7 +815,7 @@ namespace hws {
 
   void Renderer::setLightsUniforms(const Shader& shader, bool use_ambient_shadows, bool use_points_shadows)
   {
-    AmbientLight& ambient = world_->ambient_light_;
+    const AmbientLight& ambient = world_->ambient_light_;
 
     shader.setVec4("dir_light.ambient", ambient.getAmbient());
     shader.setVec4("dir_light.diffuse", ambient.getDiffuse());
@@ -831,7 +833,7 @@ namespace hws {
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
     glActiveTexture(GL_TEXTURE0);
 
-    PointLights& points = world_->point_lights_;
+    const PointLights& points = world_->point_lights_;
     for(size_t i = 0; i < points.getNbLightsSize(); i++)
     {
       std::string name = "point_lights[" + std::to_string(i) + "]";
@@ -864,7 +866,7 @@ namespace hws {
   Material Renderer::createColisionMaterial(size_t uid)
   {
     Material material;
-    float id = (float)(uid % 60) / 100.f + 0.2f;
+    float id = ((float)(uid % 60) / 100.f) + 0.2f;
     material.diffuse_color_ = Color({id, id, id, 1.f});
     material.specular_color_ = Color({id, id, id, 1.f});
     material.shininess_ = 0;

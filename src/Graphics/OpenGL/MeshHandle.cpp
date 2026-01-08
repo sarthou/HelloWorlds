@@ -1,8 +1,8 @@
 #include "hello_worlds/Graphics/OpenGL/MeshHandle.h"
 
+#include <cstdint>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -10,16 +10,15 @@
 #include "glad/glad.h"
 #include "hello_worlds/Common/Models/Color.h"
 #include "hello_worlds/Common/Models/Mesh.h"
+#include "hello_worlds/Common/Models/Vertex.h"
 #include "hello_worlds/Graphics/OpenGL/Shader.h"
 #include "hello_worlds/Graphics/OpenGL/Texture2D.h"
 
 namespace hws {
 
-  MeshHandle::MeshHandle(const Mesh& mesh)
+  MeshHandle::MeshHandle(const Mesh& mesh) : vertices(mesh.vertices_),
+                                             indices(mesh.indices_)
   {
-    this->vertices = mesh.vertices_;
-    this->indices = mesh.indices_;
-
     setupMesh();
   }
 
@@ -32,7 +31,7 @@ namespace hws {
                                       (uint8_t)(model_id) / 255.));
 
     glBindVertexArray(vao_);
-    glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices.size()), GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, static_cast<int>(indices.size()), GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
   }
 
@@ -77,7 +76,7 @@ namespace hws {
       // now bind the texture
       glBindTexture(GL_TEXTURE_2D, material_it->second.textures[i].id_);
       // and finally set the sampler to the correct texture unit
-      shader.setInt(name + number, texture_pose_offset + i);
+      shader.setInt(name + number, (int)(texture_pose_offset + i));
       nb_used++;
     }
 
@@ -85,7 +84,7 @@ namespace hws {
     {
       glActiveTexture(GL_TEXTURE0 + texture_pose_offset + nb_used);
       glBindTexture(GL_TEXTURE_2D, 0);
-      shader.setInt("material.texture_diffuse1", texture_pose_offset + nb_used);
+      shader.setInt("material.texture_diffuse1", (int)(texture_pose_offset + nb_used));
       nb_used++;
     }
 
@@ -93,7 +92,7 @@ namespace hws {
     {
       glActiveTexture(GL_TEXTURE0 + texture_pose_offset + nb_used);
       glBindTexture(GL_TEXTURE_2D, 0);
-      shader.setInt("material.texture_specular1", texture_pose_offset + nb_used);
+      shader.setInt("material.texture_specular1", (int)(texture_pose_offset + nb_used));
       nb_used++;
     }
 
@@ -101,7 +100,7 @@ namespace hws {
     {
       glActiveTexture(GL_TEXTURE0 + texture_pose_offset + nb_used);
       glBindTexture(GL_TEXTURE_2D, 0);
-      shader.setInt("material.texture_normal1", texture_pose_offset + nb_used);
+      shader.setInt("material.texture_normal1", (int)(texture_pose_offset + nb_used));
       shader.setFloat("material.use_normal", 0.);
       nb_used++;
     }
@@ -110,7 +109,7 @@ namespace hws {
     {
       glActiveTexture(GL_TEXTURE0 + texture_pose_offset + nb_used);
       glBindTexture(GL_TEXTURE_2D, 0);
-      shader.setInt("material.texture_height1", texture_pose_offset + nb_used);
+      shader.setInt("material.texture_height1", (int)(texture_pose_offset + nb_used));
       nb_used++;
     }
 
@@ -122,7 +121,7 @@ namespace hws {
                                                (diffuse_nr == 1) ? material_it->second.color.a_ : 0));
 
     glBindVertexArray(vao_);
-    glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices.size()), GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, static_cast<int>(indices.size()), GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
 
     // always good practice to set everything back to defaults once configured.
@@ -140,15 +139,15 @@ namespace hws {
     glBindVertexArray(vao_);
     // load data into vertex buffers
     glBindBuffer(GL_ARRAY_BUFFER, vbo_);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, (long)(vertices.size() * sizeof(Vertex)), vertices.data(), GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo_);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, (long)(indices.size() * sizeof(unsigned int)), indices.data(), GL_STATIC_DRAW);
 
     // set the vertex attribute pointers
     // vertex Positions
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)nullptr);
     // vertex normals
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal_));

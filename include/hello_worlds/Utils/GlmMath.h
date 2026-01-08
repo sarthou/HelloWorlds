@@ -32,7 +32,7 @@ namespace hws {
     return toGlmQuat(array);
   }
 
-  inline glm::mat4 ToM4(const std::array<float, 16>& in)
+  inline glm::mat4 toM4(const std::array<float, 16>& in)
   {
     glm::mat4 out;
     std::memcpy(glm::value_ptr(out), std::addressof(in), sizeof(float) * 16);

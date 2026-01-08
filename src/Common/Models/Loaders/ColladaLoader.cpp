@@ -1,6 +1,9 @@
 #include "hello_worlds/Common/Models/Loaders/ColladaLoader.h"
 
+#include <algorithm>
+#include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <cstdlib>
 #include <fstream>
 #include <glm/ext/matrix_float3x3.hpp>
@@ -15,6 +18,8 @@
 #include <tinyxml2.h>
 #include <vector>
 
+#include "hello_worlds/Common/Models/Color.h"
+#include "hello_worlds/Common/Models/Material.h"
 #include "hello_worlds/Common/Models/Mesh.h"
 #include "hello_worlds/Common/Models/Model.h"
 #include "hello_worlds/Utils/ShellDisplay.h"
@@ -134,7 +139,7 @@ namespace hws {
 
     doc.Parse((const char*)content.c_str());
 
-    tinyxml2::XMLElement* root = doc.RootElement();
+    tinyxml2::XMLElement const* root = doc.RootElement();
     if(root == nullptr)
     {
       return false;
@@ -281,7 +286,7 @@ namespace hws {
 
               auto* shininess = phong->FirstChildElement("shininess");
               if(shininess != nullptr)
-                material.shininess_ = atof(shininess->FirstChildElement("float")->GetText());
+                material.shininess_ = (float)atof(shininess->FirstChildElement("float")->GetText());
 
               effects.emplace(effect_id, material);
 
@@ -381,15 +386,14 @@ namespace hws {
           for(auto* input = primitive->FirstChildElement("input"); input != nullptr; input = input->NextSiblingElement("input"))
           {
             int offset = atoi(input->Attribute("offset"));
-            if((offset + 1) > index_stride)
-              index_stride = offset + 1;
+            index_stride = std::max(offset + 1, index_stride);
 
             std::string source_name = std::string(input->Attribute("source")).erase(0, 1);
             std::string sem_name(input->Attribute("semantic"));
             if(sem_name == "VERTEX")
             {
               // now we have POSITION and possibly NORMAL too, using same index array (<p>)
-              VertexSource_t& vs = vertex_sources[source_name];
+              const VertexSource_t& vs = vertex_sources.at(source_name);
               if(vs.position_id.empty() == false)
               {
                 vertex_input_name = vs.position_id;
@@ -443,27 +447,27 @@ namespace hws {
 
           for(int index = 0; index < num_indices; index++)
           {
-            int pos_index = cur_indices[index * index_stride + vertex_offset];
-            int normal_index = cur_indices[index * index_stride + normal_offset];
-            int texcoord_index = cur_indices[index * index_stride + texcoord_offset];
+            int pos_index = cur_indices[(index * index_stride) + vertex_offset];
+            int normal_index = cur_indices[(index * index_stride) + normal_offset];
+            int texcoord_index = cur_indices[(index * index_stride) + texcoord_offset];
 
-            vertex_positions.emplace_back(position_array[pos_index * 3 + 0],
-                                          position_array[pos_index * 3 + 1],
-                                          position_array[pos_index * 3 + 2]);
+            vertex_positions.emplace_back(position_array[(pos_index * 3) + 0],
+                                          position_array[(pos_index * 3) + 1],
+                                          position_array[(pos_index * 3) + 2]);
 
             if((normal_array.empty() == false) && ((int)normal_array.size() > normal_index))
             {
-              vertex_normals.emplace_back(normal_array[normal_index * 3 + 0],
-                                          normal_array[normal_index * 3 + 1],
-                                          normal_array[normal_index * 3 + 2]);
+              vertex_normals.emplace_back(normal_array[(normal_index * 3) + 0],
+                                          normal_array[(normal_index * 3) + 1],
+                                          normal_array[(normal_index * 3) + 2]);
             }
             else // add a dummy normal of length zero, so it is easy to detect that it is an invalid normal
               vertex_normals.emplace_back(0, 0, 0);
 
             if((texcoord_array.empty() == false) && ((int)texcoord_array.size() > texcoord_index))
             {
-              vertex_uvs.emplace_back(texcoord_array[texcoord_index * 2 + 0],
-                                      texcoord_array[texcoord_index * 2 + 1]);
+              vertex_uvs.emplace_back(texcoord_array[(texcoord_index * 2) + 0],
+                                      texcoord_array[(texcoord_index * 2) + 1]);
             }
             else
               vertex_uvs.emplace_back(0.5, 0.5);
@@ -514,7 +518,7 @@ namespace hws {
     tinyxml2::XMLElement* scenes = root->FirstChildElement("scene");
     if(scenes != nullptr)
     {
-      tinyxml2::XMLElement* instance_scene_reference = scenes->FirstChildElement("instance_visual_scene");
+      tinyxml2::XMLElement const* instance_scene_reference = scenes->FirstChildElement("instance_visual_scene");
       if(instance_scene_reference != nullptr)
       {
         std::string instance_scene_url = std::string(instance_scene_reference->Attribute("url")).erase(0, 1);
@@ -540,7 +544,7 @@ namespace hws {
   {
     glm::mat4 node_trans(1.);
 
-    for(tinyxml2::XMLElement* trans_elem = node->FirstChildElement("matrix"); trans_elem != nullptr; trans_elem = node->NextSiblingElement("matrix"))
+    for(tinyxml2::XMLElement const* trans_elem = node->FirstChildElement("matrix"); trans_elem != nullptr; trans_elem = node->NextSiblingElement("matrix"))
     {
       if(trans_elem->GetText() != nullptr)
       {
@@ -561,7 +565,7 @@ namespace hws {
       }
     }
 
-    for(tinyxml2::XMLElement* trans_elem = node->FirstChildElement("translate"); trans_elem != nullptr; trans_elem = node->NextSiblingElement("translate"))
+    for(tinyxml2::XMLElement const* trans_elem = node->FirstChildElement("translate"); trans_elem != nullptr; trans_elem = node->NextSiblingElement("translate"))
     {
       if(trans_elem->GetText() != nullptr)
       {
@@ -570,7 +574,7 @@ namespace hws {
       }
     }
 
-    for(tinyxml2::XMLElement* scale_elem = node->FirstChildElement("scale"); scale_elem != nullptr; scale_elem = node->NextSiblingElement("scale"))
+    for(tinyxml2::XMLElement const* scale_elem = node->FirstChildElement("scale"); scale_elem != nullptr; scale_elem = node->NextSiblingElement("scale"))
     {
       if(scale_elem->GetText() != nullptr)
       {
@@ -579,7 +583,7 @@ namespace hws {
       }
     }
 
-    for(tinyxml2::XMLElement* rotate_elem = node->FirstChildElement("rotate"); rotate_elem != nullptr; rotate_elem = node->NextSiblingElement("rotate"))
+    for(tinyxml2::XMLElement const* rotate_elem = node->FirstChildElement("rotate"); rotate_elem != nullptr; rotate_elem = node->NextSiblingElement("rotate"))
     {
       if(rotate_elem->GetText() != nullptr)
       {
@@ -628,7 +632,7 @@ namespace hws {
 
   void ColladaLoader::readFloatArray(tinyxml2::XMLElement* source, std::vector<float>& float_array, int& component_stride)
   {
-    tinyxml2::XMLElement* array = source->FirstChildElement("float_array");
+    tinyxml2::XMLElement const* array = source->FirstChildElement("float_array");
     if(array != nullptr)
     {
       int stride = 0;
@@ -640,7 +644,6 @@ namespace hws {
       array->QueryIntAttribute("count", &count);
       float_array.reserve(count);
 
-      std::string txt = array->GetText();
       TokenFloatArray_t adder(float_array);
       tokenize(array->GetText(), adder);
 

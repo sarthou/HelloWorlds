@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "hello_worlds/Common/Shapes/Shape.h"
+#include "hello_worlds/Common/Urdf/Actor.h"
 #include "hello_worlds/Common/Urdf/UrdfLoader.h"
 #include "hello_worlds/Common/World.h"
 #include "hello_worlds/Physics/PhysX/Actors/Actor.h"
@@ -97,7 +98,7 @@ namespace hws::physx {
 
     for(const auto& shape : shapes)
     {
-      ::physx::PxGeometryHolder px_geom = shape->getGeometry();
+      const ::physx::PxGeometryHolder& px_geom = shape->getGeometry();
       if(px_geom.getType() == ::physx::PxGeometryType::eINVALID)
         continue;
 
@@ -178,7 +179,7 @@ namespace hws::physx {
           for(auto& actor : actors_)
             actor.second->stepPose();
         }
-        ctx_->px_scene_->simulate((delta != 0 ? delta : time_step_) / (float)ctx_->sub_step_);
+        ctx_->px_scene_->simulate((delta != 0 ? delta : (float)time_step_) / (float)ctx_->sub_step_);
         ctx_->px_scene_->fetchResults(true);
       }
     }

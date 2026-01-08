@@ -80,7 +80,7 @@ namespace hws::physx {
     bool set = false;
     for(auto& shape : px_shapes_)
     {
-      ::physx::PxGeometryHolder px_geom = shape->getGeometry();
+      const ::physx::PxGeometryHolder& px_geom = shape->getGeometry();
       auto local_pose = shape->getLocalPose();
       ::physx::PxBounds3 geom_bounds;
       ::physx::PxGeometryQuery::computeGeomBounds(geom_bounds, px_geom.any(), ::physx::PxTransform(::physx::PxIdentity));
