@@ -147,12 +147,16 @@ function(hws_add_library TARGET)
     -Wall -Wextra)
 endfunction(hws_add_library)
 
+# ------ utils and external libraries ------
 hws_add_library(hello_worlds_SolarAzEl External/SolarAzEl/SolarAzEl.cpp)
+
+hws_add_library(hello_worlds_glad External/glad/glad.c)
 
 hws_add_library(hello_worlds_utility_lib
   src/Utils/RosPackage.cpp
   src/Utils/XmlTokenize.cpp)
 
+# ------ hello_worlds_engine_common ------
 hws_add_library(hello_worlds_engine_common
   src/Common/Camera/Camera.cpp
   src/Common/Camera/CameraUpdater.cpp
@@ -183,8 +187,7 @@ target_link_libraries(hello_worlds_engine_common PUBLIC
   ${TinyXML2_LIBRARIES})
 target_include_directories(hello_worlds_engine_common PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
-hws_add_library(hello_worlds_glad External/glad/glad.c)
-
+# ------ hello_worlds_graphics ------
 hws_add_library(hello_worlds_graphics
   src/Graphics/GLFW/Window.cpp
   src/Graphics/OpenGL/Cubemap.cpp
@@ -208,8 +211,10 @@ target_link_libraries(hello_worlds_graphics PUBLIC
 target_include_directories(hello_worlds_graphics PRIVATE ${FREETYPE_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})
 target_compile_options(hello_worlds_graphics PRIVATE $<$<CXX_COMPILER_ID:Clang>:-Wno-unused-function>)
 
+# ------ hello_worlds_physics ------
 set(PHYSX_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/External/PhysX/physx/install/linux/PhysX")
 set(PHYSX_INCLUDE_DIR "${PHYSX_ROOT_DIR}/include")
+set(PHYSX_COMPONENTS PhysX PhysXCommon PhysXCooking PhysXExtensions PhysXFoundation PhysXPvdSDK)
 
 if(CMAKE_BUILD_TYPE AND CMAKE_BUILD_TYPE STREQUAL "Debug")
   message(VERBOSE "Building with PhysX in debug configuration")
@@ -220,8 +225,6 @@ else()
   add_compile_definitions(NDEBUG)
   set(PHYSX_BIN_PATH "${PHYSX_ROOT_DIR}/bin/linux.x86_64/release")
 endif()
-
-link_directories("${PHYSX_BIN_PATH}")
 
 hws_add_library(hello_worlds_physics
   src/Physics/PhysX/Actors/Actor.cpp
@@ -234,25 +237,28 @@ hws_add_library(hello_worlds_physics
   src/Physics/PhysX/SharedContext.cpp
   src/Physics/PhysX/World.cpp)
 target_include_directories(hello_worlds_physics PUBLIC
-
-  # While BUILDING your project, use these local absolute paths
   $<BUILD_INTERFACE:${PHYSX_INCLUDE_DIR}>
-
-  # After INSTALLING your project, consumers should look in the install folder
-  # We will put the PhysX headers in a subfolder called 'PhysXExternal'
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/PhysXExternal>
 )
-
 target_link_libraries(hello_worlds_physics PUBLIC hello_worlds_engine_common)
-target_link_libraries(hello_worlds_physics
-  PUBLIC
-  PhysX
-  PhysXCommon
-  PhysXCooking
-  PhysXExtensions
-  PhysXFoundation
-  PhysXPvdSDK)
 
+foreach(LIB_NAME ${PHYSX_COMPONENTS})
+  set(LIB_FILE "lib${LIB_NAME}_static_64.a")
+
+  target_link_libraries(hello_worlds_physics PRIVATE
+
+    # For own build: use the absolute path to the External folder
+    $<BUILD_INTERFACE:${PHYSX_BIN_PATH}/${LIB_FILE}>
+
+    # For the consumer: use the relative path in the install directory
+    $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_LIBDIR}/${LIB_FILE}>
+  )
+
+  # Install the static library so the third-party linker can find it
+  install(FILES "${PHYSX_BIN_PATH}/${LIB_FILE}" DESTINATION ${CMAKE_INSTALL_LIBDIR})
+endforeach()
+
+# ------ hello_worlds main library ------
 hws_add_library(hello_worlds src/Engine.cpp)
 target_link_libraries(hello_worlds PUBLIC hello_worlds_physics hello_worlds_graphics)
 
@@ -305,7 +311,7 @@ if(BUILD_TESTING)
   endif()
 endif()
 
-# --- 7. ROS-Specific Installation/Setup ---
+# --- ROS-Specific Installation/Setup ---
 include(GNUInstallDirs)
 
 install(DIRECTORY include/
@@ -353,7 +359,6 @@ if(ROS_BUILD_TYPE STREQUAL "STANDALONE")
   )
 endif()
 
-# IMPORTANT: This must be the very last line for ROS 2
 if(ROS_BUILD_TYPE STREQUAL "ROS2")
   ament_package()
 endif()
