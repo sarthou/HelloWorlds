@@ -21,7 +21,7 @@ namespace hws::physx {
   public:
     Urdf(hws::physx::Context& ctx);
 
-    virtual ~Urdf() noexcept override = default;
+    ~Urdf() noexcept override = default;
 
     Urdf(const Urdf& other) = delete;
     Urdf& operator=(const Urdf& other) = delete;
@@ -46,7 +46,7 @@ namespace hws::physx {
     void setPhysicsEnabled(bool enabled) override;
 
     void setPositionAndOrientation(const std::array<double, 3>& position, const std::array<double, 4>& orientation) override;
-    virtual size_t getNumJoints() override;
+    size_t getNumJoints() override;
     std::pair<std::array<double, 3>, std::array<double, 4>> getPositionAndOrientation() override;
     void setVelocity(const std::array<double, 3>& linear_velocity, const std::array<double, 3>& angular_velocity) override;
 

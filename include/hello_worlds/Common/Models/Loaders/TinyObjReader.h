@@ -36,7 +36,7 @@ THE SOFTWARE.
 //                 earcut(TINYOBJLOADER_USE_MAPBOX_EARCUT).
 // version 1.4.0 : Modifed parseTextureName API
 // version 1.3.1 : Make parseTextureName API public
-// version 1.3.0 : Separate warning and error message(breaking API of LoadObj)
+// version 1.3.0 : Separate warning and error message(breaking API of loadObj)
 // version 1.2.3 : Added color space extension('-colorspace') to tex opts.
 // version 1.2.2 : Parse multiple group names.
 // version 1.2.1 : Added initial support for line('l') primitive(PR #178)
@@ -64,6 +64,7 @@ THE SOFTWARE.
 #ifndef TINY_OBJ_LOADER_H_
 #define TINY_OBJ_LOADER_H_
 
+#include <array>
 #include <map>
 #include <string>
 #include <vector>
@@ -74,9 +75,9 @@ namespace tinyobj {
   {
     std::string name;
 
-    double ambient[3];
-    double diffuse[3];
-    double specular[3];
+    std::array<double, 3> ambient;
+    std::array<double, 3> diffuse;
+    std::array<double, 3> specular;
     double shininess;
 
     bool has_ambient = false;
@@ -89,7 +90,7 @@ namespace tinyobj {
     std::string normal_texname;   // norm. For normal mapping.
   };
 
-  struct tag_t
+  struct Tag_t
   {
     std::string name;
 
@@ -114,7 +115,7 @@ namespace tinyobj {
 
     int material_id; // per-face material ID
 
-    std::vector<tag_t> tags; // SubD tag
+    std::vector<Tag_t> tags; // SubD tag
   };
 
   // Vertex attributes
@@ -126,13 +127,13 @@ namespace tinyobj {
     std::vector<double> normals;   // 'vn'
     std::vector<double> texcoords; // 'vt'(uv)
 
-    Attrib_t() {}
+    Attrib_t() = default;
   };
 
   class MaterialReader
   {
   public:
-    MaterialReader() {}
+    MaterialReader() = default;
     virtual ~MaterialReader();
 
     virtual bool operator()(const std::string& mat_id,
@@ -150,11 +151,11 @@ namespace tinyobj {
     // Path could contain separator(';' in Windows, ':' in Posix)
     explicit MaterialFileReader(const std::string& mtl_basedir)
       : mlt_base_dir_(mtl_basedir) {}
-    virtual ~MaterialFileReader() override {}
-    virtual bool operator()(const std::string& mat_id,
-                            std::vector<Material_t>* materials,
-                            std::map<std::string, int>* material_map, std::string* warn,
-                            std::string* err) override;
+    ~MaterialFileReader() override = default;
+    bool operator()(const std::string& mat_id,
+                    std::vector<Material_t>* materials,
+                    std::map<std::string, int>* material_map, std::string* warn,
+                    std::string* err) override;
 
   private:
     std::string mlt_base_dir_;
@@ -167,15 +168,15 @@ namespace tinyobj {
   {
   public:
     explicit MaterialStreamReader(std::istream& inStream)
-      : m_inStream(inStream) {}
-    virtual ~MaterialStreamReader() override {}
-    virtual bool operator()(const std::string& mat_id,
-                            std::vector<Material_t>* materials,
-                            std::map<std::string, int>* material_map, std::string* warn,
-                            std::string* err) override;
+      : m_in_stream_(inStream) {}
+    ~MaterialStreamReader() override = default;
+    bool operator()(const std::string& mat_id,
+                    std::vector<Material_t>* materials,
+                    std::map<std::string, int>* material_map, std::string* warn,
+                    std::string* err) override;
 
   private:
-    std::istream& m_inStream;
+    std::istream& m_in_stream_;
   };
 
   // v2 API
@@ -221,12 +222,12 @@ namespace tinyobj {
     ///
     /// Warning message(may be filled after `Load` or `Parse`)
     ///
-    const std::string& Warning() const { return warning_; }
+    const std::string& warning() const { return warning_; }
 
     ///
     /// Error message(filled when `Load` or `Parse` failed)
     ///
-    const std::string& Error() const { return error_; }
+    const std::string& error() const { return error_; }
 
   private:
     bool valid_;
@@ -251,7 +252,7 @@ namespace tinyobj {
   /// directory.
   /// Option 'default_vcols_fallback' specifies whether vertex colors should
   /// always be defined, even if no colors are given (fallback to white).
-  bool LoadObj(Attrib_t* attrib, std::vector<Mesh_t>* shapes,
+  bool loadObj(Attrib_t* attrib, std::vector<Mesh_t>* shapes,
                std::vector<Material_t>* materials, std::string* warn,
                std::string* err, const char* filename,
                const char* mtl_basedir = nullptr);
@@ -260,13 +261,13 @@ namespace tinyobj {
   /// std::istream for materials.
   /// Returns true when loading .obj become success.
   /// Returns warning and error message into `err`
-  bool LoadObj(Attrib_t* attrib, std::vector<Mesh_t>* shapes,
+  bool loadObj(Attrib_t* attrib, std::vector<Mesh_t>* shapes,
                std::vector<Material_t>* materials, std::string* warn,
                std::string* err, std::istream* inStream,
                MaterialReader* readMatFn = nullptr);
 
   /// Loads materials into std::map
-  void LoadMtl(std::map<std::string, int>* material_map,
+  void loadMtl(std::map<std::string, int>* material_map,
                std::vector<Material_t>* materials, std::istream* inStream,
                const std::string& texture_path,
                std::string* warning, std::string* err);

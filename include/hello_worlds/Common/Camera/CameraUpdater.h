@@ -86,9 +86,8 @@ namespace hws {
     CameraUpdater(const CameraUpdater& other) = delete;
     CameraUpdater& operator=(const CameraUpdater&) = delete;
 
-    CameraUpdater(CameraUpdater&& other)
+    CameraUpdater(CameraUpdater&& other) : camera_(other.camera_)
     {
-      camera_ = std::move(other.camera_);
       other.camera_ = nullptr;
     }
 

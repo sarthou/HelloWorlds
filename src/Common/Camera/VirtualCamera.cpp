@@ -2,7 +2,6 @@
 
 #include <array>
 #include <cstdint>
-#include <iostream>
 #include <unordered_set>
 
 #include "hello_worlds/Common/Camera/CameraProjection.h"

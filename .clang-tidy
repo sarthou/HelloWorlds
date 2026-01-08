@@ -75,7 +75,7 @@ Checks: >
   readability-simplify-subscript-expr,
   readability-string-compare,
   readability-use-std-min-max
-HeaderFilterRegex: 'hello_worlds/include/hello_worlds/*'
+HeaderFilterRegex: 'include/hello_worlds/*'
 CheckOptions:
   - { key: readability-identifier-naming.NamespaceCase,         value: lower_case }
   - { key: readability-identifier-naming.ClassCase,             value: CamelCase }

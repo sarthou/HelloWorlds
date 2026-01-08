@@ -6,7 +6,7 @@
 #include <iostream>
 #include <string>
 
-typedef unsigned int GLenum;
+typedef unsigned int GLenum; // NOLINT
 
 namespace hws {
 

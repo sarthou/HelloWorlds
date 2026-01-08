@@ -7,9 +7,9 @@ namespace hws {
 
   Mesh Mesh::create()
   {
-    return Mesh(static_cast<Id>(s_global_id_counter++));
+    return Mesh(static_cast<Id_e>(s_global_id_counter++));
   }
 
-  Mesh::Mesh(const Id id) : id_(id)
+  Mesh::Mesh(const Id_e id) : id_(id)
   {}
 } // namespace hws

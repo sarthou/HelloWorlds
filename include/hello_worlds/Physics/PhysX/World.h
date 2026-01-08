@@ -12,7 +12,6 @@
 
 namespace hws::physx {
   class Context;
-  class Actor;
 
   class World final : public hws::World
   {

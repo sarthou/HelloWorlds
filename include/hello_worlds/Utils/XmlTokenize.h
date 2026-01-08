@@ -19,7 +19,7 @@ namespace hws {
 
     void add(const char* token)
     {
-      float v = atof(token);
+      float v = (float)atof(token);
       values.push_back(v);
     }
   };
@@ -31,7 +31,7 @@ namespace hws {
 
     void add(const char* token)
     {
-      float v = atoi(token);
+      int v = atoi(token);
       values.push_back(v);
     }
   };
@@ -39,7 +39,7 @@ namespace hws {
   template<typename AddToken>
   void tokenize(const std::string& str, AddToken& token_adder, const std::string& delimiters = " \n")
   {
-    std::string::size_type pos;
+    std::string::size_type pos = 0;
     std::string::size_type last_pos = 0;
     while(true)
     {

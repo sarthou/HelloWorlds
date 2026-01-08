@@ -19,12 +19,12 @@ namespace hws {
     VirtualCamera& operator=(const VirtualCamera&) = delete;
 
     VirtualCamera(VirtualCamera&& other) : camera_(std::move(other.camera_)),
+                                           image_(other.image_),
                                            width_(other.width_),
                                            height_(other.height_),
                                            need_update_(other.need_update_),
                                            updated_(other.updated_)
     {
-      image_ = std::move(other.image_);
       other.image_ = nullptr;
     }
 

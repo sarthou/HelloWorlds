@@ -69,8 +69,8 @@ namespace hws {
     std::array<float, 3> background_color_{0.5, 0.5, 0.5};
 
     std::unordered_map<std::string, Texture2D> loaded_textures_;
-    std::unordered_map<Model::Id, std::unordered_map<Mesh::Id, MeshHandle>> cached_models_;
-    std::unordered_map<Model::Id, std::unordered_map<Mesh::Id, std::vector<InstanceData>>> current_mesh_batches_;
+    std::unordered_map<Model::Id_e, std::unordered_map<Mesh::Id_e, MeshHandle>> cached_models_;
+    std::unordered_map<Model::Id_e, std::unordered_map<Mesh::Id_e, std::vector<InstanceData>>> current_mesh_batches_;
     std::unordered_map<unsigned int, LinesHandle> cached_lines_;
     std::unordered_map<unsigned int, LinesHandle> debug_axis_;
     std::unordered_map<unsigned int, LinesHandle> debug_lights_;

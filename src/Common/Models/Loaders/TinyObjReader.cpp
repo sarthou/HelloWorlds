@@ -365,7 +365,7 @@ namespace tinyobj {
   }
 
   static bool exportGroupsToShape(Mesh_t* shape, const std::vector<std::vector<VertexIndex_t>>& face_group,
-                                  const std::vector<tag_t>& tags,
+                                  const std::vector<Tag_t>& tags,
                                   const int material_id, const std::string& name,
                                   const std::vector<double>& v, std::string* warn)
   {
@@ -783,7 +783,7 @@ namespace tinyobj {
     }
   }
 
-  void LoadMtl(std::map<std::string, int>* material_map,
+  void loadMtl(std::map<std::string, int>* material_map,
                std::vector<Material_t>* materials, std::istream* inStream,
                const std::string& texture_path,
                std::string* warning, std::string* err)
@@ -1123,7 +1123,7 @@ namespace tinyobj {
         std::ifstream mat_stream(filepath.c_str());
         if(mat_stream)
         {
-          LoadMtl(material_map, materials, &mat_stream, mlt_base_dir_, warn, err);
+          loadMtl(material_map, materials, &mat_stream, mlt_base_dir_, warn, err);
 
           return true;
         }
@@ -1144,7 +1144,7 @@ namespace tinyobj {
       std::ifstream mat_stream(filepath.c_str());
       if(mat_stream)
       {
-        LoadMtl(material_map, materials, &mat_stream, mlt_base_dir_, warn, err);
+        loadMtl(material_map, materials, &mat_stream, mlt_base_dir_, warn, err);
 
         return true;
       }
@@ -1168,7 +1168,7 @@ namespace tinyobj {
   {
     (void)err;
     (void)mat_id;
-    if(!m_inStream)
+    if(!m_in_stream_)
     {
       std::stringstream ss;
       ss << "Material stream in error state. \n";
@@ -1179,12 +1179,12 @@ namespace tinyobj {
       return false;
     }
 
-    LoadMtl(material_map, materials, &m_inStream, "", warn, err);
+    loadMtl(material_map, materials, &m_in_stream_, "", warn, err);
 
     return true;
   }
 
-  bool LoadObj(Attrib_t* attrib, std::vector<Mesh_t>* shapes,
+  bool loadObj(Attrib_t* attrib, std::vector<Mesh_t>* shapes,
                std::vector<Material_t>* materials, std::string* warn,
                std::string* err, const char* filename, const char* mtl_basedir)
   {
@@ -1214,10 +1214,10 @@ namespace tinyobj {
     }
     MaterialFileReader mat_file_reader(base_dir);
 
-    return LoadObj(attrib, shapes, materials, warn, err, &ifs, &mat_file_reader);
+    return loadObj(attrib, shapes, materials, warn, err, &ifs, &mat_file_reader);
   }
 
-  bool LoadObj(Attrib_t* attrib, std::vector<Mesh_t>* shapes,
+  bool loadObj(Attrib_t* attrib, std::vector<Mesh_t>* shapes,
                std::vector<Material_t>* materials, std::string* warn,
                std::string* err, std::istream* inStream,
                MaterialReader* readMatFn /*= nullptr*/)
@@ -1227,7 +1227,7 @@ namespace tinyobj {
     std::vector<double> v;
     std::vector<double> vn;
     std::vector<double> vt;
-    std::vector<tag_t> tags;
+    std::vector<Tag_t> tags;
     std::vector<std::vector<VertexIndex_t>> face_group;
     std::string name;
 
@@ -1566,7 +1566,7 @@ namespace tinyobj {
       if(token[0] == 't' && IS_SPACE(token[1]))
       {
         const int max_tag_nums = 8192; // FIXME(syoyo): Parameterize.
-        tag_t tag;
+        Tag_t tag;
 
         token += 2;
 
@@ -1707,7 +1707,7 @@ namespace tinyobj {
       search_path = mtl_search_path;
     }
 
-    valid_ = LoadObj(&attrib_, &shapes_, &materials_, &warning_, &error_,
+    valid_ = loadObj(&attrib_, &shapes_, &materials_, &warning_, &error_,
                      filename.c_str(), search_path.c_str());
 
     return valid_;
@@ -1724,7 +1724,7 @@ namespace tinyobj {
 
     MaterialStreamReader mtl_ss(mtl_ifs);
 
-    valid_ = LoadObj(&attrib_, &shapes_, &materials_, &warning_, &error_,
+    valid_ = loadObj(&attrib_, &shapes_, &materials_, &warning_, &error_,
                      &obj_ifs, &mtl_ss);
 
     return valid_;

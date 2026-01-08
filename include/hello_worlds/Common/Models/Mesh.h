@@ -11,16 +11,16 @@ namespace hws {
   class Mesh
   {
   public:
-    enum class Id : std::size_t
+    enum class Id_e : std::size_t
     {
     };
 
     static Mesh create();
 
-    explicit Mesh(Id id);
+    explicit Mesh(Id_e id);
 
     // As for actors, each mesh is associated with a non-zero, unique id.
-    const Id id_;
+    const Id_e id_;
 
     std::string name_;
     std::vector<hws::Vertex> vertices_;
