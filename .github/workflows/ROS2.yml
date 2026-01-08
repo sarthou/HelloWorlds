@@ -35,24 +35,24 @@ jobs:
           source /opt/ros/$ROS_DISTRO/setup.bash
           cmake --version
           cd $GITHUB_WORKSPACE
-          mkdir -p ros2_ws/src/HelloWorlds
+          mkdir -p ros2_ws/src/hello_worlds
           cd ros2_ws
           colcon build --symlink-install
 
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          path: ros2_ws/src/HelloWorlds
+          path: ros2_ws/src/hello_worlds
 
       - name: Clone PhysX
         uses: actions/checkout@v4
         with:
           repository: NVIDIA-Omniverse/PhysX
           ref: 106.5-physx-5.5.1
-          path: ros2_ws/src/HelloWorlds/External/PhysX
+          path: ros2_ws/src/hello_worlds/External/PhysX
 
       - name: Build PhysX
-        working-directory: ros2_ws/src/HelloWorlds/External/PhysX/physx
+        working-directory: ros2_ws/src/hello_worlds/External/PhysX/physx
         run: |
           ./generate_projects.sh linux-gcc release
           cd compiler/linux-gcc-release
@@ -65,6 +65,17 @@ jobs:
           source install/setup.bash
           export ROS_LOCALHOST_ONLY=1
           colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+
+      - name: Integrate
+        working-directory: ros2_ws/src
+        run: |
+          SRC_DIR=$(pwd)
+          cd hello_worlds/tests/Integration/ROS2
+          ./deploy.sh $SRC_DIR
+          cd $SRC_DIR
+          cd ..
+          colcon build --packages-select hello_worlds_consumer --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+          ros2 run hello_worlds_consumer consumer_app
 
       - name: Run tests
         working-directory: ros2_ws

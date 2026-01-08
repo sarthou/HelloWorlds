@@ -6,8 +6,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      PACKAGE_NAME: HelloWorlds
-      SRC_DIR: ${{ github.workspace }}/src/HelloWorlds
+      PACKAGE_NAME: hello_worlds
+      SRC_DIR: ${{ github.workspace }}/src/hello_worlds
     steps:
 
       - name: Install deps

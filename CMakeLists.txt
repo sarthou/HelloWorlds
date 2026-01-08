@@ -39,6 +39,8 @@ pkg_search_module(CURL REQUIRED libcurl IMPORTED_TARGET GLOBAL)
 include(FetchContent)
 include(CheckLanguage)
 
+include(GNUInstallDirs)
+
 set(CAD_FILES
   models/basic_shapes/cube.obj
   models/basic_shapes/cylinder.obj
@@ -313,8 +315,6 @@ if(BUILD_TESTING)
 endif()
 
 # --- ROS-Specific Installation/Setup ---
-include(GNUInstallDirs)
-
 install(DIRECTORY include/
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
