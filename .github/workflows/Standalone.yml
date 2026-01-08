@@ -12,7 +12,8 @@ jobs:
 
       - name: Install deps
         run: |
-            sudo apt install -y libglm-dev libglfw3-dev libfreetype-dev libtinyxml2-dev
+            sudo apt install -y libglm-dev libglfw3-dev libfreetype-dev 
+            sudo apt install -y libtinyxml2-dev pkg-config libcurl4-openssl-dev
             sudo apt install -y libglapi-mesa libxcb-dri3-dev libxcb-dri2-0-dev libxdamage-dev libxfixes-dev
 
       - name: Checkout
