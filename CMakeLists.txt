@@ -291,7 +291,14 @@ if(BUILD_TESTING)
     endif()
   endif()
 
-  # 2. Register the Test
+  # 2. Configure test config
+  configure_file(
+    tests/test_config.h.in
+    ${CMAKE_CURRENT_BINARY_DIR}/generated/test_config.hpp
+    @ONLY
+  )
+
+  # 3. Register the Test
   if(ROS_BUILD_TYPE STREQUAL "ROS1")
     # This macro creates the executable and registers it with catkin/ctest
     catkin_add_gtest(ResourceTests tests/resource_embedding.cpp ${REGISTRY_FILE} ${CAD_HEADERS} ${SHADER_HEADERS})
