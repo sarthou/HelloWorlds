@@ -1,5 +1,6 @@
 #include "hello_worlds/Common/Models/Loaders/TinyObjReader.h"
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cctype>
@@ -339,11 +340,11 @@ namespace tinyobj {
 
     for(int i = 0; i < 3; i++)
     {
-      material->ambient[i] = static_cast<double>(0.0);
-      material->diffuse[i] = static_cast<double>(0.0);
-      material->specular[i] = static_cast<double>(0.0);
+      material->ambient[i] = 0.0;
+      material->diffuse[i] = 0.0;
+      material->specular[i] = 0.0;
     }
-    material->shininess = static_cast<double>(-1.0);
+    material->shininess = -1.0;
 
     material->normal_texname = "";
   }
@@ -404,8 +405,8 @@ namespace tinyobj {
             size_t vi2 = size_t(i2.v_idx);
             size_t vi3 = size_t(i3.v_idx);
 
-            if(((3 * vi0 + 2) >= v.size()) || ((3 * vi1 + 2) >= v.size()) ||
-               ((3 * vi2 + 2) >= v.size()) || ((3 * vi3 + 2) >= v.size()))
+            if((((3 * vi0) + 2) >= v.size()) || (((3 * vi1) + 2) >= v.size()) ||
+               (((3 * vi2) + 2) >= v.size()) || (((3 * vi3) + 2) >= v.size()))
             {
               // Invalid triangle.
               // FIXME(syoyo): Is it ok to simply skip this invalid triangle?
@@ -416,18 +417,18 @@ namespace tinyobj {
               continue;
             }
 
-            double v0x = v[vi0 * 3 + 0];
-            double v0y = v[vi0 * 3 + 1];
-            double v0z = v[vi0 * 3 + 2];
-            double v1x = v[vi1 * 3 + 0];
-            double v1y = v[vi1 * 3 + 1];
-            double v1z = v[vi1 * 3 + 2];
-            double v2x = v[vi2 * 3 + 0];
-            double v2y = v[vi2 * 3 + 1];
-            double v2z = v[vi2 * 3 + 2];
-            double v3x = v[vi3 * 3 + 0];
-            double v3y = v[vi3 * 3 + 1];
-            double v3z = v[vi3 * 3 + 2];
+            double v0x = v[(vi0 * 3) + 0];
+            double v0y = v[(vi0 * 3) + 1];
+            double v0z = v[(vi0 * 3) + 2];
+            double v1x = v[(vi1 * 3) + 0];
+            double v1y = v[(vi1 * 3) + 1];
+            double v1z = v[(vi1 * 3) + 2];
+            double v2x = v[(vi2 * 3) + 0];
+            double v2y = v[(vi2 * 3) + 1];
+            double v2z = v[(vi2 * 3) + 2];
+            double v3x = v[(vi3 * 3) + 0];
+            double v3y = v[(vi3 * 3) + 1];
+            double v3z = v[(vi3 * 3) + 2];
 
             // There are two candidates to split the quad into two triangles.
             //
@@ -454,8 +455,8 @@ namespace tinyobj {
             double e13y = v3y - v1y;
             double e13z = v3z - v1z;
 
-            double sqr02 = e02x * e02x + e02y * e02y + e02z * e02z;
-            double sqr13 = e13x * e13x + e13y * e13y + e13z * e13z;
+            double sqr02 = (e02x * e02x) + (e02y * e02y) + (e02z * e02z);
+            double sqr13 = (e13x * e13x) + (e13y * e13y) + (e13z * e13z);
 
             Index_t idx0, idx1, idx2, idx3;
 
@@ -512,31 +513,31 @@ namespace tinyobj {
               size_t vi1 = size_t(i1.v_idx);
               size_t vi2 = size_t(i2.v_idx);
 
-              if(((3 * vi0 + 2) >= v.size()) || ((3 * vi1 + 2) >= v.size()) ||
-                 ((3 * vi2 + 2) >= v.size()))
+              if((((3 * vi0) + 2) >= v.size()) || (((3 * vi1) + 2) >= v.size()) ||
+                 (((3 * vi2) + 2) >= v.size()))
               {
                 // Invalid triangle.
                 // FIXME(syoyo): Is it ok to simply skip this invalid triangle?
                 continue;
               }
-              double v0x = v[vi0 * 3 + 0];
-              double v0y = v[vi0 * 3 + 1];
-              double v0z = v[vi0 * 3 + 2];
-              double v1x = v[vi1 * 3 + 0];
-              double v1y = v[vi1 * 3 + 1];
-              double v1z = v[vi1 * 3 + 2];
-              double v2x = v[vi2 * 3 + 0];
-              double v2y = v[vi2 * 3 + 1];
-              double v2z = v[vi2 * 3 + 2];
+              double v0x = v[(vi0 * 3) + 0];
+              double v0y = v[(vi0 * 3) + 1];
+              double v0z = v[(vi0 * 3) + 2];
+              double v1x = v[(vi1 * 3) + 0];
+              double v1y = v[(vi1 * 3) + 1];
+              double v1z = v[(vi1 * 3) + 2];
+              double v2x = v[(vi2 * 3) + 0];
+              double v2y = v[(vi2 * 3) + 1];
+              double v2z = v[(vi2 * 3) + 2];
               double e0x = v1x - v0x;
               double e0y = v1y - v0y;
               double e0z = v1z - v0z;
               double e1x = v2x - v1x;
               double e1y = v2y - v1y;
               double e1z = v2z - v1z;
-              double cx = std::fabs(e0y * e1z - e0z * e1y);
-              double cy = std::fabs(e0z * e1x - e0x * e1z);
-              double cz = std::fabs(e0x * e1y - e0y * e1x);
+              double cx = std::fabs((e0y * e1z) - (e0z * e1y));
+              double cy = std::fabs((e0z * e1x) - (e0x * e1z));
+              double cz = std::fabs((e0x * e1y) - (e0y * e1x));
               const double epsilon = std::numeric_limits<double>::epsilon();
 
               if(cx > epsilon || cy > epsilon || cz > epsilon)
@@ -592,8 +593,8 @@ namespace tinyobj {
               {
                 ind[k] = remaining_face[(guess_vert + k) % npolys];
                 size_t vi = size_t(ind[k].v_idx);
-                if(((vi * 3 + axes[0]) >= v.size()) ||
-                   ((vi * 3 + axes[1]) >= v.size()))
+                if((((vi * 3) + axes[0]) >= v.size()) ||
+                   (((vi * 3) + axes[1]) >= v.size()))
                 {
                   // ???
                   vx[k] = 0.0;
@@ -601,8 +602,8 @@ namespace tinyobj {
                 }
                 else
                 {
-                  vx[k] = v[vi * 3 + axes[0]];
-                  vy[k] = v[vi * 3 + axes[1]];
+                  vx[k] = v[(vi * 3) + axes[0]];
+                  vy[k] = v[(vi * 3) + axes[1]];
                 }
               }
 
@@ -613,12 +614,12 @@ namespace tinyobj {
               double e0y = vy[1] - vy[0];
               double e1x = vx[2] - vx[1];
               double e1y = vy[2] - vy[1];
-              double cross = e0x * e1y - e0y * e1x;
+              double cross = (e0x * e1y) - (e0y * e1x);
 
               double area =
-                (vx[0] * vy[1] - vy[0] * vx[1]) * static_cast<double>(0.5);
+                (vx[0] * vy[1] - vy[0] * vx[1]) * 0.5;
               // if an internal angle
-              if(cross * area < static_cast<double>(0.0))
+              if(cross * area < 0.0)
               {
                 guess_vert += 1;
                 continue;
@@ -635,12 +636,12 @@ namespace tinyobj {
 
                 size_t ovi = size_t(remaining_face[idx].v_idx);
 
-                if(((ovi * 3 + axes[0]) >= v.size()) ||
-                   ((ovi * 3 + axes[1]) >= v.size()))
+                if((((ovi * 3) + axes[0]) >= v.size()) ||
+                   (((ovi * 3) + axes[1]) >= v.size()))
                   continue;
 
-                double tx = v[ovi * 3 + axes[0]];
-                double ty = v[ovi * 3 + axes[1]];
+                double tx = v[(ovi * 3) + axes[0]];
+                double ty = v[(ovi * 3) + axes[1]];
                 if(pnpoly(3, vx.data(), vy.data(), tx, ty) != 0)
                 {
                   overlap = true;
@@ -1007,9 +1008,9 @@ namespace tinyobj {
         // without a matching Kd value.
         if(!has_kd)
         {
-          material.diffuse[0] = static_cast<double>(0.6);
-          material.diffuse[1] = static_cast<double>(0.6);
-          material.diffuse[2] = static_cast<double>(0.6);
+          material.diffuse[0] = 0.6;
+          material.diffuse[1] = 0.6;
+          material.diffuse[2] = 0.6;
         }
 
         continue;
@@ -1574,32 +1575,14 @@ namespace tinyobj {
 
         TagSizes_t ts = parseTagTriple(&token);
 
-        if(ts.num_ints < 0)
-        {
-          ts.num_ints = 0;
-        }
-        if(ts.num_ints > max_tag_nums)
-        {
-          ts.num_ints = max_tag_nums;
-        }
+        ts.num_ints = std::max(ts.num_ints, 0);
+        ts.num_ints = std::min(ts.num_ints, max_tag_nums);
 
-        if(ts.num_reals < 0)
-        {
-          ts.num_reals = 0;
-        }
-        if(ts.num_reals > max_tag_nums)
-        {
-          ts.num_reals = max_tag_nums;
-        }
+        ts.num_reals = std::max(ts.num_reals, 0);
+        ts.num_reals = std::min(ts.num_reals, max_tag_nums);
 
-        if(ts.num_strings < 0)
-        {
-          ts.num_strings = 0;
-        }
-        if(ts.num_strings > max_tag_nums)
-        {
-          ts.num_strings = max_tag_nums;
-        }
+        ts.num_strings = std::max(ts.num_strings, 0);
+        ts.num_strings = std::min(ts.num_strings, max_tag_nums);
 
         tag.intValues.resize(static_cast<size_t>(ts.num_ints));
 

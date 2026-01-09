@@ -1,5 +1,9 @@
 #include "hello_worlds/Common/Models/ModelManager.h"
 
+#include <cassert>
+#include <filesystem>
+#include <utility>
+
 #include "hello_worlds/Common/Models/Loaders/ModelLoader.h"
 #include "hello_worlds/Common/Models/Model.h"
 #include "hello_worlds/Utils/ShellDisplay.h"

@@ -11,14 +11,9 @@
 #include <glm/ext/vector_float3.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/euler_angles.hpp>
-#include <iostream>
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
+#include <utility>
 
-#include "hello_worlds/Common/Models/Model.h"
-#include "hello_worlds/Common/Urdf/Joint.h"
-#include "hello_worlds/Common/Urdf/Urdf.h"
 #include "hello_worlds/Common/Urdf/UrdfLoader.h"
 #include "hello_worlds/Physics/PhysX/Actors/LinkActor.h"
 #include "hello_worlds/Physics/PhysX/Context.h"

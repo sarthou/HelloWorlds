@@ -1,6 +1,7 @@
 #include "hello_worlds/Graphics/OpenGL/Texture2D.h"
 
 #include <array>
+#include <cstdint>
 #include <iostream>
 #include <string>
 
@@ -87,9 +88,9 @@ namespace hws {
     {
       for(int j = 0; j < width; j++)
       {
-        image[3 * (i * width + j) + 0] = data[(i * width + j)];
-        image[3 * (i * width + j) + 1] = data[(i * width + j)];
-        image[3 * (i * width + j) + 2] = data[(i * width + j)];
+        image[(3 * ((i * width) + j)) + 0] = data[((i * width) + j)];
+        image[(3 * ((i * width) + j)) + 1] = data[((i * width) + j)];
+        image[(3 * ((i * width) + j)) + 2] = data[((i * width) + j)];
       }
     }
 

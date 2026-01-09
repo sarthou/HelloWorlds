@@ -157,8 +157,8 @@ namespace hws {
       else
         delta_pos = vertex1 - vertex0;
 
-      glm::vec2& uv0 = mesh.vertices_.at(mesh.indices_.at(i)).uv_;
-      glm::vec2& uv1 = mesh.vertices_.at(mesh.indices_.at(i + 1)).uv_;
+      const glm::vec2& uv0 = mesh.vertices_.at(mesh.indices_.at(i)).uv_;
+      const glm::vec2& uv1 = mesh.vertices_.at(mesh.indices_.at(i + 1)).uv_;
       // lm::vec2& uv2 = mesh.vertices_.at(mesh.indices_.at(i + 2)).uv_;
 
       glm::vec2 delta_uv1 = uv1 - uv0;

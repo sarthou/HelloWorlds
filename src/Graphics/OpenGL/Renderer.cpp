@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <glm/ext/matrix_float3x3.hpp>
 #include <glm/ext/matrix_float4x4.hpp>
 #include <glm/ext/vector_float3.hpp>
@@ -456,7 +457,7 @@ namespace hws {
       auto mesh_it = model_it->second.find(mesh.id_);
       if(mesh_it != model_it->second.end())
       {
-        if(mesh_it->second.materials.find(instance_id) != mesh_it->second.materials.end())
+        if(mesh_it->second.materials.contains(instance_id))
           continue;
       }
       else

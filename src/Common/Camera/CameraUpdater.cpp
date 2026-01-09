@@ -1,6 +1,7 @@
 #include "hello_worlds/Common/Camera/CameraUpdater.h"
 
 #include <array>
+#include <cassert>
 #include <cstdint>
 #include <glm/gtc/packing.hpp>
 #include <glm/gtc/type_ptr.hpp>

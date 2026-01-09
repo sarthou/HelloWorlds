@@ -2,7 +2,7 @@
 
 #include <array>
 #include <cassert>
-#include <set>
+#include <utility>
 #include <vector>
 
 #include "hello_worlds/Common/Shapes/Shape.h"
