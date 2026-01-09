@@ -75,6 +75,7 @@ jobs:
           cd $SRC_DIR
           cd ..
           source install/setup.bash
+          ls src
           colcon build --packages-select hello_worlds_consumer --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
           ros2 run hello_worlds_consumer consumer_app
 
