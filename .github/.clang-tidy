@@ -10,7 +10,6 @@ Checks: >
   cppcoreguidelines-virtual-class-destructor,
   misc-const-correctness,
   misc-header-include-cycle,
-  misc-include-cleaner,
   misc-misleading-identifier,
   misc-misplaced-const,
   misc-new-delete-overloads,
@@ -94,7 +93,5 @@ CheckOptions:
   - { key: readability-identifier-naming.StaticVariableSuffix,  value: _ }
   - { key: readability-operators-representation.BinaryOperators, value: '&&;&=;&;|;~;!;!=;||;|=;^;^=' }
   - { key: misc-const-correctness.AnalyzeValues,                value: false }
-  - { key: misc-include-cleaner.DeduplicateFindings,            value: false }
-  - { key: misc-include-cleaner.IgnoreHeaders,                  value: 'glm/*;physx/*' }
 ExtraArgsBefore:
   - '-frelaxed-template-template-args'

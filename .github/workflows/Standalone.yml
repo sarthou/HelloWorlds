@@ -58,6 +58,7 @@ jobs:
       - name: Lint
         working-directory: ${{ env.SRC_DIR }}
         run: |
+          cp .github/.clang-tidy ./.clang-tidy
           python3 .github/run_clang_tidy.py . build External,build
 
       #- name: Run tests
