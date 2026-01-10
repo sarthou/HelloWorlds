@@ -33,7 +33,7 @@ jobs:
         run: |
           ./generate_projects.sh linux-gcc release
           cd compiler/linux-gcc-release
-          make
+          make -j
           make install
 
       - name: Build
