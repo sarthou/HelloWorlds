@@ -9,4 +9,10 @@ namespace hwd::tests {
     return "@CMAKE_CURRENT_SOURCE_DIR@/assets/";
   }
 
+  inline std::string get_package_dir()
+  {
+    
+    return "@CMAKE_CURRENT_SOURCE_DIR@/";
+  }
+
 } // namespace hwd::tests
