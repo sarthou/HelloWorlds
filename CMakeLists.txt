@@ -181,8 +181,7 @@ target_link_libraries(hello_worlds_engine_common PUBLIC
   hello_worlds_utility_lib
   hello_worlds_SolarAzEl
   PRIVATE
-  ${TinyXML_LIBRARIES}
-  ${TinyXML2_LIBRARIES})
+  ${TINYXML2_LIBRARIES})
 target_include_directories(hello_worlds_engine_common PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 # ------ hello_worlds_graphics ------
@@ -212,7 +211,16 @@ target_compile_options(hello_worlds_graphics PRIVATE $<$<CXX_COMPILER_ID:Clang>:
 # ------ hello_worlds_physics ------
 set(PHYSX_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/External/PhysX/physx/install/linux/PhysX")
 set(PHYSX_INCLUDE_DIR "${PHYSX_ROOT_DIR}/include")
-set(PHYSX_COMPONENTS PhysX PhysXCommon PhysXCooking PhysXExtensions PhysXFoundation PhysXPvdSDK)
+
+# Order matters: High-level libs first, low-level dependencies last
+set(PHYSX_COMPONENTS
+  PhysXExtensions
+  PhysX
+  PhysXPvdSDK
+  PhysXCooking
+  PhysXCommon
+  PhysXFoundation
+)
 
 if(CMAKE_BUILD_TYPE AND CMAKE_BUILD_TYPE STREQUAL "Debug")
   message(VERBOSE "Building with PhysX in debug configuration")
@@ -243,7 +251,7 @@ target_link_libraries(hello_worlds_physics PUBLIC hello_worlds_engine_common)
 foreach(LIB_NAME ${PHYSX_COMPONENTS})
   set(LIB_FILE "lib${LIB_NAME}_static_64.a")
 
-  target_link_libraries(hello_worlds_physics PRIVATE
+  target_link_libraries(hello_worlds_physics PUBLIC
 
     # For own build: use the absolute path to the External folder
     $<BUILD_INTERFACE:${PHYSX_BIN_PATH}/${LIB_FILE}>
