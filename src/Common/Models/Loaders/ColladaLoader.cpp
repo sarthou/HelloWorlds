@@ -102,6 +102,7 @@ namespace hws {
     {
       auto model = std::make_unique<Model>(Model::create());
       model->source_path_ = path;
+      model->scale_ = {1., 1., 1.};
       model->meshes_.swap(instances);
       for(auto& mesh : model->meshes_)
       {

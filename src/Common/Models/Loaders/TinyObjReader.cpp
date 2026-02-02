@@ -105,7 +105,7 @@ namespace tinyobj {
   static inline bool fixIndex(int idx, int n, int* ret, bool allow_zero,
                               const WarningContext_t& context)
   {
-    if(ret != nullptr)
+    if(ret == nullptr)
     {
       return false;
     }
@@ -1344,7 +1344,7 @@ namespace tinyobj {
 
         face.reserve(3);
 
-        while(!IS_NEW_LINE(token[0]))
+        while(!IS_NEW_LINE(token[0]) && (token[0] != '#'))
         {
           VertexIndex_t vi;
           if(!parseTriple(&token, static_cast<int>(v.size() / 3),
@@ -1692,6 +1692,16 @@ namespace tinyobj {
 
     valid_ = loadObj(&attrib_, &shapes_, &materials_, &warning_, &error_,
                      filename.c_str(), search_path.c_str());
+
+    if(valid_ == false)
+    {
+      if(error_.empty() == false)
+        std::cout << "[ObjReader][ERROR] file : " << filename << std::endl
+                  << error_ << std::endl;
+      if(warning_.empty() == false)
+        std::cout << "[ObjReader][WARNING] file : " << filename << std::endl
+                  << warning_ << std::endl;
+    }
 
     return valid_;
   }

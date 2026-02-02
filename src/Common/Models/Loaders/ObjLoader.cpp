@@ -52,13 +52,13 @@ namespace hws {
   {
     Vertex vtx;
     vtx.position_.x = (float)attribute.vertices[3lu * indexes.vertex_index];
-    vtx.position_.y = (float)attribute.vertices[3lu * indexes.vertex_index + 1lu];
-    vtx.position_.z = (float)attribute.vertices[3lu * indexes.vertex_index + 2lu];
+    vtx.position_.y = (float)attribute.vertices[(3lu * indexes.vertex_index) + 1lu];
+    vtx.position_.z = (float)attribute.vertices[(3lu * indexes.vertex_index) + 2lu];
 
-    if(attribute.texcoords.empty())
+    if(attribute.texcoords.empty() == false)
     {
       int uv0_index = 2 * indexes.texcoord_index;
-      int uv1_index = 2 * indexes.texcoord_index + 1;
+      int uv1_index = (2 * indexes.texcoord_index) + 1;
       if(uv0_index >= 0 && uv1_index >= 0 &&
          (uv1_index < int(attribute.texcoords.size())))
       {
@@ -85,6 +85,7 @@ namespace hws {
                                                   std::vector<tinyobj::Material_t>& materials)
   {
     auto model = std::make_unique<Model>(Model::create());
+    model->scale_ = {1., 1., 1.};
 
     for(const auto& tiny_mesh : meshes)
     {
@@ -95,6 +96,7 @@ namespace hws {
       if(tiny_mesh.material_id >= 0)
       {
         const tinyobj::Material_t& material = materials[tiny_mesh.material_id];
+        hws_mesh->material_.name_ = material.name;
         hws_mesh->material_.diffuse_color_ = Color({(float)material.diffuse[0],
                                                     (float)material.diffuse[1],
                                                     (float)material.diffuse[2],
