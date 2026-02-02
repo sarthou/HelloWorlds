@@ -140,11 +140,6 @@ function(hws_add_library TARGET)
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/External>
     $<INSTALL_INTERFACE:include>)
 
-  set_target_properties(${TARGET}
-    PROPERTIES
-    CXX_STANDARD 20
-    CXX_STANDARD_REQUIRED ON)
-
   target_compile_options(${TARGET}
     PRIVATE
     -Wall -Wextra)
@@ -372,18 +367,10 @@ install(TARGETS
 
 # ROS 2 Specific Exports
 if(ROS_BUILD_TYPE STREQUAL "ROS2")
-  # This tells ament to export the targets we defined above
   ament_export_targets(${PROJECT_NAME}Targets HAS_LIBRARY_TARGET)
-
-  # This installs the generated CMake files for ament
-  install(EXPORT ${PROJECT_NAME}Targets
-    FILE ${PROJECT_NAME}Targets.cmake
-    NAMESPACE ${PROJECT_NAME}::
-    DESTINATION share/${PROJECT_NAME}/cmake
-  )
 endif()
 
-# Standalone Specific Exports (Optional but professional)
+# Standalone Specific Exports
 if(ROS_BUILD_TYPE STREQUAL "STANDALONE")
   install(EXPORT ${PROJECT_NAME}Targets
     FILE ${PROJECT_NAME}Config.cmake
