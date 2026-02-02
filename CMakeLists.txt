@@ -298,7 +298,29 @@ if(BUILD_TESTING)
     @ONLY
   )
 
-  # 3. Register the Test
+  # 3. Test registry function
+  function(hws_add_test TEST_NAME SOURCES)
+    if(ROS_BUILD_TYPE STREQUAL "ROS1")
+      catkin_add_gtest(${TEST_NAME} ${SOURCES})
+    elseif(ROS_BUILD_TYPE STREQUAL "ROS2")
+      ament_add_gtest(${TEST_NAME} ${SOURCES})
+    else()
+      add_executable(${TEST_NAME} ${SOURCES})
+    endif()
+
+    target_link_libraries(${TEST_NAME}
+      PRIVATE
+      GTest::gtest_main
+      hello_worlds
+    )
+    target_include_directories(${TEST_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
+
+    if(ROS_BUILD_TYPE STREQUAL "STANDALONE")
+      gtest_discover_tests(${TEST_NAME})
+    endif()
+  endfunction()
+
+  # 4. Register the Test
   if(ROS_BUILD_TYPE STREQUAL "ROS1")
     # This macro creates the executable and registers it with catkin/ctest
     catkin_add_gtest(ResourceTests tests/resource_embedding.cpp ${REGISTRY_FILE} ${CAD_HEADERS} ${SHADER_HEADERS})
@@ -312,13 +334,16 @@ if(BUILD_TESTING)
   else()
     # Standalone standard CMake
     enable_testing()
+    include(GoogleTest)
+
     add_executable(ResourceTests tests/resource_embedding.cpp ${REGISTRY_FILE} ${CAD_HEADERS} ${SHADER_HEADERS})
     target_link_libraries(ResourceTests PRIVATE GTest::gtest_main)
     target_include_directories(ResourceTests PRIVATE "${EMBEDDED_DIR}")
 
-    include(GoogleTest)
     gtest_discover_tests(ResourceTests)
   endif()
+
+  hws_add_test(ModelLoaderTests tests/ModelLoaderTest.cpp)
 endif()
 
 # --- ROS-Specific Installation/Setup ---
