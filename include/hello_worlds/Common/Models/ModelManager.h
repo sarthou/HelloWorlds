@@ -25,6 +25,9 @@ namespace hws {
 
     hws::Model& load(const std::filesystem::path& path);
 
+    size_t getLoadedModelCount() const { return models_.size(); }
+    bool isModelLoaded(const std::filesystem::path& path);
+
   protected:
     ModelLoader model_loader_;
     std::unordered_map<std::string, std::unique_ptr<hws::Model>> models_;

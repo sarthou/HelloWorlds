@@ -347,6 +347,7 @@ if(BUILD_TESTING)
   endif()
 
   hws_add_test(ModelLoaderTests tests/ModelLoaderTest.cpp)
+  hws_add_test(ModelManagerTests tests/ModelManagerTest.cpp)
 endif()
 
 # --- ROS-Specific Installation/Setup ---

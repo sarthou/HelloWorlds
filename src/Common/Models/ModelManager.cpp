@@ -39,4 +39,14 @@ namespace hws {
 
     return res;
   }
+
+  bool ModelManager::isModelLoaded(const std::filesystem::path& path)
+  {
+    const auto absolute_path_str = path.string();
+    mut_.lock();
+    bool res = models_.contains(absolute_path_str);
+    mut_.unlock();
+    return res;
+  }
+
 } // namespace hws
