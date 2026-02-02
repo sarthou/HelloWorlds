@@ -52,7 +52,7 @@ jobs:
           mv standalone_CMakeLists.txt CMakeLists.txt
           mkdir build && cd build
           cmake .. -DCMAKE_PREFIX_PATH=${{ env.SRC_DIR }}/install
-          make
+          make -j
           ./consumer_app
 
       - name: Lint
