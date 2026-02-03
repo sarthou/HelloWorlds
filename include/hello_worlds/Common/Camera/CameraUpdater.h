@@ -81,7 +81,7 @@ namespace hws {
   {
   public:
     CameraUpdater(Camera* camera = nullptr);
-    ~CameraUpdater() { delete camera_; }
+    ~CameraUpdater();
 
     CameraUpdater(const CameraUpdater& other) = delete;
     CameraUpdater& operator=(const CameraUpdater&) = delete;
@@ -108,10 +108,8 @@ namespace hws {
     void setOutputResolution(const std::array<float, 2>& resolution);
     void setPlanes(const std::array<float, 2>& near_far_planes);
 
-    void setPositionAnd2DOrientation(const std::array<double, 3>& position, const std::array<double, 3>& orientation);
     void setPositionAndLookAt(const std::array<double, 3>& eye_position, const std::array<double, 3>& dst_position);
     void setPositionAndDirection(const std::array<double, 3>& eye_position, const std::array<double, 3>& eye_direction);
-    void setDirectionAndLookAt(const std::array<double, 3>& eye_direction, const std::array<double, 3>& dst_position);
     void setPositionAndOrientation(const std::array<double, 3>& eye_position, const std::array<double, 4>& orientation);
 
     void clearChanges() { camera_->has_changed_size_ = false; }
@@ -120,6 +118,7 @@ namespace hws {
 
   private:
     Camera* camera_ = nullptr;
+    bool is_internal_camera_;
 
     glm::vec2 mouse_current_position_{};
     glm::vec2 mouse_drag_start_position_{};

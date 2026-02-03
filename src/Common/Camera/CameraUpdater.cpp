@@ -19,7 +19,15 @@ namespace hws {
     if(camera == nullptr)
       camera_ = new Camera;
     else
-      camera_ = new Camera(*camera);
+      camera_ = camera;
+
+    is_internal_camera_ = (camera == nullptr);
+  }
+
+  CameraUpdater::~CameraUpdater()
+  {
+    if(is_internal_camera_)
+      delete camera_;
   }
 
   void CameraUpdater::processUserKeyboardInput(const float delta_time, Key_e key, bool is_down)
@@ -214,16 +222,6 @@ namespace hws {
     camera_->updateProjectionMatrix();
   }
 
-  void CameraUpdater::setPositionAnd2DOrientation(const std::array<double, 3>& position, const std::array<double, 3>& orientation)
-  {
-    assert(camera_ && "CameraUpdater work on null pointer");
-    // to verify
-    camera_->world_eye_position_ = toGlmV3(position);
-    camera_->view_angles_.x = (float)orientation[2]; // yaw
-    camera_->view_angles_.y = (float)orientation[1]; // pitch
-    camera_->recomputeDirectionVector();
-  }
-
   void CameraUpdater::setPositionAndLookAt(const std::array<double, 3>& eye_position, const std::array<double, 3>& dst_position)
   {
     assert(camera_ && "CameraUpdater work on null pointer");
@@ -254,21 +252,6 @@ namespace hws {
     camera_->updateViewMatrix();
   }
 
-  void CameraUpdater::setDirectionAndLookAt(const std::array<double, 3>& eye_direction, const std::array<double, 3>& dst_position)
-  {
-    assert(camera_ && "CameraUpdater work on null pointer");
-    camera_->world_eye_front_ = toGlmV3(eye_direction);
-    camera_->world_eye_position_ = toGlmV3(dst_position) - camera_->world_eye_front_;
-
-    const auto xy = glm::sqrt(glm::pow(camera_->world_eye_front_.x, 2) + glm::pow(camera_->world_eye_front_.y, 2));
-
-    camera_->view_angles_.x = glm::degrees(glm::atan(camera_->world_eye_front_.y, camera_->world_eye_front_.x));
-    camera_->view_angles_.y = glm::degrees(glm::atan(camera_->world_eye_front_.z, static_cast<float>(xy)));
-
-    camera_->recomputeDirectionVector();
-    camera_->updateViewMatrix();
-  }
-
   void CameraUpdater::setPositionAndOrientation(const std::array<double, 3>& eye_position,
                                                 const std::array<double, 4>& orientation)
   {
@@ -277,16 +260,12 @@ namespace hws {
     camera_->world_eye_position_ = toGlmV3(eye_position);
 
     glm::quat quat = toGlmQuat(orientation);
-    glm::vec3 world_up(0.0f, 0.0f, 1.0f);                                 // Fixed world up vector
-    glm::vec3 front = glm::normalize(quat * glm::vec3(0.0f, 0.0f, 1.0f)); // Forward direction
-    glm::vec3 right = glm::normalize(glm::cross(front, world_up));        // Right direction
-    glm::vec3 up = glm::cross(right, front);                              // Actual up direction based on orientation
 
-    camera_->world_eye_front_ = front;
-    camera_->world_eye_up_ = up;
-    camera_->world_eye_right_ = right;
+    camera_->world_eye_front_ = quat * glm::vec3(1.0f, 0.0f, 0.0f);
+    camera_->world_eye_up_ = quat * glm::vec3(0.0f, 0.0f, 1.0f);
 
-    // Do not call recomputeDirectionVector, they are computed here considering more degrees of freedom
+    camera_->world_eye_right_ = glm::normalize(glm::cross(camera_->world_eye_front_, camera_->world_eye_up_));
+
     camera_->updateViewMatrix();
   }
 

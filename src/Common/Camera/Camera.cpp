@@ -3,6 +3,7 @@
 // first
 #include <GLFW/glfw3.h>
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <glm/ext/vector_float2.hpp>
@@ -10,6 +11,7 @@
 #include <glm/ext/vector_float4.hpp>
 #include <glm/gtc/packing.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <vector>
 
 #include "hello_worlds/Common/Camera/CameraProjection.h"
 #include "hello_worlds/Common/Camera/CameraView.h"
@@ -82,9 +84,9 @@ namespace hws {
       {
         for(unsigned int z = 0; z < 2; ++z)
         {
-          const glm::vec4 pt = inv * glm::vec4(2.0f * (float)x - 1.0f,
-                                               2.0f * (float)y - 1.0f,
-                                               2.0f * (float)z - 1.0f,
+          const glm::vec4 pt = inv * glm::vec4((2.0f * (float)x) - 1.0f,
+                                               (2.0f * (float)y) - 1.0f,
+                                               (2.0f * (float)z) - 1.0f,
                                                1.0f);
           frustum_corners.push_back(pt / pt.w);
         }
