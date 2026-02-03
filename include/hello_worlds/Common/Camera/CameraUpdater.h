@@ -100,6 +100,7 @@ namespace hws {
     void update();
 
     void setCameraView(hws::CameraView_e view_type);
+    void setConvention(hws::CameraConvention_e convention);
     void setProjection(hws::CameraProjection_e proj);
     void setFieldOfView(float fov);
     void setFieldOfViewRad(float fov);

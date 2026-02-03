@@ -113,31 +113,34 @@ namespace hws {
 
     (void)delta_time;
     mouse_current_position_ = {x, y};
+    const auto delta = (mouse_current_position_ - mouse_drag_start_position_);
+    mouse_drag_start_position_ = mouse_current_position_;
 
     if(mouse_btn_states_[1])
     {
-      const auto delta = (mouse_current_position_ - mouse_drag_start_position_) * mouse_rotation_sensitivity_;
-      mouse_drag_start_position_ = mouse_current_position_;
+      float yaw_angle = -delta.x * mouse_rotation_sensitivity_;
+      float pitch_angle = -delta.y * mouse_rotation_sensitivity_;
 
-      camera_->view_angles_.x += delta.x; // yaw
-      camera_->view_angles_.y += delta.y; // pitch
+      glm::vec3 world_up = (camera_->convention_ == CameraConvention_e::x_forward_z_up) ? glm::vec3(0.0f, 0.0f, 1.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
 
-      if(camera_->view_angles_.y > 89.0f)
-        camera_->view_angles_.y = 89.0f;
-      if(camera_->view_angles_.y < -89.0f)
-        camera_->view_angles_.y = -89.0f;
+      glm::quat yaw_quat = glm::angleAxis(glm::radians(yaw_angle), world_up);
+      glm::quat pitch_quat = glm::angleAxis(glm::radians(pitch_angle), camera_->world_eye_right_);
+      glm::quat combined_rotation = yaw_quat * pitch_quat;
 
-      camera_->recomputeDirectionVector();
+      camera_->world_eye_front_ = glm::normalize(combined_rotation * camera_->world_eye_front_);
+      camera_->world_eye_right_ = glm::normalize(glm::cross(camera_->world_eye_front_, world_up));
+      camera_->world_eye_up_ = glm::cross(camera_->world_eye_right_, camera_->world_eye_front_);
+
+      camera_->updateViewMatrix();
     }
     else if(mouse_btn_states_[2])
     {
-      const auto delta = (mouse_current_position_ - mouse_drag_start_position_) * (mouse_translate_sensitivity_ * 0.5f);
-      mouse_drag_start_position_ = mouse_current_position_;
+      const float speed = mouse_translate_sensitivity_ * 0.5f;
 
-      camera_->world_eye_position_ -= camera_->world_eye_right_ * delta.x;
-      camera_->world_eye_position_ += camera_->world_eye_up_ * delta.y;
+      camera_->world_eye_position_ -= camera_->world_eye_right_ * (delta.x * speed);
+      camera_->world_eye_position_ += camera_->world_eye_up_ * (delta.y * speed);
 
-      camera_->recomputeDirectionVector();
+      camera_->updateViewMatrix();
     }
   }
 
@@ -174,6 +177,12 @@ namespace hws {
   {
     assert(camera_ && "CameraUpdater work on null pointer");
     camera_->view_type_ = view_type;
+  }
+
+  void CameraUpdater::setConvention(hws::CameraConvention_e convention)
+  {
+    assert(camera_ && "CameraUpdater work on null pointer");
+    camera_->convention_ = convention;
   }
 
   void CameraUpdater::setProjection(const hws::CameraProjection_e proj)
@@ -224,31 +233,30 @@ namespace hws {
 
   void CameraUpdater::setPositionAndLookAt(const std::array<double, 3>& eye_position, const std::array<double, 3>& dst_position)
   {
-    assert(camera_ && "CameraUpdater work on null pointer");
+    assert(camera_ && "CameraUpdater works on null pointer");
+
     camera_->world_eye_position_ = toGlmV3(eye_position);
-    camera_->world_eye_front_ = toGlmV3(dst_position) - camera_->world_eye_position_;
 
-    const auto xy = glm::sqrt(glm::pow(camera_->world_eye_front_.x, 2) + glm::pow(camera_->world_eye_front_.y, 2));
+    glm::vec3 dst = toGlmV3(dst_position);
+    glm::vec3 direction = dst - camera_->world_eye_position_;
 
-    camera_->view_angles_.x = glm::degrees(glm::atan(camera_->world_eye_front_.y, camera_->world_eye_front_.x));
-    camera_->view_angles_.y = glm::degrees(glm::atan(camera_->world_eye_front_.z, static_cast<float>(xy)));
+    if(glm::length(direction) < 0.0001f)
+      camera_->world_eye_front_ = camera_->getLocalFront();
+    else
+      camera_->world_eye_front_ = glm::normalize(direction);
 
-    camera_->recomputeDirectionVector();
+    camera_->orthogonalize();
     camera_->updateViewMatrix();
   }
 
   void CameraUpdater::setPositionAndDirection(const std::array<double, 3>& eye_position, const std::array<double, 3>& eye_direction)
   {
     assert(camera_ && "CameraUpdater work on null pointer");
+
     camera_->world_eye_position_ = toGlmV3(eye_position);
-    camera_->world_eye_front_ = toGlmV3(eye_direction);
+    camera_->world_eye_front_ = glm::normalize(toGlmV3(eye_direction));
 
-    const auto xy = glm::sqrt(glm::pow(camera_->world_eye_front_.x, 2) + glm::pow(camera_->world_eye_front_.y, 2));
-
-    camera_->view_angles_.x = glm::degrees(glm::atan(camera_->world_eye_front_.y, camera_->world_eye_front_.x));
-    camera_->view_angles_.y = glm::degrees(glm::atan(camera_->world_eye_front_.z, static_cast<float>(xy)));
-
-    camera_->recomputeDirectionVector();
+    camera_->orthogonalize();
     camera_->updateViewMatrix();
   }
 
@@ -261,10 +269,8 @@ namespace hws {
 
     glm::quat quat = toGlmQuat(orientation);
 
-    camera_->world_eye_front_ = quat * glm::vec3(1.0f, 0.0f, 0.0f);
-    camera_->world_eye_up_ = quat * glm::vec3(0.0f, 0.0f, 1.0f);
-
-    camera_->world_eye_right_ = glm::normalize(glm::cross(camera_->world_eye_front_, camera_->world_eye_up_));
+    camera_->world_eye_front_ = quat * camera_->getLocalFront();
+    camera_->world_eye_up_ = quat * camera_->getLocalUp();
 
     camera_->updateViewMatrix();
   }
@@ -272,8 +278,8 @@ namespace hws {
   void CameraUpdater::finalize()
   {
     assert(camera_ && "CameraUpdater work on null pointer");
-    camera_->recomputeDirectionVector();
-    camera_->updateMatrices();
+    camera_->updateViewMatrix();
+    camera_->updateProjectionMatrix();
   }
 
 } // namespace hws

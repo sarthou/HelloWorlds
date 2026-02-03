@@ -17,6 +17,13 @@ namespace hws {
 
   class CameraUpdater;
 
+  enum class CameraConvention_e
+  {
+    x_forward_z_up,    // Common in ROS / Robotics
+    z_forward_y_down,  // ROS Optical / Computer Vision
+    neg_z_forward_y_up // Standard OpenGL / Game Engines
+  };
+
   class Camera
   {
     friend CameraUpdater;
@@ -24,15 +31,16 @@ namespace hws {
   private:
     hws::CameraView_e view_type_{};
     hws::CameraProjection_e projection_type_{};
+    hws::CameraConvention_e convention_ = CameraConvention_e::x_forward_z_up;
     hws::ViewAntiAliasing_e aa_setting_;
 
     float field_of_view_ = 0.785398; // 45 deg
-    glm::vec3 world_eye_position_{};
-    glm::vec3 world_eye_front_{};
-    glm::vec3 world_eye_right_{};
+    glm::vec3 world_eye_position_{0.f};
+    glm::vec3 world_eye_front_{1.0f, 0.0f, 0.0f};
     glm::vec3 world_eye_up_ = {0.f, 0., 1.f};
 
-    glm::vec2 view_angles_{-90.0f, 0.0f}; // yaw/pitch in deg
+    glm::vec3 world_eye_right_{};
+
     glm::vec2 planes_{0.1, 100.};
 
     bool render_debug_ = true;
@@ -54,6 +62,8 @@ namespace hws {
     glm::mat4 getProjectionMatrix() const { return proj_matrix_; }
     ViewAntiAliasing_e getAASetting() const { return aa_setting_; }
     CameraView_e getViewType() const { return view_type_; }
+    glm::vec3 getLocalFront() const;
+    glm::vec3 getLocalUp() const;
     float getFov() const { return field_of_view_; }
 
     float getNearPlane() const { return planes_[0]; }
@@ -76,9 +86,7 @@ namespace hws {
 
     void updateViewMatrix();
     void updateProjectionMatrix();
-    void updateMatrices();
-
-    void recomputeDirectionVector();
+    void orthogonalize();
   };
 } // namespace hws
 

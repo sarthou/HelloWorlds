@@ -27,6 +27,26 @@ namespace hws {
                                world_eye_up_);
   }
 
+  glm::vec3 Camera::getLocalFront() const
+  {
+    switch(convention_)
+    {
+    case CameraConvention_e::x_forward_z_up: return {1.0f, 0.0f, 0.0f};
+    case CameraConvention_e::z_forward_y_down: return {0.0f, 0.0f, 1.0f};
+    default: return {0.0f, 0.0f, -1.0f};
+    }
+  }
+
+  glm::vec3 Camera::getLocalUp() const
+  {
+    switch(convention_)
+    {
+    case CameraConvention_e::x_forward_z_up: return {0.0f, 0.0f, 1.0f};
+    case CameraConvention_e::z_forward_y_down: return {0.0f, -1.0f, 0.0f};
+    default: return {0.0f, 1.0f, 0.0f};
+    }
+  }
+
   void Camera::updateProjectionMatrix()
   {
     switch(projection_type_)
@@ -53,24 +73,15 @@ namespace hws {
     }
   }
 
-  void Camera::updateMatrices()
+  void Camera::orthogonalize()
   {
-    updateViewMatrix();
-    updateProjectionMatrix();
-  }
+    world_eye_front_ = glm::normalize(world_eye_front_);
 
-  void Camera::recomputeDirectionVector()
-  {
-    glm::vec3 world_up(0.0f, 0.0f, 1.0f);
+    glm::vec3 world_up = (convention_ == CameraConvention_e::x_forward_z_up) ? glm::vec3(0.0f, 0.0f, 1.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
 
-    glm::vec3 front;
-    front.x = (float)(cos(glm::radians(view_angles_.x)) * cos(glm::radians(view_angles_.y)));
-    front.y = (float)(sin(glm::radians(view_angles_.x)) * cos(glm::radians(view_angles_.y)));
-    front.z = (float)sin(glm::radians(view_angles_.y));
+    world_eye_right_ = glm::normalize(glm::cross(world_eye_front_, world_up));
 
-    world_eye_front_ = glm::normalize(front);
-    world_eye_right_ = glm::normalize(glm::cross(world_eye_front_, world_up)); // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
-    world_eye_up_ = glm::normalize(glm::cross(world_eye_right_, world_eye_front_));
+    world_eye_up_ = glm::cross(world_eye_right_, world_eye_front_);
   }
 
   std::vector<glm::vec4> Camera::getFrustumCornersWorldSpace()
