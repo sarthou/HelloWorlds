@@ -29,16 +29,16 @@ namespace hws {
                          float specular_strength = 1.0f,
                          float attenuation_radius = 10.f);
 
-    void removeLight(std::size_t id);
+    bool removeLight(std::size_t id);
 
-    void setColor(std::size_t id, const glm::vec3& color);
-    void setPosition(std::size_t id, const glm::vec3& position);
+    bool setColor(std::size_t id, const glm::vec3& color);
+    bool setPosition(std::size_t id, const glm::vec3& position);
 
-    void setAttenuation(std::size_t id, const glm::vec3& attenuation);
-    void setAttenuation(std::size_t id, float radius);
-    void setAmbientStrength(std::size_t id, float strength);
-    void setDiffuseStrength(std::size_t id, float strength);
-    void setSpecularStrength(std::size_t id, float strength);
+    bool setAttenuation(std::size_t id, const glm::vec3& attenuation);
+    bool setAttenuation(std::size_t id, float radius);
+    bool setAmbientStrength(std::size_t id, float strength);
+    bool setDiffuseStrength(std::size_t id, float strength);
+    bool setSpecularStrength(std::size_t id, float strength);
 
     const std::array<glm::vec4, MAX_POINT_LIGHTS>& getAmbients() const { return ambients_; }
     const std::array<glm::vec4, MAX_POINT_LIGHTS>& getDiffuses() const { return diffuses_; }
@@ -74,7 +74,7 @@ namespace hws {
     std::array<glm::vec4, MAX_POINT_LIGHTS> attenuations_;
     std::array<float, MAX_POINT_LIGHTS> attenuation_distances_;
 
-    void removeId(std::size_t id);
+    bool removeId(std::size_t id);
     std::size_t findAvailableId();
 
     void computeAmbient(std::size_t id);

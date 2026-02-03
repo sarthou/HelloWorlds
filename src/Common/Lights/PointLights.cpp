@@ -50,60 +50,95 @@ namespace hws {
     return id;
   }
 
-  void PointLights::removeLight(std::size_t id)
+  bool PointLights::removeLight(std::size_t id)
   {
-    removeId(id);
+    if(removeId(id) == false)
+      return false;
+
     ambient_strengths_[id] = 0.f;
     diffuse_strengths_[id] = 0.f;
     specular_strengths_[id] = 0.f;
     computeAmbient(id);
     computeDiffuse(id);
     computeSpecular(id);
+    return true;
   }
 
-  void PointLights::setColor(std::size_t id, const glm::vec3& color)
+  bool PointLights::setColor(std::size_t id, const glm::vec3& color)
   {
+    if((id >= available_.size()) || (available_[id] == true))
+      return false;
+
     colors_[id] = glm::vec4(color, 1.0f);
     computeAmbient(id);
     computeDiffuse(id);
     computeSpecular(id);
+
+    return true;
   }
 
-  void PointLights::setPosition(std::size_t id, const glm::vec3& position)
+  bool PointLights::setPosition(std::size_t id, const glm::vec3& position)
   {
+    if((id >= available_.size()) || (available_[id] == true))
+      return false;
+
     positions_[id] = glm::vec4(position, 1.0f);
+    return true;
   }
 
-  void PointLights::setAttenuation(std::size_t id, const glm::vec3& attenuation)
+  bool PointLights::setAttenuation(std::size_t id, const glm::vec3& attenuation)
   {
+    if((id >= available_.size()) || (available_[id] == true))
+      return false;
+
     attenuations_[id] = glm::vec4(attenuation, 0.0f);
+    return true;
   }
 
-  void PointLights::setAttenuation(std::size_t id, float radius)
+  bool PointLights::setAttenuation(std::size_t id, float radius)
   {
+    if((id >= available_.size()) || (available_[id] == true))
+      return false;
+
     attenuations_[id] = glm::vec4(1.0f, 2.0 / radius, 1.0 / (radius /* * radius*/), 0.0f);
+    return true;
   }
 
-  void PointLights::setAmbientStrength(std::size_t id, float strength)
+  bool PointLights::setAmbientStrength(std::size_t id, float strength)
   {
+    if((id >= available_.size()) || (available_[id] == true))
+      return false;
+
     ambient_strengths_[id] = strength;
     computeAmbient(id);
+    return true;
   }
 
-  void PointLights::setDiffuseStrength(std::size_t id, float strength)
+  bool PointLights::setDiffuseStrength(std::size_t id, float strength)
   {
+    if((id >= available_.size()) || (available_[id] == true))
+      return false;
+
     diffuse_strengths_[id] = strength;
     computeDiffuse(id);
+    return true;
   }
 
-  void PointLights::setSpecularStrength(std::size_t id, float strength)
+  bool PointLights::setSpecularStrength(std::size_t id, float strength)
   {
+    if((id >= available_.size()) || (available_[id] == true))
+      return false;
+
     specular_strengths_[id] = strength;
     computeSpecular(id);
+    return true;
   }
 
-  void PointLights::removeId(std::size_t id)
+  bool PointLights::removeId(std::size_t id)
   {
+    if((id >= available_.size()) || (available_[id] == true))
+      return false;
+
     available_[id] = true;
     nb_lights_ = 0;
     for(std::size_t i = 0; i < MAX_POINT_LIGHTS; i++)
@@ -111,6 +146,7 @@ namespace hws {
       if(available_[i])
         nb_lights_ = i + 1;
     }
+    return true;
   }
 
   std::size_t PointLights::findAvailableId()
