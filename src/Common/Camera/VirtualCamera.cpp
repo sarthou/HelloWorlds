@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <unordered_set>
 
+#include "hello_worlds/Common/Camera/Camera.h"
 #include "hello_worlds/Common/Camera/CameraProjection.h"
 #include "hello_worlds/Common/Camera/CameraView.h"
 
@@ -11,11 +12,13 @@ namespace hws {
 
   VirtualCamera::VirtualCamera(unsigned int width, unsigned int height,
                                float fov, hws::CameraView_e view_type,
-                               float near_plane, float far_plane) : width_(width),
-                                                                    height_(height)
+                               float near_plane, float far_plane,
+                               hws::CameraConvention_e convention) : width_(width),
+                                                                     height_(height)
   {
     camera_.setCameraView(view_type);
     camera_.setProjection(CameraProjection_e::perspective);
+    camera_.setConvention(convention);
     camera_.setFieldOfViewRad(fov);
     camera_.setOutputResolution({(float)width, (float)height});
     camera_.setPlanes({near_plane, far_plane});

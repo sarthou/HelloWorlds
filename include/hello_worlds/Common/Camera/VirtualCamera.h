@@ -13,7 +13,10 @@ namespace hws {
   class VirtualCamera
   {
   public:
-    VirtualCamera(unsigned int width, unsigned int height, float fov /*Rad*/, hws::CameraView_e view_type, float near_plane, float far_plane);
+    VirtualCamera(unsigned int width, unsigned int height, float fov /*Rad*/,
+                  hws::CameraView_e view_type,
+                  float near_plane, float far_plane,
+                  hws::CameraConvention_e convention = hws::CameraConvention_e::x_forward_z_up);
     ~VirtualCamera();
     VirtualCamera(const VirtualCamera& other) = delete;
     VirtualCamera& operator=(const VirtualCamera&) = delete;
