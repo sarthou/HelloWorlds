@@ -349,6 +349,7 @@ if(BUILD_TESTING)
   hws_add_test(ModelLoaderTests tests/ModelLoaderTest.cpp)
   hws_add_test(ModelManagerTests tests/ModelManagerTest.cpp)
   hws_add_test(CameraUpdaterTests tests/CameraUpdaterTest.cpp)
+  hws_add_test(AssetResolverTests tests/AssetResolverTest.cpp)
 endif()
 
 # --- ROS-Specific Installation/Setup ---
