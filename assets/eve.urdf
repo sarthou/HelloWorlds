@@ -1,6 +1,6 @@
 <robot name="eve">
   <material name="Head">
-    <texture filename="package://overworld/models/tutorials/Eve/eve_head.png"/>
+    <texture filename="package://hello_worlds/assets/Eve/eve_head.png"/>
   </material>
 
   <material name="White">
@@ -11,14 +11,14 @@
     <visual>
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 1.57079632679"/>
       <geometry>
-        <mesh filename="package://overworld/models/tutorials/Eve/eve_body.obj"/>
+        <mesh filename="package://hello_worlds/assets/Eve/eve_body.obj"/>
       </geometry>
       <material name="White"/>
     </visual>
     <collision>
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 1.57079632679"/>
       <geometry>
-        <mesh filename="package://overworld/models/tutorials/Eve/eve_body.obj"/>
+        <mesh filename="package://hello_worlds/assets/Eve/eve_body.obj"/>
       </geometry>
     </collision>
   </link>
@@ -44,14 +44,14 @@
     <visual>
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 1.57079632679"/>
       <geometry>
-        <mesh filename="package://overworld/models/tutorials/Eve/eve_head.obj"/>
+        <mesh filename="package://hello_worlds/assets/Eve/eve_head.obj"/>
       </geometry>
       <material name="Head"/>
     </visual>
     <collision>
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 1.57079632679"/>
       <geometry>
-        <mesh filename="package://overworld/models/tutorials/Eve/eve_head.obj"/>
+        <mesh filename="package://hello_worlds/assets/Eve/eve_head.obj"/>
       </geometry>
     </collision>
   </link>
@@ -77,14 +77,14 @@
     <visual>
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 1.57079632679"/>
       <geometry>
-        <mesh filename="package://overworld/models/tutorials/Eve/eve_arm_left.obj"/>
+        <mesh filename="package://hello_worlds/assets/Eve/eve_arm_left.obj"/>
       </geometry>
       <material name="White"/>
     </visual>
     <collision>
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 1.57079632679"/>
       <geometry>
-        <mesh filename="package://overworld/models/tutorials/Eve/eve_arm_left.obj"/>
+        <mesh filename="package://hello_worlds/assets/Eve/eve_arm_left.obj"/>
       </geometry>
     </collision>
   </link>
@@ -110,14 +110,14 @@
     <visual>
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 1.57079632679"/>
       <geometry>
-        <mesh filename="package://overworld/models/tutorials/Eve/eve_arm_right.obj"/>
+        <mesh filename="package://hello_worlds/assets/Eve/eve_arm_right.obj"/>
       </geometry>
       <material name="White"/>
     </visual>
     <collision>
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 1.57079632679"/>
       <geometry>
-        <mesh filename="package://overworld/models/tutorials/Eve/eve_arm_right.obj"/>
+        <mesh filename="package://hello_worlds/assets/Eve/eve_arm_right.obj"/>
       </geometry>
     </collision>
   </link>

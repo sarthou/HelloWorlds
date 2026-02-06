@@ -2,7 +2,7 @@
 <robot name="frame">
 
   <material name="farme_material">
-    <texture filename="package://overworld/models/tutorials/Frame/frame.png"/>
+    <texture filename="package://hello_worlds/assets/Frame/frame.png"/>
   </material>
 
   <link concave="yes" name="frame_y">
@@ -14,13 +14,13 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://overworld/models/tutorials/Frame/frame.obj" scale="1 1 1"/>
+        <mesh filename="package://hello_worlds/assets/Frame/frame.obj" scale="1 1 1"/>
       </geometry>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://overworld/models/tutorials/Frame/frame.obj" scale="1 1 1"/>
+        <mesh filename="package://hello_worlds/assets/Frame/frame.obj" scale="1 1 1"/>
       </geometry>
     </collision>
   </link>
@@ -34,14 +34,14 @@
     <visual>
       <origin rpy="0 0 0" xyz="1 1 0"/>
       <geometry>
-        <mesh filename="package://overworld/models/tutorials/Frame/frame_z.dae" scale="1 1 1"/>
+        <mesh filename="package://hello_worlds/assets/Frame/frame_z.dae" scale="1 1 1"/>
       </geometry>
       <material name="farme_material"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://overworld/models/tutorials/Frame/frame.obj" scale="1 1 1"/>
+        <mesh filename="package://hello_worlds/assets/Frame/frame.obj" scale="1 1 1"/>
       </geometry>
     </collision>
   </link>
