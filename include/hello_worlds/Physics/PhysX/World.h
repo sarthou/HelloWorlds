@@ -16,7 +16,7 @@ namespace hws::physx {
   class World final : public hws::World
   {
   public:
-    explicit World(const std::filesystem::path& base_assets_path);
+    explicit World();
     ~World() override;
 
     World(const World& other) = delete;

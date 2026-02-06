@@ -45,13 +45,12 @@
 
 namespace hws {
 
-  World::World(const std::filesystem::path& base_assets_path) : base_assets_path_(base_assets_path),
-                                                                preloaded_box_model_(hws::ModelManager::get().load(
-                                                                  exportEmbeddedToTmp("cube.obj", resources::cube_obj_data, resources::cube_obj_size))),
-                                                                preloaded_cylinder_model_(hws::ModelManager::get().load(
-                                                                  exportEmbeddedToTmp("cylinder.obj", resources::cylinder_obj_data, resources::cylinder_obj_size))),
-                                                                preloaded_sphere_model_(hws::ModelManager::get().load(
-                                                                  exportEmbeddedToTmp("sphere.obj", resources::sphere_obj_data, resources::sphere_obj_size)))
+  World::World() : preloaded_box_model_(hws::ModelManager::get().load(
+                     exportEmbeddedToTmp("cube.obj", resources::cube_obj_data, resources::cube_obj_size))),
+                   preloaded_cylinder_model_(hws::ModelManager::get().load(
+                     exportEmbeddedToTmp("cylinder.obj", resources::cylinder_obj_data, resources::cylinder_obj_size))),
+                   preloaded_sphere_model_(hws::ModelManager::get().load(
+                     exportEmbeddedToTmp("sphere.obj", resources::sphere_obj_data, resources::sphere_obj_size)))
   {}
 
   World::~World()
@@ -111,10 +110,9 @@ namespace hws {
 
   size_t World::loadUrdf(const std::string& path,
                          const std::array<double, 3>& position,
-                         const std::array<double, 3>& orientation,
-                         bool from_base_path)
+                         const std::array<double, 3>& orientation)
   {
-    auto urdf_model = getUrdf(path, from_base_path);
+    auto urdf_model = getUrdf(path);
     return loadUrdf(urdf_model, position, orientation);
   }
 
@@ -689,24 +687,16 @@ namespace hws {
 
   /* PRIVATE */
 
-  urdf::Urdf_t World::getUrdf(const std::string& path, bool from_base_path)
+  urdf::Urdf_t World::getUrdf(const std::string& path)
   {
     UrdfLoader loader;
-    urdf::Urdf_t urdf_model;
-
-    if(from_base_path)
-      urdf_model = loader.read((base_assets_path_ / path).string());
-    else
-      urdf_model = loader.read(path);
-
-    return urdf_model;
+    return loader.read(path);
   }
 
   urdf::Urdf_t World::getUrdfRaw(const std::string& content)
   {
     UrdfLoader loader;
     return loader.readRaw(content);
-    ;
   }
 
   void World::loadUrdfLink(hws::Urdf* urdf, const urdf::Urdf_t& model,

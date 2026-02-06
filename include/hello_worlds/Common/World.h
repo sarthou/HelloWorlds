@@ -37,9 +37,8 @@ namespace hws {
     friend Renderer;
 
   protected:
-    explicit World(const std::filesystem::path& base_assets_path);
+    explicit World();
 
-    std::filesystem::path base_assets_path_;
     hws::Model& preloaded_box_model_;
     hws::Model& preloaded_cylinder_model_;
     hws::Model& preloaded_sphere_model_;
@@ -80,8 +79,7 @@ namespace hws {
 
     size_t loadUrdf(const std::string& path,
                     const std::array<double, 3>& position,
-                    const std::array<double, 3>& orientation,
-                    bool from_base_path = true);
+                    const std::array<double, 3>& orientation);
     size_t loadUrdfRaw(const std::string& content,
                        const std::array<double, 3>& position,
                        const std::array<double, 3>& orientation);
@@ -208,7 +206,7 @@ namespace hws {
     size_t loadUrdf(urdf::Urdf_t& urdf_model,
                     const std::array<double, 3>& position,
                     const std::array<double, 3>& orientation);
-    urdf::Urdf_t getUrdf(const std::string& path, bool from_base_path);
+    urdf::Urdf_t getUrdf(const std::string& path);
     urdf::Urdf_t getUrdfRaw(const std::string& content);
     void loadUrdfLink(hws::Urdf* urdf, const urdf::Urdf_t& model,
                       const std::string& parent,

@@ -25,8 +25,7 @@
 
 namespace hws::physx {
 
-  World::World(const std::filesystem::path& base_assets_path) : hws::World(base_assets_path),
-                                                                ctx_(std::make_unique<hws::physx::Context>(false, "0.0.0.0"))
+  World::World() : ctx_(std::make_unique<hws::physx::Context>(false, "0.0.0.0"))
   {}
 
   World::~World() = default;

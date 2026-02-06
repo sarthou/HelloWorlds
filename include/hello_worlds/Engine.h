@@ -25,8 +25,7 @@ namespace hws {
   class Engine
   {
   public:
-    Engine(const std::string& name, Window* window) : world("TODO path"), // TODO: remove ref to overworld
-                                                      name_(name), window_(window), run_(true)
+    Engine(const std::string& name, Window* window) : name_(name), window_(window), run_(true)
     {}
 
     WorldEngine world;
