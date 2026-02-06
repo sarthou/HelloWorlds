@@ -19,6 +19,7 @@ namespace hws {
 
     void registerPackage(const std::string& name, const std::string& path);
     void addSearchDirectory(const std::string& path);
+    void clear();
 
     std::string getFullPath(const std::string& uri);
 
@@ -28,6 +29,7 @@ namespace hws {
     std::unordered_map<std::string, std::string> package_cache_;
     std::vector<std::string> search_dirs_;
 
+    std::string findPackageRoot(const std::string& pkg_name);
     std::string findInEnv(const std::string& pkg_name);
 
     std::string searchInPathList(const std::string& list, const std::string& pkg, const std::string& suffix);

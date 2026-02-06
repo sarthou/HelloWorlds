@@ -13,12 +13,22 @@ namespace hws {
 
   void AssetResolver::registerPackage(const std::string& name, const std::string& path)
   {
-    package_map_[name] = path;
+    if(*(path.rbegin()) == '/')
+      package_map_[name] = path.substr(0, path.size() - 1);
+    else
+      package_map_[name] = path;
   }
 
   void AssetResolver::addSearchDirectory(const std::string& path)
   {
     search_dirs_.push_back(path);
+  }
+
+  void AssetResolver::clear()
+  {
+    package_map_.clear();
+    search_dirs_.clear();
+    package_cache_.clear();
   }
 
   std::string AssetResolver::getFullPath(const std::string& uri)
@@ -37,7 +47,13 @@ namespace hws {
     if(package_map_.count(pkg_name) != 0)
       return package_map_[pkg_name] + relative_path;
 
-    for(const auto& dir : search_dirs_)
+    std::string searched_path = findPackageRoot(pkg_name);
+    if(searched_path.empty() == false)
+    {
+      package_cache_[pkg_name] = searched_path;
+      return searched_path + relative_path;
+    }
+    /*for(const auto& dir : search_dirs_)
     {
       fs::path p = fs::path(dir) / pkg_name;
       if(fs::exists(p))
@@ -45,13 +61,47 @@ namespace hws {
         package_cache_[pkg_name] = p.string();
         return p.string() + relative_path;
       }
-    }
+    }*/
 
     std::string env_path = findInEnv(pkg_name);
     if(!env_path.empty())
     {
       package_cache_[pkg_name] = env_path;
       return env_path + relative_path;
+    }
+
+    return "";
+  }
+
+  std::string AssetResolver::findPackageRoot(const std::string& pkg_name)
+  {
+    for(const auto& dir : search_dirs_)
+    {
+      if(!fs::exists(dir))
+        continue;
+
+      fs::path shallow = fs::path(dir) / pkg_name;
+      if(fs::exists(shallow) && fs::is_directory(shallow))
+      {
+        return shallow.string();
+      }
+
+      try
+      {
+        for(const auto& entry : fs::recursive_directory_iterator(dir,
+                                                                 fs::directory_options::skip_permission_denied |
+                                                                   fs::directory_options::follow_directory_symlink))
+        {
+          if(entry.is_directory() && entry.path().filename() == pkg_name)
+          {
+            return entry.path().string();
+          }
+        }
+      }
+      catch(...)
+      {
+        continue;
+      }
     }
 
     return "";
