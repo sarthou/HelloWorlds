@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "hello_worlds/Common/Models/Material.h"
-#include "hello_worlds/Utils/RosPackage.h"
+#include "hello_worlds/Utils/AssetResolver.h"
 #include "hello_worlds/Utils/ShellDisplay.h"
 #include "hello_worlds/Utils/XmlTokenize.h"
 
@@ -117,7 +117,7 @@ namespace hws {
     if(texture != nullptr)
     {
       std::string filename = std::string(texture->Attribute("filename"));
-      instance.diffuse_texture_ = getFullPath(filename); // TODO: find a way to be able to be independent of ROS
+      instance.diffuse_texture_ = AssetResolver::instance().getFullPath(filename);
     }
 
     return {id, instance};

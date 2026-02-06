@@ -151,7 +151,7 @@ hws_add_library(hello_worlds_SolarAzEl External/SolarAzEl/SolarAzEl.cpp)
 hws_add_library(hello_worlds_glad External/glad/glad.c)
 
 hws_add_library(hello_worlds_utility_lib
-  src/Utils/RosPackage.cpp
+  src/Utils/AssetResolver.cpp
   src/Utils/XmlTokenize.cpp)
 
 # ------ hello_worlds_engine_common ------

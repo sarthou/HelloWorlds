@@ -1,8 +1,5 @@
 #include "hello_worlds/Graphics/GLFW/Window.h"
 
-#include "hello_worlds/Utils/RosPackage.h"
-// should be first
-
 #include <memory>
 #include <string>
 

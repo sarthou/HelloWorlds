@@ -34,7 +34,6 @@
 #include "hello_worlds/Graphics/OpenGL/MeshHandle.h"
 #include "hello_worlds/Graphics/OpenGL/Texture2D.h"
 #include "hello_worlds/Utils/GlmMath.h"
-#include "hello_worlds/Utils/RosPackage.h"
 #include "hello_worlds_embedded/embedded_color_shader.fs.h"
 #include "hello_worlds_embedded/embedded_color_shader.vs.h"
 #include "hello_worlds_embedded/embedded_depth_shader.fs.h"

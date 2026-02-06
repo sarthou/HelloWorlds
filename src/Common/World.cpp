@@ -37,8 +37,8 @@
 #include "hello_worlds/Common/Urdf/UrdfLoader.h"
 #include "hello_worlds/Common/Urdf/VisualActor.h"
 #include "hello_worlds/Common/WorldTypes.h"
+#include "hello_worlds/Utils/AssetResolver.h"
 #include "hello_worlds/Utils/GlmMath.h"
-#include "hello_worlds/Utils/RosPackage.h"
 #include "hello_worlds_embedded/embedded_cube.obj.h"
 #include "hello_worlds_embedded/embedded_cylinder.obj.h"
 #include "hello_worlds_embedded/embedded_sphere.obj.h"
@@ -827,8 +827,9 @@ namespace hws {
     }
     case urdf::GeometryType_e::geometry_mesh:
     {
+      std::string mesh_path = AssetResolver::instance().getFullPath(urdf_shape.file_name);
       return createShapeFromModel(urdf_shape.material,
-                                  hws::getFullPath(urdf_shape.file_name),
+                                  mesh_path,
                                   {static_cast<float>(urdf_shape.scale.x),
                                    static_cast<float>(urdf_shape.scale.y),
                                    static_cast<float>(urdf_shape.scale.z)},
