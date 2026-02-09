@@ -39,7 +39,7 @@
       <material name="farme_material"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="1 1 0"/>
       <geometry>
         <mesh filename="package://hello_worlds/assets/Frame/frame.obj" scale="1 1 1"/>
       </geometry>

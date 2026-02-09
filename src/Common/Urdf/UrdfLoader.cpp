@@ -101,6 +101,7 @@ namespace hws {
   {
     Material instance;
     std::string id = std::string(element->Attribute("name"));
+    instance.name_ = id;
 
     auto* color = element->FirstChildElement("color");
     if(color != nullptr)
