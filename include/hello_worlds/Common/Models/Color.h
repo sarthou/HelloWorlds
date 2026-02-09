@@ -19,6 +19,12 @@ namespace hws {
               a_(0.)
     {}
 
+    Color(float r, float g, float b) : r_(r),
+                                       g_(g),
+                                       b_(b),
+                                       a_(0.)
+    {}
+
     Color(const std::array<float, 3>& rgb) : r_(rgb.at(0)),
                                              g_(rgb.at(1)),
                                              b_(rgb.at(2)),
