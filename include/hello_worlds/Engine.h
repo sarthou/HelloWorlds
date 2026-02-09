@@ -3,6 +3,7 @@
 
 #include <array>
 #include <string>
+#include <thread>
 
 #include "hello_worlds/Common/Camera/Camera.h"
 #include "hello_worlds/Common/Camera/CameraView.h"
@@ -25,30 +26,32 @@ namespace hws {
   class Engine
   {
   public:
-    Engine(const std::string& name, Window* window) : name_(name), window_(window), run_(true)
+    Engine(Window* window, bool simulate = true) : window_(window),
+                                                   run_(true),
+                                                   simulate_(simulate)
     {}
 
     WorldEngine world;
 
-    void initView(float max_fps = 30, float screen_width = 640, float screen_height = 480);
-
     void setVizualizerCamera(const std::array<double, 3>& position, const std::array<double, 3>& target);
 
-    void finalise(double fps = 1. / 60.);
-
     void stop();
+    bool isRunning() { return run_; }
 
-    void run(bool simulate = false);
+    void runDetached(float max_fps = 30);
+    void run(float max_fps = 30);
 
     void setKeyCallback(const std::function<void(Key_e, bool)>& callback) { window_->setKeyCallback(callback); }
 
     WorldEngine* getWorld() { return &world; }
 
   private:
-    Renderer renderer_; // TODO find way to expose addSkyBox function
-    std::string name_;
+    Renderer renderer_;
     Window* window_;
     std::atomic<bool> run_;
+    bool simulate_;
+    bool detached_ = false;
+    std::thread engin_thread_;
   };
 
 } // namespace hws

@@ -37,9 +37,7 @@ namespace hws {
     static void release();
 
     bool initialize(Window& window, float max_fps = 30);
-    void setBackgroundColor(float r, float g, float b);
-    void addSkyBox(const std::string& images_folder); // TODO: method to set default background color ?
-    void attachWorld(World* world) { world_ = world; }
+    void attachWorld(World* world);
 
     bool shouldRender();
     void commit();
@@ -74,6 +72,8 @@ namespace hws {
     std::unordered_map<unsigned int, LinesHandle> cached_lines_;
     std::unordered_map<unsigned int, LinesHandle> debug_axis_;
     std::unordered_map<unsigned int, LinesHandle> debug_lights_;
+
+    void addSkyBox(const std::string& images_folder);
 
     void loadWorld();
     void loadActor(Actor* actor, const ShapeBox& shape, bool default_material = false);

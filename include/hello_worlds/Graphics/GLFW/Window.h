@@ -20,8 +20,9 @@ namespace hws {
     static void init();
     static void release();
     static void pollEvent();
+    static void run();
 
-    Window(const std::string& name, const std::string& icon_path = "");
+    Window(const std::string& name, float screen_width = 640, float screen_height = 480, const std::string& icon_path = "");
     ~Window();
 
     void makeCurrentContext() const;
@@ -38,19 +39,14 @@ namespace hws {
     void setKeyCallback(const std::function<void(Key_e, bool)>& callback) { key_callback_ = callback; }
 
   protected:
-    std::uint32_t width_ = 640;
-    std::uint32_t height_ = 480;
     bool has_size_changed_ = false;
     GLFWwindow* glfw_window_ = nullptr;
     CameraUpdater camera_;
     std::mutex cam_mutex_;
     std::function<void(Key_e, bool)> key_callback_;
 
-    void defaultKeyCallback(Key_e& key, bool pressed)
-    {
-      (void)key;
-      (void)pressed;
-    }
+  private:
+    static size_t nb_active_windows_;
   };
 } // namespace hws
 

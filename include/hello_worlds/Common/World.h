@@ -54,12 +54,19 @@ namespace hws {
     std::unordered_map<std::size_t, Actor*> actors_;
     std::unordered_map<std::size_t, Urdf*> urdfs_;
 
+    std::string skybox_folder_;
+    std::array<float, 3> background_color_;
+
   public:
     virtual ~World();
 
     [[nodiscard]] virtual std::string getBackendName() const = 0;
     [[nodiscard]] virtual std::string getFullyQualifiedBackendName() const = 0;
     virtual void setSubstepping(size_t sub_step) = 0;
+
+    /* */
+    void setBackgroundColor(float r, float g, float b) { background_color_ = {r, g, b}; }
+    void addSkyBox(const std::string& images_folder) { skybox_folder_ = images_folder; }
 
     /* ACTORS */
 
@@ -186,7 +193,7 @@ namespace hws {
     virtual void stepSimulation(float delta_ms = 0) = 0;
 
   protected:
-    double time_step_;
+    double time_step_ = 1. / 60.;
 
     Actor* getActor(int body_id, int link_index = -1);
 

@@ -175,11 +175,6 @@ namespace hws {
     return true;
   }
 
-  void Renderer::setBackgroundColor(float r, float g, float b)
-  {
-    background_color_ = std::array<float, 3>{r, g, b};
-  }
-
   void Renderer::addSkyBox(const std::string& images_folder)
   {
     if(sky_.init(images_folder))
@@ -189,6 +184,14 @@ namespace hws {
       });
       use_sky_box_ = true;
     }
+  }
+
+  void Renderer::attachWorld(World* world)
+  {
+    world_ = world;
+    if(world_->skybox_folder_.empty() == false)
+      addSkyBox(world_->skybox_folder_);
+    background_color_ = world_->background_color_;
   }
 
   bool Renderer::shouldRender()

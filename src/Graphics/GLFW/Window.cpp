@@ -15,6 +15,8 @@
 
 namespace hws {
 
+  size_t Window::nb_active_windows_ = 0;
+
   void Window::init()
   {
     glfwInit();
@@ -34,9 +36,26 @@ namespace hws {
     glfwPollEvents();
   }
 
-  Window::Window(const std::string& name,
-                 const std::string& icon_path) : glfw_window_(glfwCreateWindow(640, 480, name.c_str(), nullptr, nullptr))
+  void Window::run()
   {
+    while(Window::nb_active_windows_ != 0)
+    {
+      Window::pollEvent();
+      usleep(1000);
+    }
+  }
+
+  Window::Window(const std::string& name,
+                 float screen_width,
+                 float screen_height,
+                 const std::string& icon_path) : glfw_window_(glfwCreateWindow((int)screen_width, (int)screen_height, name.c_str(), nullptr, nullptr))
+  {
+    camera_.setFieldOfView(60.f);
+    camera_.setOutputAA(hws::ViewAntiAliasing_e::msaa_x4);
+    camera_.setOutputResolution({screen_width, screen_height});
+    camera_.setPositionAndLookAt({6, 6, 1.7}, {0, 0, 0});
+    camera_.setPlanes({0.1, 60.});
+    camera_.finalize();
     // glfwWindowHint(GLFW_SAMPLES, 4);
 
     if(icon_path.empty() == false)
@@ -117,10 +136,12 @@ namespace hws {
       default:
         break;
       }
+
       window->cam_mutex_.lock();
       window->camera_.processUserKeyboardInput(0.f, hws_key, action == GLFW_PRESS);
       window->cam_mutex_.unlock();
-      window->key_callback_(hws_key, action == GLFW_PRESS);
+      if(window->key_callback_)
+        window->key_callback_(hws_key, action == GLFW_PRESS);
     });
 
     glfwSetCursorPosCallback(glfw_window_, [](GLFWwindow* glfw_window, const double xpos, const double ypos) {
@@ -148,11 +169,14 @@ namespace hws {
       window->camera_.processUserMouseBtnInput(0.f, button, action == GLFW_PRESS);
       window->cam_mutex_.unlock();
     });
+
+    nb_active_windows_++;
   }
 
   Window::~Window()
   {
     glfwDestroyWindow(glfw_window_);
+    nb_active_windows_--;
   }
 
   void Window::makeCurrentContext() const
