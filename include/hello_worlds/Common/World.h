@@ -58,7 +58,7 @@ namespace hws {
     std::array<float, 3> background_color_;
 
   public:
-    virtual ~World();
+    virtual ~World() = default;
 
     [[nodiscard]] virtual std::string getBackendName() const = 0;
     [[nodiscard]] virtual std::string getFullyQualifiedBackendName() const = 0;

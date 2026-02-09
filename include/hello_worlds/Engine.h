@@ -31,6 +31,8 @@ namespace hws {
                                                    simulate_(simulate)
     {}
 
+    ~Engine();
+
     WorldEngine world;
 
     void setVizualizerCamera(const std::array<double, 3>& position, const std::array<double, 3>& target);

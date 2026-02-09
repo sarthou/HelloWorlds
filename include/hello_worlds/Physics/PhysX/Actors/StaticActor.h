@@ -18,7 +18,7 @@ namespace hws::physx {
       const hws::Shape& collision_shape,
       const std::vector<hws::Shape>& visual_shapes);
 
-    ~StaticActor() noexcept override;
+    ~StaticActor() noexcept override = default;
 
     StaticActor(const StaticActor& other) = delete;
     StaticActor& operator=(const StaticActor& other) = delete;

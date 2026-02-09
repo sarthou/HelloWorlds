@@ -5,6 +5,12 @@
 
 namespace hws {
 
+  Engine::~Engine()
+  {
+    if(detached_)
+      engin_thread_.join();
+  }
+
   void Engine::setVizualizerCamera(const std::array<double, 3>& position, const std::array<double, 3>& target)
   {
     window_->getCamera().setPositionAndLookAt(position, target);
@@ -12,9 +18,9 @@ namespace hws {
 
   void Engine::stop()
   {
-    run_ = false;
-    if(detached_)
+    if(detached_ && run_)
       engin_thread_.join();
+    run_ = false;
   }
 
   void Engine::runDetached(float max_fps)

@@ -18,10 +18,7 @@ namespace hws::physx {
                                                                              is_kinematic_(false)
   {}
 
-  DynamicActor::~DynamicActor() noexcept
-  {
-    remove();
-  }
+  DynamicActor::~DynamicActor() noexcept = default;
 
   void DynamicActor::setup(const std::array<double, 3>& position,
                            const std::array<double, 4>& orientation)

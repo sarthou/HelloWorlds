@@ -53,12 +53,6 @@ namespace hws {
                      exportEmbeddedToTmp("sphere.obj", resources::sphere_obj_data, resources::sphere_obj_size)))
   {}
 
-  World::~World()
-  {
-    for(const auto& actor : actors_)
-      delete actor.second;
-  }
-
   /* ACTORS */
 
   size_t World::createStaticActor(const hws::urdf::Geometry_t& collision_geometry,

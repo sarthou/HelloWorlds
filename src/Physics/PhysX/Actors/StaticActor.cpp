@@ -16,11 +16,6 @@ namespace hws::physx {
                            const std::vector<hws::Shape>& visual_shapes) : hws::physx::Actor(ctx, collision_shape, visual_shapes)
   {}
 
-  StaticActor::~StaticActor() noexcept
-  {
-    remove();
-  }
-
   void StaticActor::setup(const std::array<double, 3>& position,
                           const std::array<double, 4>& orientation)
   {
