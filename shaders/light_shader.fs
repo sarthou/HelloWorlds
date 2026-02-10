@@ -1,57 +1,53 @@
 #version 420 core
 out vec4 FragColor;
 
+// --- INPUTS ---
 layout (location = 0) in vec3 FragPos;
 layout (location = 1) in vec3 Normal;
 layout (location = 2) in vec2 TexCoords;
 layout (location = 3) in mat3 TBN;
 
+// --- STRUCTURES (UNCHANGED) ---
 struct Material {
   sampler2D texture_diffuse1;
-  sampler2D texture_specular1;
+  sampler2D texture_specular1; // treating this as Specular Strength or Roughness map
   sampler2D texture_normal1;
 
-  float     shininess;
-  float     specular;
+  float     shininess;  // Will be converted to Roughness
+  float     specular;   // Will be used as Specular Intensity
   vec4      color;
-  float     use_normal; // 0 if no normal map
+  float     use_normal; 
 }; 
 
 uniform Material material;
 
 struct DirLight {
   vec4 direction;
-
   vec4 ambient;
-  vec4 diffuse;
-  vec4 specular;
+  vec4 diffuse;  // Used as Light Color
+  vec4 specular; // Ignored in PBR (PBR calculates spec from roughness)
 };  
 uniform DirLight dir_light; 
 
 struct PointLight {    
   vec4 position;
-
   vec4 ambient;
   vec4 diffuse;
   vec4 specular;
   vec4 attenuation;
-
   samplerCube depth_map;
   float far_plane;
 };  
-#define NR_POINT_LIGHTS 20 // MAX_POINTLIGHT 
+#define NR_POINT_LIGHTS 20
 uniform PointLight point_lights[NR_POINT_LIGHTS];
 uniform float nb_point_lights;
 
 uniform float use_ambient_shadows;
 uniform float use_point_shadows;
-
 uniform vec3 view_pose;
-
 uniform mat4 view;
 
-layout (std140) uniform LightSpaceMatrices
-{
+layout (std140) uniform LightSpaceMatrices {
     mat4 light_space_matrices[16];
 };
 uniform sampler2DArray shadow_maps;
@@ -59,11 +55,154 @@ uniform float cascade_planes_distances[16];
 uniform int cascade_count;
 uniform float far_plane;
 
-vec4 calcDirLight(DirLight light, vec3 normal, vec3 viewDir);
-vec4 calcPointLight(PointLight light, vec3 normal, vec3 viewDir);
+// --- PROTOTYPES ---
+vec3 CalcPBR(vec3 lightDir, vec3 lightColor, vec3 normal, vec3 viewDir, vec3 albedo, float roughness, float metallic, float shadow);
 float ambiantShadowCalculation(vec3 fragPosWorldSpace);
 float pointShadowCalculation(PointLight light, vec3 fragPosWorldSpace);
 
+const float PI = 3.14159265359;
+
+// --- PBR FUNCTIONS (Blender Equivalent) ---
+
+// 1. Distribution (GGX) - Controls the size/shape of the highlight
+float DistributionGGX(vec3 N, vec3 H, float roughness) {
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float NdotH = max(dot(N, H), 0.0);
+    float NdotH2 = NdotH * NdotH;
+    float num = a2;
+    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+    denom = PI * denom * denom;
+    return num / max(denom, 0.0000001); // Prevent divide by zero
+}
+
+// 2. Geometry (Smith-Schlick) - Controls self-shadowing of microfacets
+float GeometrySchlickGGX(float NdotV, float roughness) {
+    float r = (roughness + 1.0);
+    float k = (r * r) / 8.0;
+    float num = NdotV;
+    float denom = NdotV * (1.0 - k) + k;
+    return num / denom;
+}
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
+    float NdotV = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+    float ggx2 = GeometrySchlickGGX(NdotV, roughness);
+    float ggx1 = GeometrySchlickGGX(NdotL, roughness);
+    return ggx1 * ggx2;
+}
+
+// 3. Fresnel (Schlick) - Controls reflection intensity at angles
+vec3 fresnelSchlick(float cosTheta, vec3 F0) {
+    return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
+// --- MAIN ---
+
+void main()
+{
+    // 1. Normal Mapping
+    vec3 N = normalize(Normal);
+    if(material.use_normal > 0) {
+        N = texture(material.texture_normal1, TexCoords).rgb;
+        N = N * 2.0 - 1.0;   
+        N = normalize(TBN * N);
+    }
+    vec3 V = normalize(view_pose - FragPos);
+
+    // 2. Material Parameter Extraction & Linearization
+    
+    // Albedo: Convert from sRGB to Linear space (Pow 2.2)
+    vec4 baseColor = material.color;
+    if(material.color.w == 0) {
+        baseColor = texture(material.texture_diffuse1, TexCoords);
+    }
+    vec3 albedo = pow(baseColor.rgb, vec3(2.2)); 
+
+    // Roughness: Convert Shininess (0-1000) to Roughness (0-1)
+    // Ns 1000 = Roughness 0.0 | Ns 0 = Roughness 1.0
+    float roughness = clamp(1.0 - sqrt(material.shininess / 1000.0), 0.05, 1.0);
+    
+    // Optional: Use the Specular texture to modulate roughness or intensity if needed
+    // For now, let's treat specular map as "Specular Occlusion" or simple intensity
+    float specIntensity = material.specular; 
+    if(material.specular <= 0) {
+         specIntensity = texture(material.texture_specular1, TexCoords).r;
+    }
+    // We dampen the F0 based on the specular map input
+    vec3 F0 = vec3(0.04) * specIntensity; 
+    
+    // 3. Lighting Accumulation
+    vec3 Lo = vec3(0.0);
+
+    // Directional Light
+    float shadowDir = ambiantShadowCalculation(FragPos);
+    // Note: dir_light.diffuse is often used as the "Light Color" in simple engines
+    Lo += CalcPBR(-normalize(dir_light.direction.xyz), dir_light.diffuse.rgb, N, V, albedo, roughness, 0.0, shadowDir);
+
+    // Point Lights
+    for(int i = 0; i < nb_point_lights; i++) {
+        float shadowPoint = pointShadowCalculation(point_lights[i], FragPos);
+        vec3 L = normalize(point_lights[i].position.xyz - FragPos);
+        
+        // Attenuation
+        float distance = length(point_lights[i].position.xyz - FragPos);
+        float attenuation = 1.0 / (point_lights[i].attenuation.x + 
+                                   point_lights[i].attenuation.y * distance + 
+                                   point_lights[i].attenuation.z * (distance * distance));
+        
+        vec3 radiance = point_lights[i].diffuse.rgb * attenuation;
+        Lo += CalcPBR(L, radiance, N, V, albedo, roughness, 0.0, shadowPoint); 
+    }
+
+    // 4. Ambient & Final Gamma
+    vec3 ambient = vec3(0.25) * albedo * specIntensity; // Simple ambient
+    vec3 color = ambient + Lo;
+
+    // HDR Tonemapping (Optional/Basic)
+    color = color / (color + vec3(1.0));
+
+    // Gamma Correct back to sRGB
+    color = pow(color, vec3(1.0/2.2)); 
+
+    FragColor = vec4(color, baseColor.a);
+}
+
+// --- GENERIC PBR CALCULATION ---
+vec3 CalcPBR(vec3 L, vec3 radiance, vec3 N, vec3 V, vec3 albedo, float roughness, float metallic, float shadow) {
+    if (shadow > 0.99) return vec3(0.0); // Optimization for full shadow
+
+    vec3 H = normalize(V + L);
+    
+    // Calculate F0 (Surface reflection at 0 degrees)
+    // 0.04 for dielectric, Albedo color for metal
+    vec3 F0 = vec3(0.04); 
+    F0 = mix(F0, albedo, metallic);
+
+    // Cook-Torrance BRDF
+    float NDF = DistributionGGX(N, H, roughness);   
+    float G   = GeometrySmith(N, V, L, roughness);      
+    vec3  F   = fresnelSchlick(max(dot(H, V), 0.0), F0);
+       
+    vec3 numerator    = NDF * G * F; 
+    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001; // + 0.0001 to prevent divide by zero
+    vec3 specular = numerator / denominator;
+    
+    // kS is equal to Fresnel
+    vec3 kS = F;
+    // kD is the remaining energy (1 - kS)
+    vec3 kD = vec3(1.0) - kS;
+    // Multiply kD by inverse metalness (metals have no diffuse light)
+    kD *= 1.0 - metallic;	  
+
+    float NdotL = max(dot(N, L), 0.0);
+
+    // Final Radiance combine
+    // (Diffuse + Specular) * Light Color * Angle
+    return (1.0 - shadow) * (kD * albedo + specular) * radiance * NdotL;  
+}
+
+// --- SHADOW FUNCTIONS (UNCHANGED LOGIC) ---
 vec3 sampleOffsetDirections[20] = vec3[]
 (
   vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1), 
@@ -73,194 +212,57 @@ vec3 sampleOffsetDirections[20] = vec3[]
   vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
 );
 
-void main()
-{
-  // properties
-  vec3 norm = normalize(Normal);
-  if(material.use_normal > 0)
-  {
-    norm = texture(material.texture_normal1, TexCoords).rgb;
-    norm = norm * 2.0 - 1.0;   
-    norm = normalize(TBN * norm);
-  }
-  
-  vec3 viewDir = normalize(view_pose - FragPos);
-
-  // phase 1: Directional lighting
-  vec4 result = calcDirLight(dir_light, norm, viewDir);
-  
-  // phase 2: Point lights
-  for(int i = 0; i < nb_point_lights; i++)
-      result += calcPointLight(point_lights[i], norm, viewDir);    
-  
-  FragColor = result;
-  float gamma = 2.2;
-  FragColor.rgb = pow(FragColor.rgb, vec3(1.0/gamma));
-}
-
-vec4 calcDirLight(DirLight light, vec3 normal, vec3 viewDir)
-{
-  vec4 mat_ambient = material.color;
-  if(material.color.w == 0)
-    mat_ambient = texture(material.texture_diffuse1, TexCoords);
-
-  float shadow = ambiantShadowCalculation(FragPos);
-
-  if(shadow < 0.999)
-  {
-    vec3 lightDir = normalize(-light.direction.xyz);
-    vec3 halfwayDir = normalize(lightDir + viewDir);
-    // diffuse shading
-    float diff = max(dot(normal, lightDir), 0.0);
-    // specular shading
-    float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
-    
-    vec4 mat_spec = vec4(material.specular);
-    if(material.specular < 0)
-      mat_spec = vec4(texture(material.texture_specular1, TexCoords).r);
-
-    vec4 ambient  = light.ambient  * mat_ambient;
-    vec4 diffuse  = light.diffuse  * diff * mat_ambient;
-    vec4 specular = light.specular * spec * mat_spec;
-    return (ambient + (1.0 - shadow) * (diffuse + specular));
-  }
-  else
-    return light.ambient  * mat_ambient;
-}
-
-vec4 calcPointLight(PointLight light, vec3 normal, vec3 viewDir)
-{
-  float shadow = pointShadowCalculation(light, FragPos);
-
-  if(shadow < 0.999)
-  {
-    vec3 lightDir = normalize(light.position.xyz - FragPos);
-    vec3 halfwayDir = normalize(lightDir + viewDir);
-    // diffuse shading
-    float diff = max(dot(normal, lightDir), 0.0);
-    // specular shading
-    float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
-    // attenuation
-    float distance    = length(vec3(light.position.xyz) - FragPos);
-    float attenuation = 1.0 / (light.attenuation.x + light.attenuation.y * distance + 
-                        light.attenuation.z * (distance * distance));    
-    // combine results
-    vec4 mat_ambient = material.color;
-    if(material.color.w == 0)
-      mat_ambient = texture(material.texture_diffuse1, TexCoords);
-    vec4 mat_spec = vec4(material.specular);
-    if(material.specular <= 0)
-      mat_spec = vec4(texture(material.texture_specular1, TexCoords).r);
-
-    vec4 ambient  = light.ambient  * mat_ambient;
-    vec4 diffuse  = light.diffuse  * diff * mat_ambient;
-    vec4 specular = light.specular * spec * mat_spec;
-    ambient  *= attenuation;
-    diffuse  *= attenuation;
-    specular *= attenuation;
-
-    return ((1.0 - shadow) * (ambient + diffuse + specular));
-  }
-  else
-    return vec4(0.f);
-}
-
 float pointShadowCalculation(PointLight light, vec3 fragPosWorldSpace)
 {
-  if(use_point_shadows == 0)
-    return 0.;
-
+  if(use_point_shadows == 0) return 0.;
   vec3 fragToLight = FragPos - light.position.xyz;
-  if(length(fragToLight) > light.far_plane)
-    return 1.0;
-
+  if(length(fragToLight) > light.far_plane) return 1.0;
   float currentDepth = length(fragToLight);
-
   float shadow = 0.0;
   float bias = 0.04; 
   int samples  = 20;
   float viewDistance = length(view_pose - FragPos);
-  float diskRadius = 0.002; //(1.0 + (viewDistance / light.far_plane)) / 100.0;
-  
-  for(int i = 0; i < samples; ++i)
-  {
+  float diskRadius = 0.002;
+  for(int i = 0; i < samples; ++i) {
     float closestDepth = texture(light.depth_map, fragToLight + sampleOffsetDirections[i] * diskRadius).r;
-    closestDepth *= light.far_plane;   // undo mapping [0;1]
-    if(currentDepth - bias > closestDepth)
-      shadow += 1.0;
+    closestDepth *= light.far_plane;
+    if(currentDepth - bias > closestDepth) shadow += 1.0;
   }
   shadow /= float(samples);
-
   return shadow;
 }
 
 float ambiantShadowCalculation(vec3 fragPosWorldSpace)
 {
-  if(use_ambient_shadows == 0)
-    return 0.;
-    
-  // select cascade layer
+  if(use_ambient_shadows == 0) return 0.;
   vec4 frag_pose_view_space = view * vec4(fragPosWorldSpace, 1.0);
   float depth_value = abs(frag_pose_view_space.z);
-
   int layer = -1;
-  for (int i = 0; i < cascade_count; ++i)
-  {
-    if (depth_value < cascade_planes_distances[i])
-    {
+  for (int i = 0; i < cascade_count; ++i) {
+    if (depth_value < cascade_planes_distances[i]) {
       layer = i;
       break;
     }
   }
-
-  if (layer == -1)
-  {
-    layer = cascade_count;
-  }
-
-  //return layer;
-
+  if (layer == -1) layer = cascade_count;
   vec4 frag_pos_light_space = light_space_matrices[layer] * vec4(fragPosWorldSpace, 1.0);
-  // perform perspective divide
   vec3 proj_coords = frag_pos_light_space.xyz / frag_pos_light_space.w;
-  // transform to [0,1] range
   proj_coords = proj_coords * 0.5 + 0.5;
-
-  // get depth of current fragment from light's perspective
   float current_depth = proj_coords.z;
-
-  // keep the shadow at 0.0 when outside the far_plane region of the light's frustum.
-  if (current_depth > 1.0)
-  {
-    return 0.0;
-  }
-
-  // calculate bias (based on depth map resolution and slope)
+  if (current_depth > 1.0) return 0.0;
   vec3 normal = normalize(Normal);
   float bias = max(0.05 * (1.0 - dot(normal, dir_light.direction.xyz)), 0.005);
-  const float bias_modifier = 7.; // Can be tuned (increase reduce near to wall missing shadow)
-                                  // Increasing it too much will reduce the far quality 
-  if (layer == cascade_count)
-  {
-    bias *= 1 / (far_plane * bias_modifier);
-  }
-  else
-  {
-    bias *= 1 / (cascade_planes_distances[layer] * bias_modifier);
-  }
-
-  // PCF
+  const float bias_modifier = 7.; 
+  if (layer == cascade_count) bias *= 1 / (far_plane * bias_modifier);
+  else bias *= 1 / (cascade_planes_distances[layer] * bias_modifier);
   float shadow = 0.0;
   vec2 texel_size = 1.0 / vec2(textureSize(shadow_maps, 0));
-  for(int x = -1; x <= 1; ++x)
-  {
-    for(int y = -1; y <= 1; ++y)
-    {
+  for(int x = -1; x <= 1; ++x) {
+    for(int y = -1; y <= 1; ++y) {
       float pcf_depth = texture(shadow_maps, vec3(proj_coords.xy + vec2(x, y) * texel_size, layer)).r;
       shadow += (current_depth - bias) > pcf_depth ? 1.0 : 0.0;        
     }    
   }
   shadow /= 9.0;
-      
   return shadow;
 }
