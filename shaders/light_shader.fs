@@ -64,6 +64,15 @@ const float PI = 3.14159265359;
 
 // --- PBR FUNCTIONS (Blender Equivalent) ---
 
+vec3 ACESFilm(vec3 x) {
+    float a = 2.51f;
+    float b = 0.03f;
+    float c = 2.43f;
+    float d = 0.59f;
+    float e = 0.14f;
+    return clamp((x*(a*x+b))/(x*(c*x+d)+e), 0.0, 1.0);
+}
+
 // 1. Distribution (GGX) - Controls the size/shape of the highlight
 float DistributionGGX(vec3 N, vec3 H, float roughness) {
     float a = roughness * roughness;
@@ -110,61 +119,67 @@ void main()
     }
     vec3 V = normalize(view_pose - FragPos);
 
-    // 2. Material Parameter Extraction & Linearization
-    
-    // Albedo: Convert from sRGB to Linear space (Pow 2.2)
+    // 2. Material Logic
     vec4 baseColor = material.color;
     if(material.color.w == 0) {
         baseColor = texture(material.texture_diffuse1, TexCoords);
     }
-    vec3 albedo = pow(baseColor.rgb, vec3(2.2)); 
+    // IMPORTANT: Linearize the input color
+    //vec3 albedo = pow(baseColor.rgb, vec3(2.2)); // not performed 
+    vec3 albedo = pow(baseColor.rgb, vec3(1.));
 
-    // Roughness: Convert Shininess (0-1000) to Roughness (0-1)
-    // Ns 1000 = Roughness 0.0 | Ns 0 = Roughness 1.0
+
+    // Convert Ns to Roughness
     float roughness = clamp(1.0 - sqrt(material.shininess / 1000.0), 0.05, 1.0);
     
-    // Optional: Use the Specular texture to modulate roughness or intensity if needed
-    // For now, let's treat specular map as "Specular Occlusion" or simple intensity
+    // Use your actual Ks (specular) value
     float specIntensity = material.specular; 
     if(material.specular <= 0) {
          specIntensity = texture(material.texture_specular1, TexCoords).r;
     }
-    // We dampen the F0 based on the specular map input
-    vec3 F0 = vec3(0.04) * specIntensity; 
-    
+
     // 3. Lighting Accumulation
-    vec3 Lo = vec3(0.0);
+    vec3 totalAmbient = vec3(0.0);
+    vec3 totalDirect = vec3(0.0);
 
-    // Directional Light
+    // --- Directional Light ---
     float shadowDir = ambiantShadowCalculation(FragPos);
-    // Note: dir_light.diffuse is often used as the "Light Color" in simple engines
-    Lo += CalcPBR(-normalize(dir_light.direction.xyz), dir_light.diffuse.rgb, N, V, albedo, roughness, 0.0, shadowDir);
+    
+    // Restore your actual ambient uniform
+    totalAmbient += dir_light.ambient.rgb * albedo;
+    
+    // Direct PBR contribution
+    totalDirect += CalcPBR(-normalize(dir_light.direction.xyz), dir_light.diffuse.rgb, N, V, albedo, roughness, 0.0, shadowDir);
 
-    // Point Lights
+    // --- Point Lights ---
     for(int i = 0; i < nb_point_lights; i++) {
         float shadowPoint = pointShadowCalculation(point_lights[i], FragPos);
         vec3 L = normalize(point_lights[i].position.xyz - FragPos);
         
-        // Attenuation
-        float distance = length(point_lights[i].position.xyz - FragPos);
+        float dist = length(point_lights[i].position.xyz - FragPos);
         float attenuation = 1.0 / (point_lights[i].attenuation.x + 
-                                   point_lights[i].attenuation.y * distance + 
-                                   point_lights[i].attenuation.z * (distance * distance));
+                                   point_lights[i].attenuation.y * dist + 
+                                   point_lights[i].attenuation.z * (dist * dist));
+        
+        // Add ambient from point lights (as your original shader did)
+        totalAmbient += point_lights[i].ambient.rgb * albedo * attenuation;
         
         vec3 radiance = point_lights[i].diffuse.rgb * attenuation;
-        Lo += CalcPBR(L, radiance, N, V, albedo, roughness, 0.0, shadowPoint); 
+        totalDirect += CalcPBR(L, radiance, N, V, albedo, roughness, 0.0, shadowPoint); 
     }
 
-    // 4. Ambient & Final Gamma
-    vec3 ambient = vec3(0.25) * albedo * specIntensity; // Simple ambient
-    vec3 color = ambient + Lo;
+    // 4. Final Combination
+    // Ambient is NOT shadowed (standard), Direct light IS shadowed inside CalcPBR
+    vec3 color = totalAmbient + totalDirect;
 
-    // HDR Tonemapping (Optional/Basic)
-    color = color / (color + vec3(1.0));
-
-    // Gamma Correct back to sRGB
-    color = pow(color, vec3(1.0/2.2)); 
-
+    // 5. Tonemapping & Gamma (The "Brightener")
+    // If the scene is too dark, increase the exposure constant (1.0) here
+    float exposure = 1.; 
+    color = vec3(1.0) - exp(-color * exposure);
+    
+    color = ACESFilm(color);
+    // Convert back to Gamma Space
+    //FragColor = vec4(pow(color, vec3(1.0/2.2)), baseColor.a);
     FragColor = vec4(color, baseColor.a);
 }
 
