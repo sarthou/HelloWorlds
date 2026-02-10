@@ -505,10 +505,6 @@ namespace hws {
 
   void Renderer::renderMainScreen()
   {
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    glDisable(GL_BLEND);
-
     auto& light_shader = shaders_.at("default");
 
     // 1. draw scene as normal in multisampled buffers
@@ -516,11 +512,9 @@ namespace hws {
     screen_.bindFrameBuffer();
     glClearColor(background_color_[0], background_color_[1], background_color_[2], 1.0f);
     glEnable(GL_DEPTH_TEST);
-    // glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     glEnable(GL_FRAMEBUFFER_SRGB);
-
+    glDisable(GL_BLEND); // is this necessary
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    // glStencilMask(0x00);
 
     light_shader.use();
     setLightsUniforms(light_shader, render_shadows_, render_shadows_);
