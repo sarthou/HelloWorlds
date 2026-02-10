@@ -203,7 +203,13 @@ namespace hws {
 
   bool Window::isCloseRequested() const
   {
-    return glfwWindowShouldClose(glfw_window_) != 0;
+    if(glfwWindowShouldClose(glfw_window_) != 0)
+    {
+      nb_active_windows_--;
+      return true;
+    }
+    else
+      return false;
   }
 
   void Window::swapBuffer()
