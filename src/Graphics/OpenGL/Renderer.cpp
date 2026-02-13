@@ -682,7 +682,7 @@ namespace hws {
     for(size_t i = 0; i < PointLights::MAX_POINT_LIGHTS; i++)
     {
       point_shadows_.bindFrameBuffer(i);
-      if(world_->point_lights_.isUsed(i))
+      if(world_->point_lights_.isUsed(i) && world_->point_lights_.isOn(i))
       {
         if(point_shadows_.isInit(i) == false)
           point_shadows_.init(i, world_->point_lights_.getAttenuationDistance(i));
@@ -842,6 +842,7 @@ namespace hws {
       shader.setVec4(name + ".specular", points.getSpecular(i));
       shader.setVec4(name + ".position", points.getPosition(i));
       shader.setVec4(name + ".attenuation", points.getAttenuation(i));
+      shader.setFloat(name + ".on_off", ((points.isUsed(i) && points.isOn(i)) ? 1. : 0.));
     }
     shader.setFloat("nb_point_lights", points.getNbLightsFloat());
   }
