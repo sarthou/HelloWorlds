@@ -37,6 +37,7 @@ struct PointLight {
   vec4 attenuation;
   samplerCube depth_map;
   float far_plane;
+  float on_off;
 };  
 #define NR_POINT_LIGHTS 20
 uniform PointLight point_lights[NR_POINT_LIGHTS];
@@ -153,6 +154,8 @@ void main()
 
     // --- Point Lights ---
     for(int i = 0; i < nb_point_lights; i++) {
+      if(point_lights[i].on_off != 0.)
+      {
         float shadowPoint = pointShadowCalculation(point_lights[i], FragPos);
         vec3 L = normalize(point_lights[i].position.xyz - FragPos);
         
@@ -166,6 +169,7 @@ void main()
         
         vec3 radiance = point_lights[i].diffuse.rgb * attenuation;
         totalDirect += CalcPBR(L, radiance, N, V, albedo, roughness, 0.0, shadowPoint); 
+      }
     }
 
     // 4. Final Combination
