@@ -105,7 +105,6 @@ namespace hws {
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
-    // glEnable(GL_BLEND);
     // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glEnable(GL_CULL_FACE);
@@ -463,7 +462,7 @@ namespace hws {
           continue;
       }
       else
-        mesh_it = model_it->second.insert({mesh.id_, mesh}).first;
+        mesh_it = model_it->second.insert({mesh.id_, MeshHandle(mesh)}).first;
 
       auto mesh_material = combineMaterials(mesh.material_, material);
       auto textures = loadTextures(mesh_material);
@@ -514,8 +513,7 @@ namespace hws {
     glClearColor(sky.r, sky.g, sky.b, 1.0f);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_FRAMEBUFFER_SRGB);
-    glDisable(GL_BLEND); // is this necessary
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     light_shader.use();
     setLightsUniforms(light_shader, render_shadows_, render_shadows_);
@@ -524,13 +522,17 @@ namespace hws {
     light_shader.setMat4("projection", render_camera_.getProjectionMatrix());
 
     shadow_.setUniforms(light_shader, 1);
-    shadow_.setLightMatrices();
+    // shadow_.setLightMatrices();
 
     for(size_t i = 0; i < PointLights::MAX_POINT_LIGHTS; i++)
       if(world_->point_lights_.isUsed(i))
         point_shadows_.setUniforms(i, light_shader, 6);
 
-    renderModels(light_shader, 2);
+    auto cameraCull = [&](const glm::vec3& center, float radius) {
+      return render_camera_.getFrustum().isSphereVisible(center, radius);
+    };
+
+    renderModels(light_shader, 2, cameraCull);
 
     // 1.2 draw background
 
@@ -554,8 +556,6 @@ namespace hws {
 
     // 3. now render quad with scene's visuals as its texture image
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glClearColor(background_color_[0], background_color_[1], background_color_[2], 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_FRAMEBUFFER_SRGB);
 
@@ -601,8 +601,7 @@ namespace hws {
     glClearColor(sky.r, sky.g, sky.b, 1.0f);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_FRAMEBUFFER_SRGB);
-    glDisable(GL_BLEND);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     light_shader.use();
     setLightsUniforms(light_shader, false, render_shadows_); // We never use the ambient shadows for offscreen
@@ -611,13 +610,17 @@ namespace hws {
     light_shader.setMat4("projection", camera->getProjectionMatrix());
 
     shadow_.setUniforms(light_shader, 1);
-    shadow_.setLightMatrices();
+    // shadow_.setLightMatrices();
 
     for(size_t i = 0; i < PointLights::MAX_POINT_LIGHTS; i++)
       if(world_->point_lights_.isUsed(i))
         point_shadows_.setUniforms(i, light_shader, 6);
 
-    renderModels(light_shader, 2);
+    auto cameraCull = [&](const glm::vec3& center, float radius) {
+      return camera->getFrustum().isSphereVisible(center, radius);
+    };
+
+    renderModels(light_shader, 2, cameraCull);
 
     // 1.2 draw background
     if(use_sky_box_)
@@ -636,9 +639,8 @@ namespace hws {
   void Renderer::renderOffscreenSegmented(Camera* camera)
   {
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     auto& shader = shaders_.at("color");
 
@@ -655,18 +657,24 @@ namespace hws {
       return;
 
     auto& shadow_shader = shaders_.at("depth");
-
-    auto ambient_dir = -glm::normalize(world_->ambient_light_.getDirection());
-    shadow_.computeLightSpaceMatrices(render_camera_, ambient_dir);
-
     shadow_shader.use();
-    shadow_.setLightMatrices();
 
     shadow_.bindFrameBuffer();
     glEnable(GL_DEPTH_TEST);
 
     if(world_->ambient_light_.getDirection().y >= -0.3)
-      renderModels(shadow_shader, 2);
+    {
+      auto ambient_dir = -glm::normalize(world_->ambient_light_.getDirection());
+      shadow_.computeLightSpaceMatrices(render_camera_, ambient_dir);
+
+      shadow_.setLightMatrices();
+
+      auto ambientCull = [&](const glm::vec3& center, float radius) {
+        return shadow_.getMasterFrustum().isSphereVisible(center, radius);
+      };
+
+      renderModels(shadow_shader, 2, ambientCull);
+    }
   }
 
   void Renderer::renderPointShadowDepth()
@@ -691,7 +699,15 @@ namespace hws {
 
         point_shadows_.setUniforms(i, shadow_point_shader);
 
-        renderModels(shadow_point_shader, 2);
+        glm::vec3 light_pos = world_->point_lights_.getPosition(i);
+        float light_radius = world_->point_lights_.getAttenuationDistance(i) * 1.2;
+
+        auto pointLightCull = [&](const glm::vec3& center, float radius) {
+          float d = glm::distance(light_pos, center);
+          return d < (light_radius + radius);
+        };
+
+        renderModels(shadow_point_shader, 2, pointLightCull);
       }
     }
   }
@@ -775,7 +791,9 @@ namespace hws {
     glDisable(GL_BLEND);
   }
 
-  void Renderer::renderModels(const Shader& shader, unsigned int texture_offset)
+  void Renderer::renderModels(const Shader& shader,
+                              unsigned int texture_offset,
+                              std::function<bool(const glm::vec3&, float)> visibility_test)
   {
     for(auto& [model_id, batch] : current_mesh_batches_)
     {
@@ -783,10 +801,21 @@ namespace hws {
 
       for(auto& [mesh_id, transforms] : batch)
       {
-        const auto& mesh = meshes.at(mesh_id);
+        const MeshHandle& mesh = meshes.at(mesh_id);
 
-        for(const auto& transform : transforms)
+        for(const InstanceData& transform : transforms)
         {
+          const glm::mat4& model = transform.mvp_;
+          glm::vec3 world_center = glm::vec3(model * glm::vec4(mesh.getCenter(), 1.0f));
+
+          float max_scale = glm::max(glm::length(glm::vec3(model[0])),
+                                     glm::max(glm::length(glm::vec3(model[1])),
+                                              glm::length(glm::vec3(model[2]))));
+          float world_radius = mesh.getRadius() * max_scale;
+
+          if(visibility_test && !visibility_test(world_center, world_radius))
+            continue;
+
           shader.setMat4("model", transform.mvp_);
           mesh.draw(shader, transform.object_id_, texture_offset);
         }
@@ -802,9 +831,9 @@ namespace hws {
 
       for(auto& [mesh_id, transforms] : batch)
       {
-        const auto& mesh = meshes.at(mesh_id);
+        const MeshHandle& mesh = meshes.at(mesh_id);
 
-        for(const auto& transform : transforms)
+        for(const InstanceData& transform : transforms)
         {
           shader.setMat4("model", transform.mvp_);
           mesh.drawId(shader, (uint32_t)transform.object_id_);

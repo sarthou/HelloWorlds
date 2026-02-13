@@ -88,7 +88,9 @@ namespace hws {
     void loadModel(const Model& model, const Material& material, uint32_t instance_id);
     void loadDebugLines();
 
-    void renderModels(const Shader& shader, unsigned int texture_offset = 0);
+    void renderModels(const Shader& shader,
+                      unsigned int texture_offset = 0,
+                      std::function<bool(const glm::vec3&, float)> visibility_test = nullptr);
     void renderModelsSegmented(const Shader& shader);
 
     void renderMainScreen();
