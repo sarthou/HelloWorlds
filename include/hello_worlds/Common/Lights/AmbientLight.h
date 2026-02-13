@@ -11,52 +11,57 @@ namespace hws {
   class AmbientLight
   {
   public:
-    AmbientLight(const glm::vec3& direction = glm::vec3(0.0f, 0.0f, -1.0f),
-                 const glm::vec3& color = glm::vec3(1.0),
-                 float ambient_strength = 1.0f,
-                 float diffuse_strength = 1.0f,
-                 float specular_strength = 1.0f);
+    struct GeographicCoords
+    {
+      double latitude;
+      double longitude;
+      double altitude;
+    };
 
-    AmbientLight(const std::array<float, 3>& lat_long_alt,
-                 const glm::vec3& color = glm::vec3(1.0),
-                 float ambient_strength = 1.0f,
-                 float diffuse_strength = 1.0f,
-                 float specular_strength = 1.0f);
+    // Constructor 1: Simple Directional Use
+    AmbientLight(const glm::vec3& direction = glm::vec3(0., 0., 1.0f),
+                 const glm::vec3& color = glm::vec3(1.0f),
+                 float intensity = 1.0f);
 
-    void setDirection(const glm::vec3& direction);
-    void setElevationAndAzimuth(float elevation, float azimuth);
+    // Constructor 2: Geographic Based
+    AmbientLight(const GeographicCoords& coords,
+                 const glm::vec3& color = glm::vec3(1.0f),
+                 float intensity = 1.0f);
 
-    void setColor(const glm::vec3& color);
+    // Update logic - Uses stored coordinates
+    void updateTime(time_t current_time = 0);
 
-    void setAmbientStrength(float strength);
-    void setDiffuseStrength(float strength);
-    void setSpecularStrength(float strength);
+    // Setters
+    void setDirection(const glm::vec3& dir);
+    void setBaseColor(const glm::vec3& color)
+    {
+      base_color_ = color;
+      updateVisuals();
+    }
+    void setIntensity(float intensity) { intensity_ = intensity; }
+    void setCoords(const GeographicCoords& coords) { geo_coords_ = coords; }
 
-    const glm::vec4& getDirection() const { return direction_; }
-    const glm::vec4& getAmbient() const { return ambient_; }
-    const glm::vec4& getDiffuse() const { return diffuse_; }
-    const glm::vec4& getSpecular() const { return specular_; }
-    const glm::vec4& getColor() const { return color_; }
+    // Getters for Shaders
+    glm::vec4 getDirection() const { return glm::vec4(direction_, 1.0); }
+    glm::vec4 getAmbient() const { return glm::vec4(base_color_ * ambient_factor_ * intensity_, 1.0); }
+    glm::vec4 getDiffuse() const { return glm::vec4(current_color_ * diffuse_factor_ * intensity_, 1.0); }
+    glm::vec4 getSpecular() const { return glm::vec4(current_color_ * specular_factor_ * intensity_, 1.0); }
+
+    glm::vec3 getSkyColor(glm::vec3 base_color) const;
 
   private:
-    glm::vec4 direction_;
-    glm::vec4 color_;
+    void updateVisuals();
 
-    float ambient_strength_;
-    float diffuse_strength_;
-    float specular_strength_;
+    glm::vec3 direction_;
+    glm::vec3 base_color_;
+    glm::vec3 current_color_;
+    float intensity_;
 
-    float latitude_;
-    float longitude_;
-    float altitude_;
+    GeographicCoords geo_coords_{0, 0, 0};
 
-    glm::vec4 ambient_;
-    glm::vec4 diffuse_;
-    glm::vec4 specular_;
-
-    void computeAmbient();
-    void computeDiffuse();
-    void computeSpecular();
+    float ambient_factor_ = 0.2f;
+    float diffuse_factor_ = 0.8f;
+    float specular_factor_ = 1.0f;
   };
 
 } // namespace hws

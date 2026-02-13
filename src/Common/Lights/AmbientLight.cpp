@@ -12,118 +12,121 @@
 
 namespace hws {
 
+  // Constructor 1: Manual Direction
   AmbientLight::AmbientLight(const glm::vec3& direction,
                              const glm::vec3& color,
-                             float ambient_strength,
-                             float diffuse_strength,
-                             float specular_strength) : direction_(direction, 1.0f),
-                                                        color_(glm::vec4(color, 1.0f)),
-                                                        ambient_strength_(ambient_strength),
-                                                        diffuse_strength_(diffuse_strength),
-                                                        specular_strength_(specular_strength)
+                             float intensity) : direction_(glm::normalize(direction)),
+                                                base_color_(color),
+                                                current_color_(color),
+                                                intensity_(intensity)
   {
-    computeAmbient();
-    computeDiffuse();
-    computeSpecular();
+    updateVisuals();
   }
 
-  AmbientLight::AmbientLight(const std::array<float, 3>& lat_long_alt,
+  // Constructor 2: Geographic
+  AmbientLight::AmbientLight(const GeographicCoords& coords,
                              const glm::vec3& color,
-                             float ambient_strength,
-                             float diffuse_strength,
-                             float specular_strength) : color_(glm::vec4(color, 1.0f)),
-                                                        ambient_strength_(ambient_strength),
-                                                        diffuse_strength_(diffuse_strength),
-                                                        specular_strength_(specular_strength),
-                                                        latitude_(lat_long_alt[0]),
-                                                        longitude_(lat_long_alt[1]),
-                                                        altitude_(lat_long_alt[2])
-
+                             float intensity) : base_color_(color),
+                                                current_color_(color),
+                                                intensity_(intensity),
+                                                geo_coords_(coords)
   {
-    double el = 0., az = 0.;
-    solarAzEl(time(nullptr), latitude_, longitude_, altitude_, &az, &el);
-    setElevationAndAzimuth((float)glm::radians(el), (float)glm::radians(az));
-    computeAmbient();
-    computeDiffuse();
-    computeSpecular();
+    updateTime(0); // Initialize direction based on current time
   }
 
-  void AmbientLight::setDirection(const glm::vec3& direction)
+  void AmbientLight::updateTime(time_t time)
   {
-    direction_ = glm::vec4(direction, 1.0f);
+    double az = 0.0, el = 0.0;
+    solarAzEl(time == 0 ? std::time(nullptr) : time,
+              geo_coords_.latitude, geo_coords_.longitude, geo_coords_.altitude,
+              &az, &el);
+
+    // Convert Solar Az/El to Direction Vector
+    // Assuming Y-Up: Elevation is angle from XZ plane, Azimuth is rotation around Y
+    float phi = static_cast<float>(glm::radians(el));
+    float theta = static_cast<float>(glm::radians(az));
+
+    direction_.x = std::cos(phi) * std::sin(theta);
+    direction_.y = std::sin(phi);
+    direction_.z = std::cos(phi) * std::cos(theta);
+
+    updateVisuals();
   }
 
-  void AmbientLight::setElevationAndAzimuth(float elevation, float azimuth)
+  void AmbientLight::setDirection(const glm::vec3& dir)
   {
-    float x = std::cos(elevation) * std::sin(azimuth);
-    float y = -(std::cos(elevation) * std::cos(azimuth));
-    float z = std::sin(elevation);
-    setDirection(glm::vec3(-y, -x, -z));
+    direction_ = glm::normalize(dir);
+    updateVisuals();
+  }
 
-    auto night_color = glm::vec4(0.11, 0.15f, 0.31f, 1.f);
-    if(z < -1)
+  glm::vec3 AmbientLight::getSkyColor(glm::vec3 base_color) const
+  {
+    const float h = direction_.y;
+
+    // Exact same colors as updateVisuals for perfect cohesion
+    const glm::vec3 day_sky = base_color;
+    const glm::vec3 sunset_sky = base_color * glm::vec3(1.0f, 0.40f, 0.15f);
+    const glm::vec3 night_sky = base_color * glm::vec3(0.02f, 0.05f, 0.12f);
+
+    // Two-stage LERP to ensure no abrupt switches
+    if(h > 0.0f)
     {
-      diffuse_strength_ = 0.;
-      specular_strength_ = 0.;
-      color_ = night_color;
+      // Transition Day -> Sunset
+      float t = glm::smoothstep(0.0f, 0.4f, h);
+      return glm::mix(sunset_sky, day_sky, t);
     }
-    else if(z < 0.)
+    else
     {
-      z = z + 1;
-      color_ = z * color_ + night_color * (1.f - z);
-      diffuse_strength_ = z;
-      specular_strength_ = z;
+      // Transition Sunset -> Night
+      float t = glm::smoothstep(-0.4f, 0.0f, h);
+      return glm::mix(night_sky, sunset_sky, t);
     }
   }
 
-  void AmbientLight::setColor(const glm::vec3& color)
+  void AmbientLight::updateVisuals()
   {
-    color_ = glm::vec4(color, 1.0f);
-    computeAmbient();
-    computeDiffuse();
-    computeSpecular();
-  }
+    const float h = direction_.y; // Sun height (-1.0 to 1.0)
 
-  void AmbientLight::setAmbientStrength(float strength)
-  {
-    ambient_strength_ = strength;
-    computeAmbient();
-  }
+    // --- 1. DEFINE TINTS ---
+    const glm::vec3 sunset_tint = glm::vec3(1.0f, 0.40f, 0.10f); // Deep orange
+    const glm::vec3 moon_tint = glm::vec3(0.20f, 0.35f, 0.65f);  // Cool blue
 
-  void AmbientLight::setDiffuseStrength(float strength)
-  {
-    diffuse_strength_ = strength;
-    computeDiffuse();
-  }
+    // --- 2. CALCULATE PHASE WEIGHTS (The Secret to Smoothness) ---
+    // Day Weight: 1.0 at noon, drops to 0.0 by the time sun is near horizon (0.1)
+    float day_w = glm::smoothstep(0.0f, 0.35f, h);
 
-  void AmbientLight::setSpecularStrength(float strength)
-  {
-    specular_strength_ = strength;
-    computeSpecular();
-  }
+    // Sunset Weight: Peaks at horizon (0.0), fades as we go to day (0.4) or night (-0.4)
+    float sunset_w = glm::smoothstep(0.4f, 0.0f, std::abs(h));
 
-  void AmbientLight::computeAmbient()
-  {
-    ambient_ = glm::vec4(color_.x * ambient_strength_,
-                         color_.y * ambient_strength_,
-                         color_.z * ambient_strength_,
-                         color_.w * ambient_strength_);
-  }
+    // Night Weight: 1.0 when sun is deep (-0.3), 0.0 when sun is rising (0.1)
+    float night_w = glm::smoothstep(0.1f, -0.2f, h);
 
-  void AmbientLight::computeDiffuse()
-  {
-    diffuse_ = glm::vec4(color_.x * diffuse_strength_,
-                         color_.y * diffuse_strength_,
-                         color_.z * diffuse_strength_,
-                         color_.w * diffuse_strength_);
-  }
+    // --- 3. COLOR INTERPOLATION ---
+    // We blend linearly across all phases. Because we use smoothstep,
+    // the transitions have no "sharp" start or stop.
+    glm::vec3 day_col = base_color_;
+    glm::vec3 sunset_col = base_color_ * sunset_tint;
+    glm::vec3 night_col = base_color_ * moon_tint;
 
-  void AmbientLight::computeSpecular()
-  {
-    specular_ = glm::vec4(color_.x * specular_strength_,
-                          color_.y * specular_strength_,
-                          color_.z * specular_strength_,
-                          color_.w * specular_strength_);
+    // Weight-based blending
+    current_color_ = (day_col * day_w) + (sunset_col * sunset_w * (1.0f - day_w)) + (night_col * night_w);
+
+    // Normalize in case of overlap to keep energy consistent
+    float total_w = day_w + (sunset_w * (1.0f - day_w)) + night_w;
+    if(total_w > 0.001f)
+      current_color_ /= total_w;
+
+    // --- 4. INTENSITY BLENDING ---
+    const float daylight_intensity = 0.60f;
+    const float moonlight_intensity = 0.45f; // Your requested high floor
+
+    // Intensity smoothly follows the night factor
+    diffuse_factor_ = glm::mix(daylight_intensity, moonlight_intensity, night_w);
+    specular_factor_ = glm::mix(1.0f, 0.02f, night_w);
+
+    // Final touch: Dim the color slightly at absolute midnight
+    float midnight_dim = glm::smoothstep(0.0f, -0.8f, h) * 0.4f;
+    current_color_ *= (1.0f - midnight_dim);
   }
 
 } // namespace hws

@@ -355,15 +355,26 @@ namespace hws {
 
   /* LIGHTS */
 
-  void World::setAmbientLight(const std::array<float, 3>& lat_long_alt,
-                              const std::array<float, 3>& color,
-                              float ambient_strength,
-                              float diffuse_strength,
-                              float specular_strength)
+  void World::setLocatedAmbientLight(const std::array<float, 3>& lat_long_alt,
+                                     const std::array<float, 3>& color,
+                                     float intensity)
   {
-    ambient_light_ = AmbientLight(lat_long_alt,
+    AmbientLight::GeographicCoords coords;
+    coords.latitude = lat_long_alt[0];
+    coords.longitude = lat_long_alt[1];
+    coords.altitude = lat_long_alt[2];
+    ambient_light_ = AmbientLight(coords,
                                   glm::vec3(color[0], color[1], color[2]),
-                                  ambient_strength, diffuse_strength, specular_strength);
+                                  intensity);
+  }
+
+  void World::setAmbientLight(const std::array<float, 3>& direction,
+                              const std::array<float, 3>& color,
+                              float intensity)
+  {
+    ambient_light_ = AmbientLight(glm::vec3(direction[0], direction[1], direction[2]),
+                                  glm::vec3(color[0], color[1], color[2]),
+                                  intensity);
   }
 
   void World::setAmbientLightDirection(const std::array<float, 3>& direction)
@@ -373,12 +384,16 @@ namespace hws {
 
   void World::setAmbientLightColor(const std::array<float, 3>& color)
   {
-    ambient_light_.setColor(glm::vec3(color[0], color[1], color[2]));
+    ambient_light_.setBaseColor(glm::vec3(color[0], color[1], color[2]));
   }
 
-  void World::setAmbientLightAmbientStrength(float ambient_strength)
+  void World::setAmbientLightIntensity(float intensity)
   {
-    ambient_light_.setAmbientStrength(ambient_strength);
+    ambient_light_.setIntensity(intensity);
+  }
+  void World::setAmbientLightTime(time_t current_time)
+  {
+    ambient_light_.updateTime(current_time);
   }
 
   std::size_t World::addPointLight(const std::array<float, 3>& position,

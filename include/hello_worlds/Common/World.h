@@ -123,14 +123,16 @@ namespace hws {
 
     /* LIGHTS */
 
-    void setAmbientLight(const std::array<float, 3>& lat_long_alt,
+    void setLocatedAmbientLight(const std::array<float, 3>& lat_long_alt,
+                                const std::array<float, 3>& color = {1.0, 1.0, 1.0},
+                                float intensity = 1.0);
+    void setAmbientLight(const std::array<float, 3>& direction,
                          const std::array<float, 3>& color = {1.0, 1.0, 1.0},
-                         float ambient_strength = 1.0f,
-                         float diffuse_strength = 1.0f,
-                         float specular_strength = 1.0f);
+                         float intensity = 1.0);
     void setAmbientLightDirection(const std::array<float, 3>& direction);
     void setAmbientLightColor(const std::array<float, 3>& color);
-    void setAmbientLightAmbientStrength(float ambient_strength);
+    void setAmbientLightIntensity(float intensity);
+    void setAmbientLightTime(time_t current_time);
 
     std::size_t addPointLight(const std::array<float, 3>& position,
                               const std::array<float, 3>& color = {1.0, 1.0, 1.0},
