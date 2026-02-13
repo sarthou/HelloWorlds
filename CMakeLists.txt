@@ -268,6 +268,11 @@ endforeach()
 hws_add_library(hello_worlds src/Engine.cpp)
 target_link_libraries(hello_worlds PUBLIC hello_worlds_physics hello_worlds_graphics)
 
+# --- Demo executables ---
+add_executable(demo_light examples/light_demo.cpp)
+target_link_libraries(demo_light PRIVATE hello_worlds)
+target_include_directories(demo_light PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
+
 # --- Testing ---
 option(BUILD_TESTING "Build tests" ON)
 
