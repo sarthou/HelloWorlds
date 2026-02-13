@@ -648,7 +648,11 @@ namespace hws {
     shader.setMat4("view", camera->getViewMatrix());
     shader.setMat4("projection", camera->getProjectionMatrix());
 
-    renderModelsSegmented(shader);
+    auto cameraCull = [&](const glm::vec3& center, float radius) {
+      return camera->getFrustum().isSphereVisible(center, radius);
+    };
+
+    renderModelsSegmented(shader, cameraCull);
   }
 
   void Renderer::renderAmbientShadowDepth()
@@ -823,7 +827,8 @@ namespace hws {
     }
   }
 
-  void Renderer::renderModelsSegmented(const Shader& shader)
+  void Renderer::renderModelsSegmented(const Shader& shader,
+                                       std::function<bool(const glm::vec3&, float)> visibility_test)
   {
     for(auto& [model_id, batch] : current_mesh_batches_)
     {
@@ -835,6 +840,17 @@ namespace hws {
 
         for(const InstanceData& transform : transforms)
         {
+          const glm::mat4& model = transform.mvp_;
+          glm::vec3 world_center = glm::vec3(model * glm::vec4(mesh.getCenter(), 1.0f));
+
+          float max_scale = glm::max(glm::length(glm::vec3(model[0])),
+                                     glm::max(glm::length(glm::vec3(model[1])),
+                                              glm::length(glm::vec3(model[2]))));
+          float world_radius = mesh.getRadius() * max_scale;
+
+          if(visibility_test && !visibility_test(world_center, world_radius))
+            continue;
+
           shader.setMat4("model", transform.mvp_);
           mesh.drawId(shader, (uint32_t)transform.object_id_);
         }
