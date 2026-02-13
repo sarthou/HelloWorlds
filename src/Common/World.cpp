@@ -431,6 +431,16 @@ namespace hws {
     point_lights_.setAmbientStrength(id, strength);
   }
 
+  void World::setPointLightOn(std::size_t id, bool on)
+  {
+    point_lights_.setOn(id, on);
+  }
+
+  bool World::isPointLightOn(std::size_t id)
+  {
+    return point_lights_.isOn(id);
+  }
+
   /* DEBUG */
 
   int World::addDebugText(const std::string& text,

@@ -133,6 +133,7 @@ namespace hws {
     void setAmbientLightColor(const std::array<float, 3>& color);
     void setAmbientLightIntensity(float intensity);
     void setAmbientLightTime(time_t current_time);
+    bool isAmbientNight() const { return ambient_light_.isNight(); }
 
     std::size_t addPointLight(const std::array<float, 3>& position,
                               const std::array<float, 3>& color = {1.0, 1.0, 1.0},
@@ -144,6 +145,8 @@ namespace hws {
     void setPointLightColor(std::size_t id, const glm::vec3& color);
     void setPointLightPosition(std::size_t id, const glm::vec3& position);
     void setPointLightAmbientStrength(std::size_t id, float strength);
+    void setPointLightOn(std::size_t id, bool on);
+    bool isPointLightOn(std::size_t id);
 
     /* DEBUG */
 
