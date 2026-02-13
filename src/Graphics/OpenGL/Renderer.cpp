@@ -688,23 +688,28 @@ namespace hws {
 
     auto& shadow_point_shader = shaders_.at("depthcube");
     glEnable(GL_DEPTH_TEST);
+    Frustum_t cam_frustum = render_camera_.getFrustum();
 
     // Points shadows
     shadow_point_shader.use();
     for(size_t i = 0; i < PointLights::MAX_POINT_LIGHTS; i++)
     {
-      point_shadows_.bindFrameBuffer(i);
       if(world_->point_lights_.isUsed(i) && world_->point_lights_.isOn(i))
       {
+        glm::vec3 light_pos = world_->point_lights_.getPosition(i);
+        float light_radius = world_->point_lights_.getAttenuationDistance(i) * 1.2;
+
+        if(!cam_frustum.isSphereVisible(light_pos, light_radius)) // /!\ point shadows may not be computed for offscreen rendering
+          continue;
+
+        point_shadows_.bindFrameBuffer(i);
+
         if(point_shadows_.isInit(i) == false)
           point_shadows_.init(i, world_->point_lights_.getAttenuationDistance(i));
 
         point_shadows_.computeLightTransforms(i, glm::vec3(world_->point_lights_.getPosition(i)));
 
         point_shadows_.setUniforms(i, shadow_point_shader);
-
-        glm::vec3 light_pos = world_->point_lights_.getPosition(i);
-        float light_radius = world_->point_lights_.getAttenuationDistance(i) * 1.2;
 
         auto pointLightCull = [&](const glm::vec3& center, float radius) {
           float d = glm::distance(light_pos, center);
