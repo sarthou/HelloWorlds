@@ -33,6 +33,7 @@ namespace hws {
 
     bool setColor(std::size_t id, const glm::vec3& color);
     bool setPosition(std::size_t id, const glm::vec3& position);
+    bool setOn(size_t id, bool on = true);
 
     bool setAttenuation(std::size_t id, const glm::vec3& attenuation);
     bool setAttenuation(std::size_t id, float radius);
@@ -48,6 +49,7 @@ namespace hws {
     glm::vec4 getNbLights() const { return glm::vec4((float)nb_lights_); }
 
     bool isUsed(std::size_t id) const { return !available_[id]; }
+    bool isOn(std::size_t id) const { return on_off_[id]; }
     const glm::vec4& getAmbient(std::size_t id) const { return ambients_[id]; }
     const glm::vec4& getDiffuse(std::size_t id) const { return diffuses_[id]; }
     const glm::vec4& getSpecular(std::size_t id) const { return speculars_[id]; }
@@ -59,6 +61,7 @@ namespace hws {
 
   private:
     std::array<bool, MAX_POINT_LIGHTS> available_;
+    std::array<bool, MAX_POINT_LIGHTS> on_off_;
     std::size_t nb_lights_;
 
     std::array<glm::vec4, MAX_POINT_LIGHTS> colors_;

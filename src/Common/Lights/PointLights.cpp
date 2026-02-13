@@ -27,6 +27,7 @@ namespace hws {
     setSpecularStrength(id, specular_strength);
     setAttenuation(id, attenuation);
     attenuation_distances_[id] = 20;
+    on_off_[id] = true;
 
     return id;
   }
@@ -46,6 +47,7 @@ namespace hws {
     setSpecularStrength(id, specular_strength);
     setAttenuation(id, attenuation_radius);
     attenuation_distances_[id] = attenuation_radius;
+    on_off_[id] = true;
 
     return id;
   }
@@ -83,6 +85,15 @@ namespace hws {
       return false;
 
     positions_[id] = glm::vec4(position, 1.0f);
+    return true;
+  }
+
+  bool PointLights::setOn(size_t id, bool on)
+  {
+    if((id >= available_.size()) || (available_[id] == true))
+      return false;
+
+    on_off_[id] = on;
     return true;
   }
 
