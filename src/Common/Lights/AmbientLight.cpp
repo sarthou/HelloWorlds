@@ -63,12 +63,10 @@ namespace hws {
   {
     const float h = direction_.y;
 
-    // Exact same colors as updateVisuals for perfect cohesion
     const glm::vec3 day_sky = base_color;
     const glm::vec3 sunset_sky = base_color * glm::vec3(1.0f, 0.40f, 0.15f);
     const glm::vec3 night_sky = base_color * glm::vec3(0.02f, 0.05f, 0.12f);
 
-    // Two-stage LERP to ensure no abrupt switches
     if(h > 0.0f)
     {
       // Transition Day -> Sunset
@@ -85,25 +83,19 @@ namespace hws {
 
   void AmbientLight::updateVisuals()
   {
-    const float h = direction_.y; // Sun height (-1.0 to 1.0)
+    const float h = direction_.y;
 
-    // --- 1. DEFINE TINTS ---
+    // 1. Tints
     const glm::vec3 sunset_tint = glm::vec3(1.0f, 0.40f, 0.10f); // Deep orange
     const glm::vec3 moon_tint = glm::vec3(0.20f, 0.35f, 0.65f);  // Cool blue
 
-    // --- 2. CALCULATE PHASE WEIGHTS (The Secret to Smoothness) ---
-    // Day Weight: 1.0 at noon, drops to 0.0 by the time sun is near horizon (0.1)
+    // 2. Weights
     float day_w = glm::smoothstep(0.0f, 0.35f, h);
-
-    // Sunset Weight: Peaks at horizon (0.0), fades as we go to day (0.4) or night (-0.4)
     float sunset_w = glm::smoothstep(0.4f, 0.0f, std::abs(h));
-
-    // Night Weight: 1.0 when sun is deep (-0.3), 0.0 when sun is rising (0.1)
     float night_w = glm::smoothstep(0.1f, -0.2f, h);
 
-    // --- 3. COLOR INTERPOLATION ---
-    // We blend linearly across all phases. Because we use smoothstep,
-    // the transitions have no "sharp" start or stop.
+    // 3. Interpolations
+    // We blend linearly across all phases.
     glm::vec3 day_col = base_color_;
     glm::vec3 sunset_col = base_color_ * sunset_tint;
     glm::vec3 night_col = base_color_ * moon_tint;
@@ -116,15 +108,15 @@ namespace hws {
     if(total_w > 0.001f)
       current_color_ /= total_w;
 
-    // --- 4. INTENSITY BLENDING ---
+    // 4. Intensity blending
     const float daylight_intensity = 0.60f;
-    const float moonlight_intensity = 0.45f; // Your requested high floor
+    const float moonlight_intensity = 0.45f;
 
     // Intensity smoothly follows the night factor
     diffuse_factor_ = glm::mix(daylight_intensity, moonlight_intensity, night_w);
     specular_factor_ = glm::mix(1.0f, 0.02f, night_w);
 
-    // Final touch: Dim the color slightly at absolute midnight
+    // Dim the color slightly at absolute midnight
     float midnight_dim = glm::smoothstep(0.0f, -0.8f, h) * 0.4f;
     current_color_ *= (1.0f - midnight_dim);
   }

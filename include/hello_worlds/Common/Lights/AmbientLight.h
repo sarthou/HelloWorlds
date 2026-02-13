@@ -46,6 +46,7 @@ namespace hws {
     glm::vec4 getAmbient() const { return glm::vec4(base_color_ * ambient_factor_ * intensity_, 1.0); }
     glm::vec4 getDiffuse() const { return glm::vec4(current_color_ * diffuse_factor_ * intensity_, 1.0); }
     glm::vec4 getSpecular() const { return glm::vec4(current_color_ * specular_factor_ * intensity_, 1.0); }
+    bool isNight() const { return (direction_.y < 0); }
 
     glm::vec3 getSkyColor(glm::vec3 base_color) const;
 
