@@ -101,7 +101,10 @@ namespace hws {
       else if(i < shadow_cascade_levels_.size())
         lightspace_matrices_.push_back(getLightSpaceMatrix(camera, light_dir, shadow_cascade_levels_[i - 1], shadow_cascade_levels_[i]));
       else
+      {
         lightspace_matrices_.push_back(getLightSpaceMatrix(camera, light_dir, shadow_cascade_levels_[i - 1], far_plane_));
+        master_frustum_ = ref_cam.getFrustum();
+      }
     }
   }
 

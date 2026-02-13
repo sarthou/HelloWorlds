@@ -18,8 +18,11 @@ namespace hws {
     void setLightMatrices();
     void computeLightSpaceMatrices(Camera ref_cam, const glm::vec3& light_dir);
 
+    const Frustum_t& getMasterFrustum() const { return master_frustum_; }
+
   private:
     std::vector<glm::mat4> lightspace_matrices_;
+    Frustum_t master_frustum_;
 
     unsigned int matrices_uniform_buffer_;
     unsigned int depth_framebuffer_;
