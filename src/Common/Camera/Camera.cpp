@@ -25,6 +25,7 @@ namespace hws {
     view_matrix_ = glm::lookAt(world_eye_position_,
                                world_eye_position_ + world_eye_front_,
                                world_eye_up_);
+    updateFrustum();
   }
 
   glm::vec3 Camera::getLocalFront() const
@@ -82,6 +83,51 @@ namespace hws {
     world_eye_right_ = glm::normalize(glm::cross(world_eye_front_, world_up));
 
     world_eye_up_ = glm::cross(world_eye_right_, world_eye_front_);
+  }
+
+  void Camera::updateFrustum()
+  {
+    glm::mat4 m = proj_matrix_ * view_matrix_;
+
+    // Extraction using Gribb-Hartmann (Column-major indexing)
+    // Left
+    frustum_.planes[0].normal.x = m[0][3] + m[0][0];
+    frustum_.planes[0].normal.y = m[1][3] + m[1][0];
+    frustum_.planes[0].normal.z = m[2][3] + m[2][0];
+    frustum_.planes[0].distance = m[3][3] + m[3][0];
+
+    // Right
+    frustum_.planes[1].normal.x = m[0][3] - m[0][0];
+    frustum_.planes[1].normal.y = m[1][3] - m[1][0];
+    frustum_.planes[1].normal.z = m[2][3] - m[2][0];
+    frustum_.planes[1].distance = m[3][3] - m[3][0];
+
+    // Bottom
+    frustum_.planes[2].normal.x = m[0][3] + m[0][1];
+    frustum_.planes[2].normal.y = m[1][3] + m[1][1];
+    frustum_.planes[2].normal.z = m[2][3] + m[2][1];
+    frustum_.planes[2].distance = m[3][3] + m[3][1];
+
+    // Top
+    frustum_.planes[3].normal.x = m[0][3] - m[0][1];
+    frustum_.planes[3].normal.y = m[1][3] - m[1][1];
+    frustum_.planes[3].normal.z = m[2][3] - m[2][1];
+    frustum_.planes[3].distance = m[3][3] - m[3][1];
+
+    // Near
+    frustum_.planes[4].normal.x = m[0][3] + m[0][2];
+    frustum_.planes[4].normal.y = m[1][3] + m[1][2];
+    frustum_.planes[4].normal.z = m[2][3] + m[2][2];
+    frustum_.planes[4].distance = m[3][3] + m[3][2];
+
+    // Far
+    frustum_.planes[5].normal.x = m[0][3] - m[0][2];
+    frustum_.planes[5].normal.y = m[1][3] - m[1][2];
+    frustum_.planes[5].normal.z = m[2][3] - m[2][2];
+    frustum_.planes[5].distance = m[3][3] - m[3][2];
+
+    for(int i = 0; i < 6; i++)
+      frustum_.planes[i].normalize();
   }
 
   std::vector<glm::vec4> Camera::getFrustumCornersWorldSpace()
