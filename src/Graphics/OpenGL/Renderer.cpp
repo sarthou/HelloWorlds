@@ -510,7 +510,8 @@ namespace hws {
     // 1. draw scene as normal in multisampled buffers
 
     screen_.bindFrameBuffer();
-    glClearColor(background_color_[0], background_color_[1], background_color_[2], 1.0f);
+    auto sky = world_->ambient_light_.getSkyColor(glm::vec3(background_color_[0], background_color_[1], background_color_[2]));
+    glClearColor(sky.r, sky.g, sky.b, 1.0f);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_FRAMEBUFFER_SRGB);
     glDisable(GL_BLEND); // is this necessary
@@ -540,7 +541,7 @@ namespace hws {
       glm::mat4 view = glm::mat4(glm::mat3(render_camera_.getViewMatrix()));
       sky_shader.setMat4("view", view);
       sky_shader.setMat4("projection", render_camera_.getProjectionMatrix());
-      sky_shader.setVec4("color", world_->ambient_light_.getColor());
+      sky_shader.setVec4("color", world_->ambient_light_.getDiffuse());
 
       sky_.draw(sky_shader);
     }
@@ -596,7 +597,8 @@ namespace hws {
     auto& light_shader = shaders_.at("default");
 
     // 1. draw scene as normal in multisampled buffers
-    glClearColor(background_color_[0], background_color_[1], background_color_[2], 1.0f);
+    auto sky = world_->ambient_light_.getSkyColor(glm::vec3(background_color_[0], background_color_[1], background_color_[2]));
+    glClearColor(sky.r, sky.g, sky.b, 1.0f);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_FRAMEBUFFER_SRGB);
     glDisable(GL_BLEND);
@@ -625,7 +627,7 @@ namespace hws {
       glm::mat4 view = glm::mat4(glm::mat3(camera->getViewMatrix()));
       sky_shader.setMat4("view", view);
       sky_shader.setMat4("projection", camera->getProjectionMatrix());
-      sky_shader.setVec4("color", world_->ambient_light_.getColor());
+      sky_shader.setVec4("color", world_->ambient_light_.getDiffuse());
 
       sky_.draw(sky_shader);
     }
@@ -663,7 +665,8 @@ namespace hws {
     shadow_.bindFrameBuffer();
     glEnable(GL_DEPTH_TEST);
 
-    renderModels(shadow_shader, 2);
+    if(world_->ambient_light_.getDirection().y >= -0.3)
+      renderModels(shadow_shader, 2);
   }
 
   void Renderer::renderPointShadowDepth()
