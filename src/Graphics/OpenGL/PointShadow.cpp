@@ -10,7 +10,7 @@
 #include <string>
 
 #include "glad/glad.h"
-#include "hello_worlds/Graphics/OpenGL/Shader.h"
+#include "hello_worlds/Graphics/OpenGL/Shaders/Shader.h"
 
 namespace hws {
 
@@ -104,10 +104,11 @@ namespace hws {
 
   void PointShadow::setUniforms(size_t id, const Shader& shader, unsigned int texture_offset) const
   {
-    shader.setFloat("point_lights[" + std::to_string(id) + "].far_plane", far_plane_[id]);
+    std::string str = "point_lights[" + std::to_string(id);
+    shader.setFloat(str + "].far_plane", far_plane_[id]);
 
     glActiveTexture(GL_TEXTURE0 + texture_offset + id);
-    shader.setInt("point_lights[" + std::to_string(id) + "].depth_map", (int)(texture_offset + id));
+    shader.setInt(str + "].depth_map", (int)(texture_offset + id));
     glBindTexture(GL_TEXTURE_CUBE_MAP, depth_cubemap_[id]);
 
     // always good practice to set everything back to defaults once configured.

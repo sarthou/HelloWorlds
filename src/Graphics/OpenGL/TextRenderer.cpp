@@ -13,7 +13,7 @@
 #include <string>
 
 #include "glad/glad.h"
-#include "hello_worlds/Graphics/OpenGL/Shader.h"
+#include "hello_worlds/Graphics/OpenGL/Shaders/Shader.h"
 #include "hello_worlds/Utils/ShellDisplay.h"
 
 namespace hws {

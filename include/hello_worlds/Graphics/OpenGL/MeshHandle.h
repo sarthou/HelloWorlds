@@ -6,7 +6,7 @@
 
 #include "hello_worlds/Common/Models/Color.h"
 #include "hello_worlds/Common/Models/Mesh.h"
-#include "hello_worlds/Graphics/OpenGL/Shader.h"
+#include "hello_worlds/Graphics/OpenGL/Shaders/Shader.h"
 
 namespace hws {
 

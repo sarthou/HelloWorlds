@@ -1,4 +1,4 @@
-#include "hello_worlds/Graphics/OpenGL/Shader.h"
+#include "hello_worlds/Graphics/OpenGL/Shaders/Shader.h"
 
 #include <array>
 #include <fstream>
@@ -155,9 +155,14 @@ namespace hws {
     glUseProgram(id_);
   }
 
-  void Shader::setBool(const std::string& name, bool value) const
+  void Shader::setBool(const char* name, bool value) const
   {
-    glUniform1i(glGetUniformLocation(id_, name.c_str()), (int)value);
+    glUniform1i(glGetUniformLocation(id_, name), (int)value);
+  }
+
+  void Shader::setInt(const char* name, int value) const
+  {
+    glUniform1i(glGetUniformLocation(id_, name), value);
   }
 
   void Shader::setInt(const std::string& name, int value) const
@@ -165,9 +170,19 @@ namespace hws {
     glUniform1i(glGetUniformLocation(id_, name.c_str()), value);
   }
 
+  void Shader::setFloat(const char* name, float value) const
+  {
+    glUniform1f(glGetUniformLocation(id_, name), value);
+  }
+
   void Shader::setFloat(const std::string& name, float value) const
   {
     glUniform1f(glGetUniformLocation(id_, name.c_str()), value);
+  }
+
+  void Shader::setMat4(const char* name, const glm::mat4& value) const
+  {
+    glUniformMatrix4fv(glGetUniformLocation(id_, name), 1, GL_FALSE, glm::value_ptr(value));
   }
 
   void Shader::setMat4(const std::string& name, const glm::mat4& value) const
@@ -175,9 +190,14 @@ namespace hws {
     glUniformMatrix4fv(glGetUniformLocation(id_, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
   }
 
-  void Shader::setVec3(const std::string& name, const glm::vec3& value) const
+  void Shader::setVec3(const char* name, const glm::vec3& value) const
   {
-    glUniform3fv(glGetUniformLocation(id_, name.c_str()), 1, &value[0]);
+    glUniform3fv(glGetUniformLocation(id_, name), 1, &value[0]);
+  }
+
+  void Shader::setVec4(const char* name, const glm::vec4& value) const
+  {
+    glUniform4fv(glGetUniformLocation(id_, name), 1, &value[0]);
   }
 
   void Shader::setVec4(const std::string& name, const glm::vec4& value) const

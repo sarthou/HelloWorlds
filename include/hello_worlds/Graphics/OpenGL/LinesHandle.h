@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "hello_worlds/Common/Debug/DebugLine.h"
-#include "hello_worlds/Graphics/OpenGL/Shader.h"
+#include "hello_worlds/Graphics/OpenGL/Shaders/Shader.h"
 
 namespace hws {
   class Actor;

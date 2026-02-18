@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "glad/glad.h"
-#include "hello_worlds/Graphics/OpenGL/Shader.h"
+#include "hello_worlds/Graphics/OpenGL/Shaders/Shader.h"
 #include "hws_stb_image.h"
 
 namespace hws {

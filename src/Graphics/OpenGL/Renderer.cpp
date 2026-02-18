@@ -75,7 +75,10 @@ messageCallback(GLenum source,
 
 namespace hws {
 
-  Renderer::~Renderer() = default;
+  Renderer::~Renderer()
+  {
+    delete screen_sharder_;
+  }
 
   void Renderer::init()
   {
@@ -122,11 +125,10 @@ namespace hws {
     if(render_camera_.getAASetting() != ViewAntiAliasing_e::off)
       setAntiAliasing(render_camera_.getAASetting());
 
+    screen_sharder_ = new Shader(resources::screen_shader_vs_data, resources::screen_shader_fs_data);
+
     shaders_.insert({
       "default", {resources::light_shader_vs_data, resources::light_shader_fs_data}
-    });
-    shaders_.insert({
-      "screen", {resources::screen_shader_vs_data, resources::screen_shader_fs_data}
     });
     shaders_.insert({
       "depth", {resources::depth_shader_vs_data, resources::depth_shader_fs_data, resources::depth_shader_gs_data}
@@ -162,8 +164,8 @@ namespace hws {
                                   {0, 1},
                                   glm::vec3(0., 0., 1.)));
 
-    shaders_.at("screen").use();
-    shaders_.at("screen").setInt("screenTexture", 0);
+    screen_sharder_->use();
+    screen_sharder_->setInt("screenTexture", 0);
 
     render_steps_.emplace_back([this]() { loadWorld(); });
     render_steps_.emplace_back([this]() { renderPointShadowDepth(); });
@@ -518,8 +520,8 @@ namespace hws {
     light_shader.use();
     setLightsUniforms(light_shader, render_shadows_, render_shadows_);
     light_shader.setVec3("view_pose", render_camera_.getPosition());
-    light_shader.setMat4("view", render_camera_.getViewMatrix());
-    light_shader.setMat4("projection", render_camera_.getProjectionMatrix());
+    light_shader.setView(render_camera_.getViewMatrix());
+    light_shader.setProjection(render_camera_.getProjectionMatrix());
 
     shadow_.setUniforms(light_shader, 1);
     // shadow_.setLightMatrices();
@@ -541,8 +543,8 @@ namespace hws {
       auto& sky_shader = shaders_.at("sky");
       sky_shader.use();
       glm::mat4 view = glm::mat4(glm::mat3(render_camera_.getViewMatrix()));
-      sky_shader.setMat4("view", view);
-      sky_shader.setMat4("projection", render_camera_.getProjectionMatrix());
+      sky_shader.setView(view);
+      sky_shader.setProjection(render_camera_.getProjectionMatrix());
       sky_shader.setVec4("color", world_->ambient_light_.getDiffuse());
 
       sky_.draw(sky_shader);
@@ -560,7 +562,7 @@ namespace hws {
     glDisable(GL_FRAMEBUFFER_SRGB);
 
     // draw Screen quad
-    shaders_.at("screen").use();
+    screen_sharder_->use();
     screen_.draw();
   }
 
@@ -606,8 +608,8 @@ namespace hws {
     light_shader.use();
     setLightsUniforms(light_shader, false, render_shadows_); // We never use the ambient shadows for offscreen
     light_shader.setVec3("view_pose", camera->getPosition());
-    light_shader.setMat4("view", camera->getViewMatrix());
-    light_shader.setMat4("projection", camera->getProjectionMatrix());
+    light_shader.setView(camera->getViewMatrix());
+    light_shader.setProjection(camera->getProjectionMatrix());
 
     shadow_.setUniforms(light_shader, 1);
     // shadow_.setLightMatrices();
@@ -628,8 +630,8 @@ namespace hws {
       auto& sky_shader = shaders_.at("sky");
       sky_shader.use();
       glm::mat4 view = glm::mat4(glm::mat3(camera->getViewMatrix()));
-      sky_shader.setMat4("view", view);
-      sky_shader.setMat4("projection", camera->getProjectionMatrix());
+      sky_shader.setView(view);
+      sky_shader.setProjection(camera->getProjectionMatrix());
       sky_shader.setVec4("color", world_->ambient_light_.getDiffuse());
 
       sky_.draw(sky_shader);
@@ -645,8 +647,8 @@ namespace hws {
     auto& shader = shaders_.at("color");
 
     shader.use();
-    shader.setMat4("view", camera->getViewMatrix());
-    shader.setMat4("projection", camera->getProjectionMatrix());
+    shader.setView(camera->getViewMatrix());
+    shader.setProjection(camera->getProjectionMatrix());
 
     auto cameraCull = [&](const glm::vec3& center, float radius) {
       return camera->getFrustum().isSphereVisible(center, radius);
@@ -729,18 +731,18 @@ namespace hws {
     // Draw lines
 
     lines_shader.use();
-    lines_shader.setMat4("view", render_camera_.getViewMatrix());
-    lines_shader.setMat4("projection", render_camera_.getProjectionMatrix());
-    lines_shader.setMat4("model", glm::mat4(1.));
+    lines_shader.setView(render_camera_.getViewMatrix());
+    lines_shader.setProjection(render_camera_.getProjectionMatrix());
+    lines_shader.setModel(glm::mat4(1.));
 
     for(auto& line_handle : cached_lines_)
     {
       if(line_handle.second.actor == nullptr)
-        lines_shader.setMat4("model", glm::mat4(1.));
+        lines_shader.setModel(glm::mat4(1.));
       else
       {
         auto pose = line_handle.second.actor->getPositionAndOrientation().first;
-        lines_shader.setMat4("model", glm::translate(glm::mat4(1), glm::vec3(pose[0], pose[1], pose[2])));
+        lines_shader.setModel(glm::translate(glm::mat4(1), glm::vec3(pose[0], pose[1], pose[2])));
       }
       line_handle.second.draw(lines_shader);
     }
@@ -766,9 +768,9 @@ namespace hws {
     glm::mat4 view_translation = glm::translate(glm::mat4(1), glm::vec3(trans_x * aspect, -trans_y, -1.));
     view = view_translation * view;
 
-    lines_shader.setMat4("projection", render_camera_.getProjectionMatrix());
-    lines_shader.setMat4("view", view);
-    lines_shader.setMat4("model", model);
+    lines_shader.setProjection(render_camera_.getProjectionMatrix());
+    lines_shader.setView(view);
+    lines_shader.setModel(model);
 
     debug_axis_.at(0).draw(lines_shader);
     debug_axis_.at(1).draw(lines_shader);
@@ -783,7 +785,7 @@ namespace hws {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     text_shader.use();
-    text_shader.setMat4("projection", render_camera_.getProjectionMatrix());
+    text_shader.setProjection(render_camera_.getProjectionMatrix());
     for(const auto& debug : world_->debug_texts_)
     {
       glm::vec4 actor_pose(0., 0., 0., 0.);
@@ -800,7 +802,7 @@ namespace hws {
     glDisable(GL_BLEND);
   }
 
-  void Renderer::renderModels(const Shader& shader,
+  void Renderer::renderModels(const ModelShader& shader,
                               unsigned int texture_offset,
                               std::function<bool(const glm::vec3&, float)> visibility_test)
   {
@@ -825,14 +827,14 @@ namespace hws {
           if(visibility_test && !visibility_test(world_center, world_radius))
             continue;
 
-          shader.setMat4("model", transform.mvp_);
+          shader.setModel(transform.mvp_);
           mesh.draw(shader, transform.object_id_, texture_offset);
         }
       }
     }
   }
 
-  void Renderer::renderModelsSegmented(const Shader& shader,
+  void Renderer::renderModelsSegmented(const ModelShader& shader,
                                        std::function<bool(const glm::vec3&, float)> visibility_test)
   {
     for(auto& [model_id, batch] : current_mesh_batches_)
@@ -856,7 +858,7 @@ namespace hws {
           if(visibility_test && !visibility_test(world_center, world_radius))
             continue;
 
-          shader.setMat4("model", transform.mvp_);
+          shader.setModel(transform.mvp_);
           mesh.drawId(shader, (uint32_t)transform.object_id_);
         }
       }

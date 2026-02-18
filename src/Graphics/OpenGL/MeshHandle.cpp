@@ -12,7 +12,7 @@
 #include "hello_worlds/Common/Models/Color.h"
 #include "hello_worlds/Common/Models/Mesh.h"
 #include "hello_worlds/Common/Models/Vertex.h"
-#include "hello_worlds/Graphics/OpenGL/Shader.h"
+#include "hello_worlds/Graphics/OpenGL/Shaders/Shader.h"
 #include "hello_worlds/Graphics/OpenGL/Texture2D.h"
 
 namespace hws {
@@ -66,35 +66,33 @@ namespace hws {
     unsigned int nb_used = 0;
     for(unsigned int i = 0; i < material_it->second.textures.size(); i++)
     {
-      glActiveTexture(GL_TEXTURE0 + texture_pose_offset + i); // active proper texture unit before binding
-      std::string number;
-      std::string name;
-      if(material_it->second.textures[i].type_ == texture_diffuse)
+      glActiveTexture(GL_TEXTURE0 + texture_pose_offset + i);            // active proper texture unit before binding
+      glBindTexture(GL_TEXTURE_2D, material_it->second.textures[i].id_); // now bind the texture
+
+      switch(material_it->second.textures[i].type_)
       {
-        name = "material.texture_diffuse";
-        number = std::to_string(diffuse_nr++);
-      }
-      else if(material_it->second.textures[i].type_ == texture_specular)
-      {
-        name = "material.texture_specular";
-        number = std::to_string(specular_nr++);
-      }
-      else if(material_it->second.textures[i].type_ == texture_normal)
-      {
-        name = "material.texture_normal";
-        number = std::to_string(normal_nr++);
+      case texture_diffuse:
+        shader.setInt("material.texture_diffuse1", (int)(texture_pose_offset + i));
+        diffuse_nr++;
+        break;
+      case texture_specular:
+        shader.setInt("material.texture_specular1", (int)(texture_pose_offset + i));
+        specular_nr++;
+        break;
+      case texture_normal:
+        shader.setInt("material.texture_normal1", (int)(texture_pose_offset + i));
+        normal_nr++;
         shader.setFloat("material.use_normal", 1.);
-      }
-      else if(material_it->second.textures[i].type_ == texture_height)
-      {
-        name = "material.texture_height";
-        number = std::to_string(height_nr++);
+        break;
+      case texture_height:
+        shader.setInt("material.texture_height1", (int)(texture_pose_offset + i));
+        height_nr++;
+        break;
+
+      default:
+        break;
       }
 
-      // now bind the texture
-      glBindTexture(GL_TEXTURE_2D, material_it->second.textures[i].id_);
-      // and finally set the sampler to the correct texture unit
-      shader.setInt(name + number, (int)(texture_pose_offset + i));
       nb_used++;
     }
 
