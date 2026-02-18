@@ -25,6 +25,7 @@ namespace hws {
     glGenBuffers(1, &matrices_uniform_buffer_);
     glBindBuffer(GL_UNIFORM_BUFFER, matrices_uniform_buffer_);
     glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4x4) * 16, nullptr, GL_STATIC_DRAW);
+    // Bind to the same index as the shader: "binding = 0"
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, matrices_uniform_buffer_);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 

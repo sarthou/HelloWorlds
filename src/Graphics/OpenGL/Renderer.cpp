@@ -126,10 +126,8 @@ namespace hws {
       setAntiAliasing(render_camera_.getAASetting());
 
     screen_sharder_ = new Shader(resources::screen_shader_vs_data, resources::screen_shader_fs_data);
+    main_sharder_ = new DefaultShader(resources::light_shader_vs_data, resources::light_shader_fs_data);
 
-    shaders_.insert({
-      "default", {resources::light_shader_vs_data, resources::light_shader_fs_data}
-    });
     shaders_.insert({
       "depth", {resources::depth_shader_vs_data, resources::depth_shader_fs_data, resources::depth_shader_gs_data}
     });
@@ -506,8 +504,6 @@ namespace hws {
 
   void Renderer::renderMainScreen()
   {
-    auto& light_shader = shaders_.at("default");
-
     // 1. draw scene as normal in multisampled buffers
 
     screen_.bindFrameBuffer();
@@ -517,24 +513,24 @@ namespace hws {
     glEnable(GL_FRAMEBUFFER_SRGB);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    light_shader.use();
-    setLightsUniforms(light_shader, render_shadows_, render_shadows_);
-    light_shader.setVec3("view_pose", render_camera_.getPosition());
-    light_shader.setView(render_camera_.getViewMatrix());
-    light_shader.setProjection(render_camera_.getProjectionMatrix());
+    main_sharder_->use();
+    setLightsUniforms(*main_sharder_, render_shadows_, render_shadows_);
+    main_sharder_->setVec3("view_pose", render_camera_.getPosition());
+    main_sharder_->setView(render_camera_.getViewMatrix());
+    main_sharder_->setProjection(render_camera_.getProjectionMatrix());
 
-    shadow_.setUniforms(light_shader, 1);
+    shadow_.setUniforms(*main_sharder_, 1);
     // shadow_.setLightMatrices();
 
     for(size_t i = 0; i < PointLights::MAX_POINT_LIGHTS; i++)
       if(world_->point_lights_.isUsed(i))
-        point_shadows_.setUniforms(i, light_shader, 6);
+        point_shadows_.setUniforms(i, *main_sharder_, 6);
 
     auto cameraCull = [&](const glm::vec3& center, float radius) {
       return render_camera_.getFrustum().isSphereVisible(center, radius);
     };
 
-    renderModels(light_shader, 2, cameraCull);
+    renderTexturedModels(main_sharder_, 2, cameraCull);
 
     // 1.2 draw background
 
@@ -596,8 +592,6 @@ namespace hws {
 
   void Renderer::renderOffscreenRgb(Camera* camera)
   {
-    auto& light_shader = shaders_.at("default");
-
     // 1. draw scene as normal in multisampled buffers
     auto sky = world_->ambient_light_.getSkyColor(glm::vec3(background_color_[0], background_color_[1], background_color_[2]));
     glClearColor(sky.r, sky.g, sky.b, 1.0f);
@@ -605,24 +599,24 @@ namespace hws {
     glEnable(GL_FRAMEBUFFER_SRGB);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    light_shader.use();
-    setLightsUniforms(light_shader, false, render_shadows_); // We never use the ambient shadows for offscreen
-    light_shader.setVec3("view_pose", camera->getPosition());
-    light_shader.setView(camera->getViewMatrix());
-    light_shader.setProjection(camera->getProjectionMatrix());
+    main_sharder_->use();
+    setLightsUniforms(*main_sharder_, false, render_shadows_); // We never use the ambient shadows for offscreen
+    main_sharder_->setVec3("view_pose", camera->getPosition());
+    main_sharder_->setView(camera->getViewMatrix());
+    main_sharder_->setProjection(camera->getProjectionMatrix());
 
-    shadow_.setUniforms(light_shader, 1);
+    shadow_.setUniforms(*main_sharder_, 1);
     // shadow_.setLightMatrices();
 
     for(size_t i = 0; i < PointLights::MAX_POINT_LIGHTS; i++)
       if(world_->point_lights_.isUsed(i))
-        point_shadows_.setUniforms(i, light_shader, 6);
+        point_shadows_.setUniforms(i, *main_sharder_, 6);
 
     auto cameraCull = [&](const glm::vec3& center, float radius) {
       return camera->getFrustum().isSphereVisible(center, radius);
     };
 
-    renderModels(light_shader, 2, cameraCull);
+    renderTexturedModels(main_sharder_, 2, cameraCull);
 
     // 1.2 draw background
     if(use_sky_box_)
@@ -679,7 +673,7 @@ namespace hws {
         return shadow_.getMasterFrustum().isSphereVisible(center, radius);
       };
 
-      renderModels(shadow_shader, 2, ambientCull);
+      renderModels(shadow_shader, ambientCull);
     }
   }
 
@@ -718,7 +712,7 @@ namespace hws {
           return d < (light_radius + radius);
         };
 
-        renderModels(shadow_point_shader, 2, pointLightCull);
+        renderModels(shadow_point_shader, pointLightCull);
       }
     }
   }
@@ -802,8 +796,39 @@ namespace hws {
     glDisable(GL_BLEND);
   }
 
+  void Renderer::renderTexturedModels(DefaultShader* shader,
+                                      unsigned int texture_offset,
+                                      std::function<bool(const glm::vec3&, float)> visibility_test)
+  {
+    for(auto& [model_id, batch] : current_mesh_batches_)
+    {
+      auto& meshes = cached_models_.at(model_id);
+
+      for(auto& [mesh_id, transforms] : batch)
+      {
+        const MeshHandle& mesh = meshes.at(mesh_id);
+
+        for(const InstanceData& transform : transforms)
+        {
+          const glm::mat4& model = transform.mvp_;
+          glm::vec3 world_center = glm::vec3(model * glm::vec4(mesh.getCenter(), 1.0f));
+
+          float max_scale = glm::max(glm::length(glm::vec3(model[0])),
+                                     glm::max(glm::length(glm::vec3(model[1])),
+                                              glm::length(glm::vec3(model[2]))));
+          float world_radius = mesh.getRadius() * max_scale;
+
+          if(visibility_test && !visibility_test(world_center, world_radius))
+            continue;
+
+          shader->setModel(transform.mvp_);
+          mesh.drawWithMaterial(*shader, transform.object_id_, texture_offset);
+        }
+      }
+    }
+  }
+
   void Renderer::renderModels(const ModelShader& shader,
-                              unsigned int texture_offset,
                               std::function<bool(const glm::vec3&, float)> visibility_test)
   {
     for(auto& [model_id, batch] : current_mesh_batches_)
@@ -828,7 +853,7 @@ namespace hws {
             continue;
 
           shader.setModel(transform.mvp_);
-          mesh.draw(shader, transform.object_id_, texture_offset);
+          mesh.draw(shader);
         }
       }
     }

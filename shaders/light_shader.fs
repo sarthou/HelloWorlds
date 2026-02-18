@@ -8,18 +8,24 @@ layout (location = 2) in vec2 TexCoords;
 layout (location = 3) in mat3 TBN;
 
 // --- STRUCTURES (UNCHANGED) ---
-struct Material {
-  sampler2D texture_diffuse1;
-  sampler2D texture_specular1; // treating this as Specular Strength or Roughness map
-  sampler2D texture_normal1;
+struct MaterialData {
+    vec4  color;      // 16 bytes
+    float shininess;  // 4 bytes
+    float specular;   // 4 bytes
+    float use_normal; // 4 bytes
+    float padding;    // 4 bytes (to align to 16-byte chunks)
+};
 
-  float     shininess;  // Will be converted to Roughness
-  float     specular;   // Will be used as Specular Intensity
-  vec4      color;
-  float     use_normal; 
-}; 
+layout (std140, binding = 1) uniform MaterialBlock {
+    MaterialData material;
+};
 
-uniform Material material;
+//uniform MaterialData material;
+
+// Textures stay as regular uniforms (for now)
+uniform sampler2D texture_diffuse;
+uniform sampler2D texture_specular;
+uniform sampler2D texture_normal;
 
 struct DirLight {
   vec4 direction;
@@ -48,7 +54,7 @@ uniform float use_point_shadows;
 uniform vec3 view_pose;
 uniform mat4 view;
 
-layout (std140) uniform LightSpaceMatrices {
+layout (std140, binding = 0) uniform LightSpaceMatrices {
     mat4 light_space_matrices[16];
 };
 uniform sampler2DArray shadow_maps;
@@ -114,7 +120,7 @@ void main()
     // 1. Normal Mapping
     vec3 N = normalize(Normal);
     if(material.use_normal > 0) {
-        N = texture(material.texture_normal1, TexCoords).rgb;
+        N = texture(texture_normal, TexCoords).rgb;
         N = N * 2.0 - 1.0;   
         N = normalize(TBN * N);
     }
@@ -123,7 +129,7 @@ void main()
     // 2. Material Logic
     vec4 baseColor = material.color;
     if(material.color.w == 0) {
-        baseColor = texture(material.texture_diffuse1, TexCoords);
+        baseColor = texture(texture_diffuse, TexCoords);
     }
     // IMPORTANT: Linearize the input color
     //vec3 albedo = pow(baseColor.rgb, vec3(2.2)); // not performed 
@@ -136,7 +142,7 @@ void main()
     // Use your actual Ks (specular) value
     float specIntensity = material.specular; 
     if(material.specular <= 0) {
-         specIntensity = texture(material.texture_specular1, TexCoords).r;
+         specIntensity = texture(texture_specular, TexCoords).r;
     }
 
     // 3. Lighting Accumulation

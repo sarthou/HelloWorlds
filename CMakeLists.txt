@@ -195,6 +195,7 @@ hws_add_library(hello_worlds_graphics
   src/Graphics/OpenGL/Renderer.cpp
   src/Graphics/OpenGL/Screen.cpp
   src/Graphics/OpenGL/Shaders/Shader.cpp
+  src/Graphics/OpenGL/Shaders/DefaultShader.cpp
   src/Graphics/OpenGL/Shaders/ModelShader.cpp
   src/Graphics/OpenGL/TextRenderer.cpp
   src/Graphics/OpenGL/AmbientShadow.cpp

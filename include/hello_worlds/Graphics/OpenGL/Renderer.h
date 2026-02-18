@@ -19,6 +19,7 @@
 #include "hello_worlds/Graphics/OpenGL/OffScreen.h"
 #include "hello_worlds/Graphics/OpenGL/PointShadow.h"
 #include "hello_worlds/Graphics/OpenGL/Screen.h"
+#include "hello_worlds/Graphics/OpenGL/Shaders/DefaultShader.h"
 #include "hello_worlds/Graphics/OpenGL/Shaders/ModelShader.h"
 #include "hello_worlds/Graphics/OpenGL/Shaders/Shader.h"
 #include "hello_worlds/Graphics/OpenGL/TextRenderer.h"
@@ -50,6 +51,7 @@ namespace hws {
     Camera render_camera_;
     std::unordered_map<std::string, ModelShader> shaders_;
     Shader* screen_sharder_;
+    DefaultShader* main_sharder_;
     Screen screen_;
     std::vector<OffScreen> off_screens_;
     Cubemap sky_;
@@ -91,8 +93,10 @@ namespace hws {
     void loadDebugLines();
 
     void renderModels(const ModelShader& shader,
-                      unsigned int texture_offset = 0,
                       std::function<bool(const glm::vec3&, float)> visibility_test = nullptr);
+    void renderTexturedModels(DefaultShader* shader,
+                              unsigned int texture_offset,
+                              std::function<bool(const glm::vec3&, float)> visibility_test = nullptr);
     void renderModelsSegmented(const ModelShader& shader,
                                std::function<bool(const glm::vec3&, float)> visibility_test = nullptr);
 

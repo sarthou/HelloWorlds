@@ -6,6 +6,7 @@
 
 #include "hello_worlds/Common/Models/Color.h"
 #include "hello_worlds/Common/Models/Mesh.h"
+#include "hello_worlds/Graphics/OpenGL/Shaders/DefaultShader.h"
 #include "hello_worlds/Graphics/OpenGL/Shaders/Shader.h"
 
 namespace hws {
@@ -32,7 +33,9 @@ namespace hws {
 
     void drawId(const Shader& shader, uint32_t model_id) const;
 
-    void draw(const Shader& shader, uint32_t model_id, unsigned int texture_pose_offset = 0) const;
+    void draw(const Shader& shader) const;
+
+    void drawWithMaterial(const DefaultShader& shader, uint32_t model_id, unsigned int texture_pose_offset = 0) const;
 
     float getRadius() const { return radius_; }
     glm::vec3 getCenter() const { return center_; }
