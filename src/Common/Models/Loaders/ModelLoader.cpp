@@ -138,7 +138,10 @@ namespace hws {
   void ModelLoader::computeTangentSpace(const std::unique_ptr<hws::Model>& model) const
   {
     for(auto& mesh : model->meshes_)
+    {
       computeTangentSpace(mesh);
+      mesh.finalize();
+    }
   }
 
   void ModelLoader::computeTangentSpace(Mesh& mesh) const

@@ -26,6 +26,15 @@ namespace hws {
     std::vector<hws::Vertex> vertices_;
     std::vector<std::uint32_t> indices_;
     Material material_;
+
+    void finalize();
+
+    float getRadius() const { return radius_; }
+    glm::vec3 getCenter() const { return center_; }
+
+  private:
+    float radius_;
+    glm::vec3 center_; // Local space center
   };
 } // namespace hws
 

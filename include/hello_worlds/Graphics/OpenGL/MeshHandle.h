@@ -37,13 +37,7 @@ namespace hws {
 
     void drawWithMaterial(const DefaultShader& shader, uint32_t model_id, unsigned int texture_pose_offset = 0) const;
 
-    float getRadius() const { return radius_; }
-    glm::vec3 getCenter() const { return center_; }
-
   private:
-    float radius_;
-    glm::vec3 center_; // Local space center
-
     unsigned int vbo_; // vertex buffer object
     unsigned int ebo_; //
     unsigned int vao_; // vertex array object

@@ -342,7 +342,18 @@ namespace hws {
     loadModel(model, material, object_id);
 
     for(const auto& mesh : model.meshes_)
-      current_mesh_batches_[model.id_][mesh.id_].emplace_back(InstanceData{model_mat, {}, object_id}); // TODO add instance data ?
+    {
+      glm::vec3 world_center = glm::vec3(model_mat[3]) + glm::mat3(model_mat) * mesh.getCenter();
+
+      float s1 = glm::dot(glm::vec3(model_mat[0]), glm::vec3(model_mat[0]));
+      float s2 = glm::dot(glm::vec3(model_mat[1]), glm::vec3(model_mat[1]));
+      float s3 = glm::dot(glm::vec3(model_mat[2]), glm::vec3(model_mat[2]));
+
+      float max_scale_sq = glm::max(s1, glm::max(s2, s3));
+      float world_radius = mesh.getRadius() * glm::sqrt(max_scale_sq);
+
+      current_mesh_batches_[model.id_][mesh.id_].emplace_back(InstanceData{model_mat, world_center, world_radius, {}, object_id}); // TODO add instance data ?
+    }
   }
 
   Material Renderer::combineMaterials(const Material& shape_material, const Material& model_material)
@@ -810,15 +821,7 @@ namespace hws {
 
         for(const InstanceData& transform : transforms)
         {
-          const glm::mat4& model = transform.mvp_;
-          glm::vec3 world_center = glm::vec3(model * glm::vec4(mesh.getCenter(), 1.0f));
-
-          float max_scale = glm::max(glm::length(glm::vec3(model[0])),
-                                     glm::max(glm::length(glm::vec3(model[1])),
-                                              glm::length(glm::vec3(model[2]))));
-          float world_radius = mesh.getRadius() * max_scale;
-
-          if(visibility_test && !visibility_test(world_center, world_radius))
+          if(visibility_test && !visibility_test(transform.world_center_, transform.world_radius_))
             continue;
 
           shader->setModel(transform.mvp_);
@@ -841,15 +844,7 @@ namespace hws {
 
         for(const InstanceData& transform : transforms)
         {
-          const glm::mat4& model = transform.mvp_;
-          glm::vec3 world_center = glm::vec3(model * glm::vec4(mesh.getCenter(), 1.0f));
-
-          float max_scale = glm::max(glm::length(glm::vec3(model[0])),
-                                     glm::max(glm::length(glm::vec3(model[1])),
-                                              glm::length(glm::vec3(model[2]))));
-          float world_radius = mesh.getRadius() * max_scale;
-
-          if(visibility_test && !visibility_test(world_center, world_radius))
+          if(visibility_test && !visibility_test(transform.world_center_, transform.world_radius_))
             continue;
 
           shader.setModel(transform.mvp_);
@@ -872,15 +867,7 @@ namespace hws {
 
         for(const InstanceData& transform : transforms)
         {
-          const glm::mat4& model = transform.mvp_;
-          glm::vec3 world_center = glm::vec3(model * glm::vec4(mesh.getCenter(), 1.0f));
-
-          float max_scale = glm::max(glm::length(glm::vec3(model[0])),
-                                     glm::max(glm::length(glm::vec3(model[1])),
-                                              glm::length(glm::vec3(model[2]))));
-          float world_radius = mesh.getRadius() * max_scale;
-
-          if(visibility_test && !visibility_test(world_center, world_radius))
+          if(visibility_test && !visibility_test(transform.world_center_, transform.world_radius_))
             continue;
 
           shader.setModel(transform.mvp_);

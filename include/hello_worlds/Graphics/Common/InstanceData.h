@@ -10,6 +10,8 @@ namespace hws {
   {
   public:
     glm::mat4 mvp_;
+    glm::vec3 world_center_;
+    float world_radius_;
     hws::Color rgba_;
     uint32_t object_id_;
   };
