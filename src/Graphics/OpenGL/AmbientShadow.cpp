@@ -69,8 +69,6 @@ namespace hws {
 
   void AmbientShadow::setUniforms(const Shader& shader, unsigned int texture_offset) const
   {
-    shader.setFloat("far_plane", far_plane_);
-    shader.setInt("cascade_count", (int)shadow_cascade_levels_.size());
     for(size_t i = 0; i < shadow_cascade_levels_.size(); ++i)
       shader.setFloat("cascade_planes_distances[" + std::to_string(i) + "]", shadow_cascade_levels_[i]);
 

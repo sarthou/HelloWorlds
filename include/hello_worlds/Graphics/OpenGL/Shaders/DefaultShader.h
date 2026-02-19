@@ -20,10 +20,13 @@ namespace hws {
 
   struct DirLightUBO_t
   {
-    glm::vec4 direction;
-    glm::vec4 ambient;
-    glm::vec4 diffuse;
-    glm::vec4 specular;
+    glm::vec4 direction;  // 16 bytes
+    glm::vec4 ambient;    // 16 bytes
+    glm::vec4 diffuse;    // 16 bytes
+    glm::vec4 specular;   // 16 bytes
+    int cascade_count;    // 4 bytes
+    float far_plane;      // 4 bytes
+    glm::vec2 texel_size; // 8 bytes
   };
 
   struct PointLightUBO_t

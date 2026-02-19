@@ -29,6 +29,9 @@ struct DirLightData {
   vec4 ambient;
   vec4 diffuse;  // Used as Light Color
   vec4 specular; // Ignored in PBR (PBR calculates spec from roughness)
+  int cascade_count;
+  float far_plane;
+  vec2 texel_size; // aligned to a 16-byte
 };
 
 layout (std140, binding = 2) uniform DirLightBlock {
@@ -64,12 +67,10 @@ layout (std140, binding = 0) uniform LightSpaceMatrices {
 };
 uniform sampler2DArray shadow_maps;
 uniform float cascade_planes_distances[16];
-uniform int cascade_count;
-uniform float far_plane;
 
 // --- PROTOTYPES ---
 vec3 CalcPBR(vec3 lightDir, vec3 lightColor, vec3 normal, vec3 viewDir, vec3 albedo, float roughness, float metallic, float shadow);
-float ambiantShadowCalculation(vec3 fragPosWorldSpace);
+float ambiantShadowCalculation(vec3 fragPosWorldSpace, vec3 normal);
 float pointShadowCalculation(int index, vec3 fragPosWorldSpace, float currentDepth);
 
 const float PI = 3.14159265359;
@@ -155,7 +156,7 @@ void main()
     vec3 totalDirect = vec3(0.0);
 
     // --- Directional Light ---
-    float shadowDir = ambiantShadowCalculation(FragPos);
+    float shadowDir = ambiantShadowCalculation(FragPos, N);
     
     // Restore your actual ambient uniform
     totalAmbient += dir_light.ambient.rgb * albedo;
@@ -289,35 +290,40 @@ float pointShadowCalculation(int index, vec3 fragPosWorldSpace, float distToLigh
     return shadow / float(samples);
 }
 
-float ambiantShadowCalculation(vec3 fragPosWorldSpace)
+float ambiantShadowCalculation(vec3 fragPosWorldSpace, vec3 normal)
 {
-  if(use_ambient_shadows == 0) return 0.;
-  vec4 frag_pose_view_space = view * vec4(fragPosWorldSpace, 1.0);
-  float depth_value = abs(frag_pose_view_space.z);
-  int layer = -1;
-  for (int i = 0; i < cascade_count; ++i) {
-    if (depth_value < cascade_planes_distances[i]) {
+  if(use_ambient_shadows == 0) return 0.0;
+  
+  float depth_value = abs((view * vec4(fragPosWorldSpace, 1.0)).z);
+
+  int layer = dir_light.cascade_count;
+  for (int i = 0; i < dir_light.cascade_count; ++i)
+  {
+    if (depth_value < cascade_planes_distances[i])
+    {
       layer = i;
       break;
     }
   }
-  if (layer == -1) layer = cascade_count;
+
   vec4 frag_pos_light_space = light_space_matrices[layer] * vec4(fragPosWorldSpace, 1.0);
   vec3 proj_coords = frag_pos_light_space.xyz / frag_pos_light_space.w;
   proj_coords = proj_coords * 0.5 + 0.5;
-  float current_depth = proj_coords.z;
-  if (current_depth > 1.0) return 0.0;
-  vec3 normal = normalize(Normal);
+
+  if (proj_coords.z > 1.0) return 0.0;
+
   float bias = max(0.05 * (1.0 - dot(normal, dir_light.direction.xyz)), 0.005);
-  const float bias_modifier = 7.; 
-  if (layer == cascade_count) bias *= 1 / (far_plane * bias_modifier);
-  else bias *= 1 / (cascade_planes_distances[layer] * bias_modifier);
+  float current_cascade_dist = (layer == dir_light.cascade_count) ? dir_light.far_plane : cascade_planes_distances[layer];
+  bias *= 1.0 / (current_cascade_dist * 7.0);
+
   float shadow = 0.0;
-  vec2 texel_size = 1.0 / vec2(textureSize(shadow_maps, 0));
-  for(int x = -1; x <= 1; ++x) {
-    for(int y = -1; y <= 1; ++y) {
-      float pcf_depth = texture(shadow_maps, vec3(proj_coords.xy + vec2(x, y) * texel_size, layer)).r;
-      shadow += (current_depth - bias) > pcf_depth ? 1.0 : 0.0;        
+
+  for(int x = -1; x <= 1; ++x)
+  {
+    for(int y = -1; y <= 1; ++y)
+    {
+      float pcf_depth = texture(shadow_maps, vec3(proj_coords.xy + vec2(x, y) * dir_light.texel_size, layer)).r;
+      shadow += (proj_coords.z - bias) > pcf_depth ? 1.0 : 0.0;       
     }    
   }
   shadow /= 9.0;

@@ -19,6 +19,9 @@ namespace hws {
     void computeLightSpaceMatrices(Camera ref_cam, const glm::vec3& light_dir);
 
     const Frustum_t& getMasterFrustum() const { return master_frustum_; }
+    float getFarPlane() const { return far_plane_; }
+    int getCascadeCount() const { return (int)shadow_cascade_levels_.size(); }
+    glm::vec2 getTexelSize() const { return glm::vec2{1. / (float)resolution_, 1. / (float)resolution_}; }
 
   private:
     std::vector<glm::mat4> lightspace_matrices_;

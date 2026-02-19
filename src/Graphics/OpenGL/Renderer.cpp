@@ -888,10 +888,14 @@ namespace hws {
   {
     const AmbientLight& ambient = world_->ambient_light_;
 
-    DirLightUBO_t dir_light{ambient.getDirection(),
-                            ambient.getAmbient(),
-                            ambient.getDiffuse(),
-                            ambient.getSpecular()};
+    DirLightUBO_t dir_light{
+      ambient.getDirection(),
+      ambient.getAmbient(),
+      ambient.getDiffuse(),
+      ambient.getSpecular(),
+      shadow_.getCascadeCount(),
+      shadow_.getFarPlane(),
+      shadow_.getTexelSize()};
     shader->setDirLight(&dir_light);
 
     shader->setUsePointLight(use_points_shadows);
