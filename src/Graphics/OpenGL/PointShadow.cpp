@@ -21,6 +21,13 @@ namespace hws {
 
   void PointShadow::init()
   {
+    glGenBuffers(1, &matrices_uniform_buffer_);
+    glBindBuffer(GL_UNIFORM_BUFFER, matrices_uniform_buffer_);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4x4) * 6, nullptr, GL_STATIC_DRAW);
+    // Bind to the same index as the shader: "binding = 4"
+    glBindBufferBase(GL_UNIFORM_BUFFER, 4, matrices_uniform_buffer_);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
     for(size_t id = 0; id < MAX_POINTS; id++)
     {
       glGenFramebuffers(1, &depth_framebuffer_[id]);
@@ -76,20 +83,25 @@ namespace hws {
   {
     shader.setFloat("far_plane", far_plane_[id]);
     shader.setVec3("lightPos", positions_[id]);
-    for(unsigned int i = 0; i < 6; ++i)
-      shader.setMat4("shadowMatrices[" + std::to_string(i) + "]", shadow_transforms_[id][i]);
+
+    glBindBuffer(GL_UNIFORM_BUFFER, matrices_uniform_buffer_);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, (long)shadow_transforms_[id].size() * sizeof(glm::mat4x4), shadow_transforms_[id].data());
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
   }
 
   void PointShadow::computeLightTransforms(size_t id, const glm::vec3& light_pose)
   {
-    positions_[id] = light_pose;
-    shadow_transforms_[id].clear();
-    shadow_transforms_[id].push_back(projection_matrix_[id] * glm::lookAt(light_pose, light_pose + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
-    shadow_transforms_[id].push_back(projection_matrix_[id] * glm::lookAt(light_pose, light_pose + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
-    shadow_transforms_[id].push_back(projection_matrix_[id] * glm::lookAt(light_pose, light_pose + glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0)));
-    shadow_transforms_[id].push_back(projection_matrix_[id] * glm::lookAt(light_pose, light_pose + glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0)));
-    shadow_transforms_[id].push_back(projection_matrix_[id] * glm::lookAt(light_pose, light_pose + glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, -1.0, 0.0)));
-    shadow_transforms_[id].push_back(projection_matrix_[id] * glm::lookAt(light_pose, light_pose + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, -1.0, 0.0)));
+    if(positions_[id] != light_pose)
+    {
+      positions_[id] = light_pose;
+      shadow_transforms_[id].clear();
+      shadow_transforms_[id].emplace_back(projection_matrix_[id] * glm::lookAt(light_pose, light_pose + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
+      shadow_transforms_[id].emplace_back(projection_matrix_[id] * glm::lookAt(light_pose, light_pose + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
+      shadow_transforms_[id].emplace_back(projection_matrix_[id] * glm::lookAt(light_pose, light_pose + glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0)));
+      shadow_transforms_[id].emplace_back(projection_matrix_[id] * glm::lookAt(light_pose, light_pose + glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0)));
+      shadow_transforms_[id].emplace_back(projection_matrix_[id] * glm::lookAt(light_pose, light_pose + glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, -1.0, 0.0)));
+      shadow_transforms_[id].emplace_back(projection_matrix_[id] * glm::lookAt(light_pose, light_pose + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, -1.0, 0.0)));
+    }
   }
 
 } // namespace hws

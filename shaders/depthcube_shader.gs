@@ -1,8 +1,11 @@
-#version 400 core
+#version 420 core
 layout (triangles, invocations = 6) in; // Parallelize 6 times
 layout (triangle_strip, max_vertices = 3) out;
 
-uniform mat4 shadowMatrices[6];
+layout (std140, binding = 4) uniform ShadowMatrices
+{
+    mat4 shadow_matrices[6];
+};
 
 out vec4 FragPos; 
 
@@ -15,7 +18,7 @@ void main()
     {
         FragPos = gl_in[i].gl_Position;
         // Apply the matrix specific to this invocation
-        gl_Position = shadowMatrices[gl_InvocationID] * FragPos;
+        gl_Position = shadow_matrices[gl_InvocationID] * FragPos;
         EmitVertex();
     }    
     EndPrimitive();

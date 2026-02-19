@@ -26,6 +26,7 @@ namespace hws {
     void computeLightTransforms(size_t id, const glm::vec3& light_pose);
 
   private:
+    unsigned int matrices_uniform_buffer_;
     std::array<bool, MAX_POINTS> is_init_;
     std::array<unsigned int, MAX_POINTS> depth_framebuffer_;
     std::array<unsigned int, MAX_POINTS> depth_cubemap_;
