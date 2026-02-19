@@ -18,7 +18,10 @@ namespace hws {
     void init(size_t id, float far_plane);
     bool isInit(std::size_t id) const { return is_init_[id]; }
     void bindFrameBuffer(size_t id) const;
-    void setUniforms(size_t id, const Shader& shader, unsigned int texture_offset) const;
+
+    float getFarPlane(size_t id) const { return far_plane_[id]; }
+    unsigned int getCubeMapId(size_t id) const { return depth_cubemap_[id]; }
+
     void setUniforms(size_t id, const Shader& shader) const;
     void computeLightTransforms(size_t id, const glm::vec3& light_pose);
 

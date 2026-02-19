@@ -18,6 +18,27 @@ namespace hws {
     float padding;    // Offset 28 (Manual padding to keep it 16-byte aligned)
   };
 
+  struct DirLightUBO_t
+  {
+    glm::vec4 direction;
+    glm::vec4 ambient;
+    glm::vec4 diffuse;
+    glm::vec4 specular;
+  };
+
+  struct PointLightUBO_t
+  {
+    glm::vec4 position;    // 16 bytes
+    glm::vec4 ambient;     // 16 bytes
+    glm::vec4 diffuse;     // 16 bytes
+    glm::vec4 specular;    // 16 bytes
+    glm::vec4 attenuation; // 16 bytes
+    float far_plane;       // 4 bytes
+    float on_off;          // 4 bytes
+    float padding1;        // 4 bytes
+    float padding2;        // 4 bytes (Total struct = 96 bytes, which is 16 * 6)
+  };
+
   class DefaultShader : public ModelShader
   {
   public:
@@ -26,13 +47,20 @@ namespace hws {
     DefaultShader(const char* v_shader_code, const char* f_shader_code, const char* g_shader_code = nullptr);
 
     void setMaterial(MaterialUBO_t* data) const;
+
+    void setDirLight(DirLightUBO_t* data) const;
+    void setPointLights(PointLightUBO_t* data, size_t nb) const;
     void setUseAmbiantShadow(bool value) const;
     void setUsePointLight(bool value) const;
+    void setNbPointLight(float value) const;
 
   private:
     uint32_t ubo_material_;
+    uint32_t ubo_dir_light_;
+    uint32_t ubo_point_lights_;
     int use_ambient_shadows_uniform_id_;
     int use_point_shadows_uniform_id_;
+    int nb_point_lights_uniform_id_;
 
     void setUniformIds();
   };

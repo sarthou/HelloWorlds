@@ -54,6 +54,8 @@
 // should be after glad
 #include <GLFW/glfw3.h>
 
+#define POINT_SHADOW_TEXTURE 20
+
 void GLAPIENTRY
 messageCallback(GLenum source,
                 GLenum type,
@@ -126,7 +128,7 @@ namespace hws {
       setAntiAliasing(render_camera_.getAASetting());
 
     screen_sharder_ = new Shader(resources::screen_shader_vs_data, resources::screen_shader_fs_data);
-    main_sharder_ = new DefaultShader(resources::light_shader_vs_data, resources::light_shader_fs_data);
+    main_shader_ = new DefaultShader(resources::light_shader_vs_data, resources::light_shader_fs_data);
 
     shaders_.insert({
       "depth", {resources::depth_shader_vs_data, resources::depth_shader_fs_data, resources::depth_shader_gs_data}
@@ -143,6 +145,7 @@ namespace hws {
 
     shadow_.init(render_camera_.getNearPlane(), render_camera_.getFarPlane());
     point_shadows_.init();
+    initShadowSamplers();
     text_renderer_.init();
     text_renderer_.load("/usr/share/fonts/truetype/open-sans/OpenSans-Regular.ttf", 48);
 
@@ -524,24 +527,22 @@ namespace hws {
     glEnable(GL_FRAMEBUFFER_SRGB);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    main_sharder_->use();
-    setLightsUniforms(*main_sharder_, render_shadows_, render_shadows_);
-    main_sharder_->setVec3("view_pose", render_camera_.getPosition());
-    main_sharder_->setView(render_camera_.getViewMatrix());
-    main_sharder_->setProjection(render_camera_.getProjectionMatrix());
+    main_shader_->use();
 
-    shadow_.setUniforms(*main_sharder_, 1);
+    main_shader_->setVec3("view_pose", render_camera_.getPosition());
+    main_shader_->setView(render_camera_.getViewMatrix());
+    main_shader_->setProjection(render_camera_.getProjectionMatrix());
+
+    shadow_.setUniforms(*main_shader_, 1);
     // shadow_.setLightMatrices();
 
-    for(size_t i = 0; i < PointLights::MAX_POINT_LIGHTS; i++)
-      if(world_->point_lights_.isUsed(i))
-        point_shadows_.setUniforms(i, *main_sharder_, 6);
+    setLightsUniforms(main_shader_, render_shadows_, render_shadows_);
 
     auto cameraCull = [&](const glm::vec3& center, float radius) {
       return render_camera_.getFrustum().isSphereVisible(center, radius);
     };
 
-    renderTexturedModels(main_sharder_, 2, cameraCull);
+    renderTexturedModels(main_shader_, 2, cameraCull);
 
     // 1.2 draw background
 
@@ -610,24 +611,21 @@ namespace hws {
     glEnable(GL_FRAMEBUFFER_SRGB);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    main_sharder_->use();
-    setLightsUniforms(*main_sharder_, false, render_shadows_); // We never use the ambient shadows for offscreen
-    main_sharder_->setVec3("view_pose", camera->getPosition());
-    main_sharder_->setView(camera->getViewMatrix());
-    main_sharder_->setProjection(camera->getProjectionMatrix());
+    main_shader_->use();
 
-    shadow_.setUniforms(*main_sharder_, 1);
+    main_shader_->setVec3("view_pose", camera->getPosition());
+    main_shader_->setView(camera->getViewMatrix());
+    main_shader_->setProjection(camera->getProjectionMatrix());
+
+    shadow_.setUniforms(*main_shader_, 1);
     // shadow_.setLightMatrices();
-
-    for(size_t i = 0; i < PointLights::MAX_POINT_LIGHTS; i++)
-      if(world_->point_lights_.isUsed(i))
-        point_shadows_.setUniforms(i, *main_sharder_, 6);
+    setLightsUniforms(main_shader_, false, render_shadows_); // We never use the ambient shadows for offscreen
 
     auto cameraCull = [&](const glm::vec3& center, float radius) {
       return camera->getFrustum().isSphereVisible(center, radius);
     };
 
-    renderTexturedModels(main_sharder_, 2, cameraCull);
+    renderTexturedModels(main_shader_, 2, cameraCull);
 
     // 1.2 draw background
     if(use_sky_box_)
@@ -877,38 +875,56 @@ namespace hws {
     }
   }
 
-  void Renderer::setLightsUniforms(const Shader& shader, bool use_ambient_shadows, bool use_points_shadows)
+  void Renderer::initShadowSamplers()
+  {
+    main_shader_->use();
+    for(size_t i = 0; i < PointLights::MAX_POINT_LIGHTS; i++)
+    {
+      main_shader_->setInt("point_lights_depth_maps[" + std::to_string(i) + "]", POINT_SHADOW_TEXTURE + i);
+    }
+  }
+
+  void Renderer::setLightsUniforms(DefaultShader* shader, bool use_ambient_shadows, bool use_points_shadows)
   {
     const AmbientLight& ambient = world_->ambient_light_;
 
-    shader.setVec4("dir_light.ambient", ambient.getAmbient());
-    shader.setVec4("dir_light.diffuse", ambient.getDiffuse());
-    shader.setVec4("dir_light.specular", ambient.getSpecular());
-    shader.setVec4("dir_light.direction", ambient.getDirection());
+    DirLightUBO_t dir_light{ambient.getDirection(),
+                            ambient.getAmbient(),
+                            ambient.getDiffuse(),
+                            ambient.getSpecular()};
+    shader->setDirLight(&dir_light);
 
-    shader.setFloat("use_point_shadows", use_points_shadows ? 1.0 : 0.0);
-    shader.setFloat("use_ambient_shadows", use_ambient_shadows ? 1.0 : 0.0);
+    shader->setUsePointLight(use_points_shadows);
+    shader->setUseAmbiantShadow(use_ambient_shadows);
 
-    glActiveTexture(GL_TEXTURE2);
-    for(size_t i = 0; i < PointLights::MAX_POINT_LIGHTS; i++)
+    if(use_points_shadows)
     {
-      shader.setInt("point_lights[" + std::to_string(i) + "].depth_map", 6);
+      for(size_t i = 0; i < PointLights::MAX_POINT_LIGHTS; i++)
+      {
+        if(world_->point_lights_.isUsed(i) && world_->point_lights_.isOn(i))
+        {
+          glActiveTexture(GL_TEXTURE0 + POINT_SHADOW_TEXTURE + i);
+          glBindTexture(GL_TEXTURE_CUBE_MAP, point_shadows_.getCubeMapId(i));
+        }
+      }
     }
-    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-    glActiveTexture(GL_TEXTURE0);
 
-    const PointLights& points = world_->point_lights_;
+    PointLightUBO_t gpu_data[20];
+    const auto& points = world_->point_lights_;
+
     for(size_t i = 0; i < points.getNbLightsSize(); i++)
     {
-      std::string name = "point_lights[" + std::to_string(i) + "]";
-      shader.setVec4(name + ".ambient", points.getAmbient(i));
-      shader.setVec4(name + ".diffuse", points.getDiffuse(i));
-      shader.setVec4(name + ".specular", points.getSpecular(i));
-      shader.setVec4(name + ".position", points.getPosition(i));
-      shader.setVec4(name + ".attenuation", points.getAttenuation(i));
-      shader.setFloat(name + ".on_off", ((points.isUsed(i) && points.isOn(i)) ? 1. : 0.));
+      gpu_data[i].position = points.getPosition(i);
+      gpu_data[i].ambient = points.getAmbient(i);
+      gpu_data[i].diffuse = points.getDiffuse(i);
+      gpu_data[i].specular = points.getSpecular(i);
+      gpu_data[i].attenuation = points.getAttenuation(i);
+      gpu_data[i].far_plane = point_shadows_.getFarPlane(i);
+      gpu_data[i].on_off = (points.isUsed(i) && points.isOn(i)) ? 1.0f : 0.0f;
     }
-    shader.setFloat("nb_point_lights", points.getNbLightsFloat());
+
+    shader->setPointLights(gpu_data, points.getNbLightsSize());
+    shader->setNbPointLight(points.getNbLightsFloat());
   }
 
   void Renderer::setAntiAliasing(ViewAntiAliasing_e setting)

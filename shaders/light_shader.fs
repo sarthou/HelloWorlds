@@ -7,7 +7,6 @@ layout (location = 1) in vec3 Normal;
 layout (location = 2) in vec2 TexCoords;
 layout (location = 3) in mat3 TBN;
 
-// --- STRUCTURES (UNCHANGED) ---
 struct MaterialData {
     vec4  color;      // 16 bytes
     float shininess;  // 4 bytes
@@ -20,33 +19,39 @@ layout (std140, binding = 1) uniform MaterialBlock {
     MaterialData material;
 };
 
-//uniform MaterialData material;
-
-// Textures stay as regular uniforms (for now)
+// Textures stay as regular uniforms
 uniform sampler2D texture_diffuse;
 uniform sampler2D texture_specular;
 uniform sampler2D texture_normal;
 
-struct DirLight {
+struct DirLightData {
   vec4 direction;
   vec4 ambient;
   vec4 diffuse;  // Used as Light Color
   vec4 specular; // Ignored in PBR (PBR calculates spec from roughness)
-};  
-uniform DirLight dir_light; 
+};
 
-struct PointLight {    
-  vec4 position;
-  vec4 ambient;
-  vec4 diffuse;
-  vec4 specular;
-  vec4 attenuation;
-  samplerCube depth_map;
-  float far_plane;
-  float on_off;
-};  
+layout (std140, binding = 2) uniform DirLightBlock {
+    DirLightData dir_light;
+};
+
+struct PointLightData {
+    vec4 position;
+    vec4 ambient;
+    vec4 diffuse;
+    vec4 specular;
+    vec4 attenuation;
+    float far_plane;
+    float on_off;
+    float padding1;
+    float padding2; // Padding to make the struct 96 bytes (multiple of 16)
+};
+
 #define NR_POINT_LIGHTS 20
-uniform PointLight point_lights[NR_POINT_LIGHTS];
+layout (std140, binding = 3) uniform LightBlock {
+    PointLightData point_lights[NR_POINT_LIGHTS];
+};
+uniform samplerCube point_lights_depth_maps[NR_POINT_LIGHTS];
 uniform float nb_point_lights;
 
 uniform float use_ambient_shadows;
@@ -65,7 +70,7 @@ uniform float far_plane;
 // --- PROTOTYPES ---
 vec3 CalcPBR(vec3 lightDir, vec3 lightColor, vec3 normal, vec3 viewDir, vec3 albedo, float roughness, float metallic, float shadow);
 float ambiantShadowCalculation(vec3 fragPosWorldSpace);
-float pointShadowCalculation(PointLight light, vec3 fragPosWorldSpace);
+float pointShadowCalculation(int index, vec3 fragPosWorldSpace);
 
 const float PI = 3.14159265359;
 
@@ -162,7 +167,7 @@ void main()
     for(int i = 0; i < nb_point_lights; i++) {
       if(point_lights[i].on_off != 0.)
       {
-        float shadowPoint = pointShadowCalculation(point_lights[i], FragPos);
+        float shadowPoint = pointShadowCalculation(i, FragPos);
         vec3 L = normalize(point_lights[i].position.xyz - FragPos);
         
         float dist = length(point_lights[i].position.xyz - FragPos);
@@ -237,20 +242,20 @@ vec3 sampleOffsetDirections[20] = vec3[]
   vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
 );
 
-float pointShadowCalculation(PointLight light, vec3 fragPosWorldSpace)
+float pointShadowCalculation(int index, vec3 fragPosWorldSpace)
 {
   if(use_point_shadows == 0) return 0.;
-  vec3 fragToLight = FragPos - light.position.xyz;
-  if(length(fragToLight) > light.far_plane) return 1.0;
+  vec3 fragToLight = fragPosWorldSpace - point_lights[index].position.xyz;
+  if(length(fragToLight) > point_lights[index].far_plane) return 1.0;
   float currentDepth = length(fragToLight);
   float shadow = 0.0;
   float bias = 0.04; 
   int samples  = 20;
-  float viewDistance = length(view_pose - FragPos);
+  float viewDistance = length(view_pose - fragPosWorldSpace);
   float diskRadius = 0.002;
   for(int i = 0; i < samples; ++i) {
-    float closestDepth = texture(light.depth_map, fragToLight + sampleOffsetDirections[i] * diskRadius).r;
-    closestDepth *= light.far_plane;
+    float closestDepth = texture(point_lights_depth_maps[index], fragToLight + sampleOffsetDirections[i] * diskRadius).r;
+    closestDepth *= point_lights[index].far_plane;
     if(currentDepth - bias > closestDepth) shadow += 1.0;
   }
   shadow /= float(samples);

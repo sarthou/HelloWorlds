@@ -37,14 +37,31 @@ namespace hws {
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(MaterialUBO_t), data);
   }
 
+  void DefaultShader::setDirLight(DirLightUBO_t* data) const
+  {
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo_dir_light_);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(DirLightUBO_t), data);
+  }
+
+  void DefaultShader::setPointLights(PointLightUBO_t* data, size_t nb) const
+  {
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo_point_lights_);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(PointLightUBO_t) * nb, data);
+  }
+
   void DefaultShader::setUseAmbiantShadow(bool value) const
   {
-    glUniform1i(use_ambient_shadows_uniform_id_, value);
+    glUniform1f(use_ambient_shadows_uniform_id_, value);
   }
 
   void DefaultShader::setUsePointLight(bool value) const
   {
-    glUniform1i(use_point_shadows_uniform_id_, value);
+    glUniform1f(use_point_shadows_uniform_id_, value);
+  }
+
+  void DefaultShader::setNbPointLight(float value) const
+  {
+    glUniform1f(nb_point_lights_uniform_id_, value);
   }
 
   void DefaultShader::setUniformIds()
@@ -54,10 +71,24 @@ namespace hws {
     glBufferData(GL_UNIFORM_BUFFER, sizeof(MaterialUBO_t), nullptr, GL_DYNAMIC_DRAW);
     // Bind to the same index as the shader: "binding = 1"
     glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubo_material_);
+
+    glGenBuffers(1, &ubo_dir_light_);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo_dir_light_);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(DirLightUBO_t), nullptr, GL_DYNAMIC_DRAW);
+    // Bind to the same index as the shader: "binding = 2"
+    glBindBufferBase(GL_UNIFORM_BUFFER, 2, ubo_dir_light_);
+
+    glGenBuffers(1, &ubo_point_lights_);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo_point_lights_);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(PointLightUBO_t) * 20, nullptr, GL_DYNAMIC_DRAW);
+    // Bind to the same index as the shader: "binding = 3"
+    glBindBufferBase(GL_UNIFORM_BUFFER, 3, ubo_point_lights_);
+
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     use_ambient_shadows_uniform_id_ = glGetUniformLocation(id_, "use_ambient_shadows");
     use_point_shadows_uniform_id_ = glGetUniformLocation(id_, "use_point_shadows");
+    nb_point_lights_uniform_id_ = glGetUniformLocation(id_, "nb_point_lights");
   }
 
 } // namespace hws
