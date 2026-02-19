@@ -70,7 +70,7 @@ uniform float far_plane;
 // --- PROTOTYPES ---
 vec3 CalcPBR(vec3 lightDir, vec3 lightColor, vec3 normal, vec3 viewDir, vec3 albedo, float roughness, float metallic, float shadow);
 float ambiantShadowCalculation(vec3 fragPosWorldSpace);
-float pointShadowCalculation(int index, vec3 fragPosWorldSpace);
+float pointShadowCalculation(int index, vec3 fragPosWorldSpace, float currentDepth);
 
 const float PI = 3.14159265359;
 
@@ -147,7 +147,7 @@ void main()
     // Use your actual Ks (specular) value
     float specIntensity = material.specular; 
     if(material.specular <= 0) {
-         specIntensity = texture(texture_specular, TexCoords).r;
+      specIntensity = texture(texture_specular, TexCoords).r;
     }
 
     // 3. Lighting Accumulation
@@ -164,23 +164,31 @@ void main()
     totalDirect += CalcPBR(-normalize(dir_light.direction.xyz), dir_light.diffuse.rgb, N, V, albedo, roughness, 0.0, shadowDir);
 
     // --- Point Lights ---
-    for(int i = 0; i < nb_point_lights; i++) {
-      if(point_lights[i].on_off != 0.)
-      {
-        float shadowPoint = pointShadowCalculation(i, FragPos);
-        vec3 L = normalize(point_lights[i].position.xyz - FragPos);
-        
-        float dist = length(point_lights[i].position.xyz - FragPos);
-        float attenuation = 1.0 / (point_lights[i].attenuation.x + 
-                                   point_lights[i].attenuation.y * dist + 
-                                   point_lights[i].attenuation.z * (dist * dist));
-        
-        // Add ambient from point lights (as your original shader did)
-        totalAmbient += point_lights[i].ambient.rgb * albedo * attenuation;
-        
-        vec3 radiance = point_lights[i].diffuse.rgb * attenuation;
-        totalDirect += CalcPBR(L, radiance, N, V, albedo, roughness, 0.0, shadowPoint); 
-      }
+    for(int i = 0; i < int(nb_point_lights); i++)
+    {
+      if(point_lights[i].on_off < 0.5) continue;
+
+      vec3 L_unnormalized = point_lights[i].position.xyz - FragPos;
+      float dist = length(L_unnormalized);
+      
+      // 1. RANGE CHECK: If the pixel is further than the light's reach, skip.
+      if(dist > point_lights[i].far_plane) continue;
+
+      float attenuation = 1.0 / (point_lights[i].attenuation.x + 
+                                point_lights[i].attenuation.y * dist + 
+                                point_lights[i].attenuation.z * (dist * dist));
+
+      // 2. ATTENUATION CHECK: If light is too dim to see, skip.
+      if(attenuation < 0.001) continue;
+
+      // 3. SHADOW CHECK: Only do the 20 samples if the light actually hits the pixel.
+      float shadowPoint = pointShadowCalculation(i, FragPos, dist);
+      
+      vec3 L = L_unnormalized / dist; // Normalize using the distance we already calculated
+      
+      totalAmbient += point_lights[i].ambient.rgb * albedo * attenuation;
+      vec3 radiance = point_lights[i].diffuse.rgb * attenuation;
+      totalDirect += CalcPBR(L, radiance, N, V, albedo, roughness, 0.0, shadowPoint); 
     }
 
     // 4. Final Combination
@@ -242,24 +250,43 @@ vec3 sampleOffsetDirections[20] = vec3[]
   vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
 );
 
-float pointShadowCalculation(int index, vec3 fragPosWorldSpace)
+float pointShadowCalculation(int index, vec3 fragPosWorldSpace, float distToLight)
 {
-  if(use_point_shadows == 0) return 0.;
-  vec3 fragToLight = fragPosWorldSpace - point_lights[index].position.xyz;
-  if(length(fragToLight) > point_lights[index].far_plane) return 1.0;
-  float currentDepth = length(fragToLight);
-  float shadow = 0.0;
-  float bias = 0.04; 
-  int samples  = 20;
-  float viewDistance = length(view_pose - fragPosWorldSpace);
-  float diskRadius = 0.002;
-  for(int i = 0; i < samples; ++i) {
-    float closestDepth = texture(point_lights_depth_maps[index], fragToLight + sampleOffsetDirections[i] * diskRadius).r;
-    closestDepth *= point_lights[index].far_plane;
-    if(currentDepth - bias > closestDepth) shadow += 1.0;
-  }
-  shadow /= float(samples);
-  return shadow;
+    if(use_point_shadows == 0) return 0.0;
+    
+    vec3 fragToLight = fragPosWorldSpace - point_lights[index].position.xyz;
+    float currentDepth = distToLight;
+    float shadow = 0.0;
+    float bias = 0.04; 
+
+    // Determine sample count based on distance to CAMERA
+    float distToCamera = length(view_pose - fragPosWorldSpace);
+    int samples;
+    
+    if(distToCamera < 5.0) {
+        samples = 20; // High quality close up
+    } else if(distToCamera < 15.0) {
+        samples = 8;  // Medium quality
+    } else {
+        samples = 2;  // Low quality background
+    }
+
+    // Optimization: If the shadow is too far away, just do a single sample
+    if (samples == 2) {
+        float closestDepth = texture(point_lights_depth_maps[index], fragToLight).r;
+        closestDepth *= point_lights[index].far_plane;
+        return (currentDepth - bias > closestDepth) ? 1.0 : 0.0;
+    }
+
+    // Otherwise, run the PCF loop
+    float diskRadius = 0.002;
+    for(int i = 0; i < samples; ++i) {
+        float closestDepth = texture(point_lights_depth_maps[index], fragToLight + sampleOffsetDirections[i] * diskRadius).r;
+        closestDepth *= point_lights[index].far_plane;
+        if(currentDepth - bias > closestDepth) shadow += 1.0;
+    }
+    
+    return shadow / float(samples);
 }
 
 float ambiantShadowCalculation(vec3 fragPosWorldSpace)
