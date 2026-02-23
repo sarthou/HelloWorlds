@@ -34,7 +34,6 @@ find_package(PkgConfig REQUIRED)
 find_package(assimp REQUIRED)
 
 pkg_check_modules(TINYXML2 REQUIRED tinyxml2)
-pkg_search_module(CURL REQUIRED libcurl IMPORTED_TARGET GLOBAL)
 
 include(FetchContent)
 include(CheckLanguage)
