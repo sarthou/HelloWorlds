@@ -184,6 +184,7 @@ namespace hws {
   void Window::makeCurrentContext() const
   {
     glfwMakeContextCurrent(glfw_window_);
+    glfwSwapInterval(0);
   }
 
   /*WindowPlatformData Window::getPlatformData() const
