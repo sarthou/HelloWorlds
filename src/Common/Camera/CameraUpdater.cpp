@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cassert>
+#include <chrono>
 #include <cstdint>
 #include <glm/gtc/packing.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -53,6 +54,7 @@ namespace hws {
       key_state_shadows_ = is_down;
       break;
     }
+    case Key_e::key_left_control: key_speed_ = is_down; break;
     case Key_e::key_w:
     case Key_e::key_up: key_state_front_ = is_down; break;
     case Key_e::key_s:
@@ -81,6 +83,7 @@ namespace hws {
     switch(btn)
     {
     case 1: // right
+    case 0: // left
     {
       if(is_down)
       {
@@ -116,7 +119,7 @@ namespace hws {
     const auto delta = (mouse_current_position_ - mouse_drag_start_position_);
     mouse_drag_start_position_ = mouse_current_position_;
 
-    if(mouse_btn_states_[1])
+    if(mouse_btn_states_[1] || mouse_btn_states_[0])
     {
       float yaw_angle = -delta.x * mouse_rotation_sensitivity_;
       float pitch_angle = -delta.y * mouse_rotation_sensitivity_;
@@ -159,18 +162,26 @@ namespace hws {
     if(camera_ == nullptr)
       return;
 
+    std::chrono::system_clock::time_point current_frame = std::chrono::high_resolution_clock::now();
+    delta_time_ = current_frame - last_frame_;
+    last_frame_ = current_frame;
+
+    float delta_seconds = std::chrono::duration_cast<std::chrono::microseconds>(delta_time_).count() / 1000000.f;
+    float speed = key_speed_ ? 2.9 : 1.4; // m/s
+    float dist = speed * delta_seconds;
+
     if(key_state_front_)
-      camera_->world_eye_position_ += camera_->world_eye_front_ * 0.1f;
+      camera_->world_eye_position_ += camera_->world_eye_front_ * dist;
     if(key_state_back_)
-      camera_->world_eye_position_ -= camera_->world_eye_front_ * 0.1f;
+      camera_->world_eye_position_ -= camera_->world_eye_front_ * dist;
     if(key_state_right_)
-      camera_->world_eye_position_ += camera_->world_eye_right_ * 0.1f;
+      camera_->world_eye_position_ += camera_->world_eye_right_ * dist;
     if(key_state_left_)
-      camera_->world_eye_position_ -= camera_->world_eye_right_ * 0.1f;
+      camera_->world_eye_position_ -= camera_->world_eye_right_ * dist;
     if(key_state_up_)
-      camera_->world_eye_position_ += camera_->world_eye_up_ * 0.1f;
+      camera_->world_eye_position_ += camera_->world_eye_up_ * dist;
     if(key_state_down_)
-      camera_->world_eye_position_ -= camera_->world_eye_up_ * 0.1f;
+      camera_->world_eye_position_ -= camera_->world_eye_up_ * dist;
   }
 
   void CameraUpdater::setCameraView(const hws::CameraView_e view_type)

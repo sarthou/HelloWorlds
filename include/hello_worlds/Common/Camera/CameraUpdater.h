@@ -3,6 +3,7 @@
 
 #include <array>
 #include <bitset>
+#include <chrono>
 #include <cstdint>
 #include <glm/vec2.hpp>
 
@@ -74,7 +75,8 @@ namespace hws {
     key_x,
     key_y,
     key_z,
-    key_left_shift
+    key_left_shift,
+    key_left_control
   };
 
   class CameraUpdater
@@ -124,7 +126,10 @@ namespace hws {
     glm::vec2 mouse_current_position_{};
     glm::vec2 mouse_drag_start_position_{};
     bool is_dragging_mouse_ = false;
+    std::chrono::system_clock::duration delta_time_ = std::chrono::system_clock::duration(0);
+    std::chrono::system_clock::time_point last_frame_ = std::chrono::high_resolution_clock::now();
 
+    bool key_speed_ = false;
     bool key_state_front_ = false;
     bool key_state_back_ = false;
     bool key_state_left_ = false;

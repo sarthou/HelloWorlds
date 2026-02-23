@@ -106,6 +106,7 @@ namespace hws {
       case GLFW_KEY_ESCAPE: hws_key = Key_e::key_esc; break;
       case GLFW_KEY_SPACE: hws_key = Key_e::key_space; break;
       case GLFW_KEY_LEFT_SHIFT: hws_key = Key_e::key_left_shift; break;
+      case GLFW_KEY_LEFT_CONTROL: hws_key = Key_e::key_left_control; break;
       case GLFW_KEY_MINUS: hws_key = Key_e::key_minus; break;
       case GLFW_KEY_ENTER: hws_key = Key_e::key_enter; break;
       case GLFW_KEY_A: hws_key = Key_e::key_a; break;
