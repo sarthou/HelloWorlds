@@ -139,7 +139,7 @@ namespace hws {
 
     constexpr float z_mult = 7.f; // Can be tuned (increase to remove missing shadows)
                                   // Increasing too much will require a higher bias_modifier
-    if(min_z < 0)
+    /*if(min_z < 0)
       min_z *= z_mult;
     else
       min_z /= z_mult;
@@ -147,9 +147,9 @@ namespace hws {
     if(max_z < 0)
       max_z /= z_mult;
     else
-      max_z *= z_mult;
+      max_z *= z_mult;*/
 
-    const glm::mat4 light_projection = glm::ortho(min_x, max_x, min_y, max_y, min_z, max_z);
+    const glm::mat4 light_projection = glm::ortho(min_x, max_x, min_y, max_y, min_z - 50, max_z + 50);
     return light_projection * light_view;
   }
 

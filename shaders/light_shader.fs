@@ -202,8 +202,8 @@ float directionalShadowCalculation(vec3 fragPosWorldSpace, vec3 normal, float di
   if (proj_coords.z > 1.0) return 0.0;
 
   float bias = max(0.05 * (1.0 - NdotL), 0.005);
-  float current_cascade_dist = (layer == dir_light.cascade_count) ? dir_light.far_plane : cascade_planes_distances[layer];
-  bias *= 1.0 / (current_cascade_dist * 7.0);
+  float current_cascade_dist = (layer == dir_light.cascade_count) ? dir_light.far_plane * 0.5 : cascade_planes_distances[layer] * ((layer == 0) ? 4. : 1.5) ;
+  bias *= 1.0 / (current_cascade_dist);
 
   // Directional Shadow LOD: Only do 3x3 PCF if close to camera
   if (distToCamera > 20.0) {
