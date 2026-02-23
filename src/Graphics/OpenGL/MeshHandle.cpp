@@ -78,7 +78,7 @@ namespace hws {
       }
     }
 
-    unsigned int nb_used = material_it->second.textures.size();
+    /*unsigned int nb_used = material_it->second.textures.size();
 
     if(use_diffuse_texture == false)
     {
@@ -102,7 +102,7 @@ namespace hws {
       glBindTexture(GL_TEXTURE_2D, 0);
       shader.setInt("texture_normal", (int)(texture_pose_offset + nb_used));
       nb_used++;
-    }
+    }*/
 
     MaterialUBO_t data;
     data.color = glm::vec4(material_it->second.color.r_,
