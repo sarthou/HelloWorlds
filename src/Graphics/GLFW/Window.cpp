@@ -11,7 +11,7 @@
 #include "hws_stb_image.h"
 
 // Should be last
-#define GLFW_EXPOSE_NATIVE_X11
+// #define GLFW_EXPOSE_NATIVE_X11
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
@@ -186,12 +186,12 @@ namespace hws {
     glfwMakeContextCurrent(glfw_window_);
   }
 
-  WindowPlatformData Window::getPlatformData() const
+  /*WindowPlatformData Window::getPlatformData() const
   {
     return {
       reinterpret_cast<void*>(glfwGetX11Display()),
       reinterpret_cast<void*>(glfwGetX11Window(glfw_window_))};
-  }
+  }*/
 
   void Window::doPollEvents(Renderer& renderer)
   {

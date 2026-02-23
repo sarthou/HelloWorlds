@@ -27,7 +27,7 @@ namespace hws {
 
     void makeCurrentContext() const;
 
-    WindowPlatformData getPlatformData() const;
+    // WindowPlatformData getPlatformData() const;
 
     void doPollEvents(hws::Renderer& renderer);
     bool isCloseRequested() const;
