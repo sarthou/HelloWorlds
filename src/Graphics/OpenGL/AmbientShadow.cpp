@@ -24,7 +24,7 @@ namespace hws {
 
     glGenBuffers(1, &matrices_uniform_buffer_);
     glBindBuffer(GL_UNIFORM_BUFFER, matrices_uniform_buffer_);
-    glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4x4) * 16, nullptr, GL_STATIC_DRAW);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4x4) * MAX_CASCADE, nullptr, GL_STATIC_DRAW);
     // Bind to the same index as the shader: "binding = 0"
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, matrices_uniform_buffer_);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -34,7 +34,7 @@ namespace hws {
     glGenTextures(1, &depth_maps_);
     glBindTexture(GL_TEXTURE_2D_ARRAY, depth_maps_);
     glTexImage3D(
-      GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F, (int)resolution_, (int)resolution_, int(shadow_cascade_levels_.size()) + 1,
+      GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT16, (int)resolution_, (int)resolution_, int(shadow_cascade_levels_.size()) + 1,
       0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);

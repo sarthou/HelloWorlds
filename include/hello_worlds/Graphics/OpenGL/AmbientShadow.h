@@ -6,6 +6,8 @@
 #include "hello_worlds/Common/Camera/Camera.h"
 #include "hello_worlds/Common/Camera/CameraUpdater.h"
 
+#define MAX_CASCADE 5
+
 namespace hws {
   class Shader;
 
