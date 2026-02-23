@@ -5,7 +5,7 @@ layout(triangle_strip, max_vertices = 3) out;
 
 layout (std140) uniform LightSpaceMatrices
 {
-    mat4 light_space_matrices[16];
+    mat4 light_space_matrices[5];
 };
 
 void main()
