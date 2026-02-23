@@ -1,6 +1,7 @@
 #include "hello_worlds/Engine.h"
 
 #include <array>
+#include <chrono>
 #include <string>
 
 namespace hws {
@@ -40,7 +41,8 @@ namespace hws {
       if(simulate_)
         world.stepSimulation();
       while(renderer_.shouldRender() == false)
-        usleep(500);
+        std::this_thread::sleep_for(std::chrono::microseconds(500));
+
       renderer_.commit();
       window_->swapBuffer();
     }

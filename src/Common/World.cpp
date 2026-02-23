@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cassert>
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
@@ -13,6 +14,7 @@
 #include <glm/gtc/quaternion.hpp>
 #include <iostream>
 #include <string>
+#include <thread>
 #include <unistd.h>
 #include <unordered_set>
 #include <utility>
@@ -659,7 +661,7 @@ namespace hws {
     has_render_request_ = true;
 
     while(has_render_request_ == true)
-      usleep(1000);
+      std::this_thread::sleep_for(std::chrono::microseconds(500));
   }
 
   void World::getCameraImage(int id, uint32_t** image, unsigned int& width, unsigned int& height)

@@ -1,7 +1,9 @@
 #include "hello_worlds/Graphics/GLFW/Window.h"
 
+#include <chrono>
 #include <memory>
 #include <string>
+#include <thread>
 
 #include "hello_worlds/Common/Camera/Camera.h"
 #include "hello_worlds/Graphics/Common/WindowPlatformData.h"
@@ -41,7 +43,7 @@ namespace hws {
     while(Window::nb_active_windows_ != 0)
     {
       Window::pollEvent();
-      usleep(1000);
+      std::this_thread::sleep_for(std::chrono::microseconds(500));
     }
   }
 
