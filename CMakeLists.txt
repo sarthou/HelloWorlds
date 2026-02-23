@@ -49,6 +49,8 @@ set(CAD_FILES
 set(SHADER_FILES
   shaders/color_shader.fs
   shaders/color_shader.vs
+  shaders/depth_prepass.fs
+  shaders/depth_prepass.vs
   shaders/depth_shader.fs
   shaders/depth_shader.gs
   shaders/depth_shader.vs

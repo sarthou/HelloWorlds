@@ -36,6 +36,8 @@
 #include "hello_worlds/Utils/GlmMath.h"
 #include "hello_worlds_embedded/embedded_color_shader.fs.h"
 #include "hello_worlds_embedded/embedded_color_shader.vs.h"
+#include "hello_worlds_embedded/embedded_depth_prepass.fs.h"
+#include "hello_worlds_embedded/embedded_depth_prepass.vs.h"
 #include "hello_worlds_embedded/embedded_depth_shader.fs.h"
 #include "hello_worlds_embedded/embedded_depth_shader.gs.h"
 #include "hello_worlds_embedded/embedded_depth_shader.vs.h"
@@ -132,6 +134,9 @@ namespace hws {
 
     shaders_.insert({
       "depth", {resources::depth_shader_vs_data, resources::depth_shader_fs_data, resources::depth_shader_gs_data}
+    });
+    shaders_.insert({
+      "depth_prepass", {resources::depth_prepass_vs_data, resources::depth_prepass_fs_data}
     });
     shaders_.insert({
       "depthcube", {resources::depthcube_shader_vs_data, resources::depthcube_shader_fs_data, resources::depthcube_shader_gs_data}
@@ -516,33 +521,57 @@ namespace hws {
 
   void Renderer::renderMainScreen()
   {
-    // 1. draw scene as normal in multisampled buffers
+    auto cameraCull = [&](const glm::vec3& center, float radius) {
+      return render_camera_.getFrustum().isSphereVisible(center, radius);
+    };
 
+    // --- SETUP ---
     screen_.bindFrameBuffer();
-    auto sky = world_->ambient_light_.getSkyColor(glm::vec3(background_color_[0], background_color_[1], background_color_[2]));
-    glClearColor(sky.r, sky.g, sky.b, 1.0f);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_FRAMEBUFFER_SRGB);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    // --- STEP 0: DEPTH PRE-PASS ---
+    auto& prepass = shaders_.at("depth_prepass");
+    prepass.use();
+    prepass.setView(render_camera_.getViewMatrix());
+    prepass.setProjection(render_camera_.getProjectionMatrix());
+
+    // Prepare for Depth-Only
+    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+    glDepthMask(GL_TRUE);
+    glDepthFunc(GL_LESS);
+
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(0.2f, 1.0f); // push pre-pass depth away // factor, units
+    renderModels(prepass, cameraCull);
+    glDisable(GL_POLYGON_OFFSET_FILL);
+
+    // --- STEP 1: COLOR PASS ---
     main_shader_->use();
+
+    // Enable color writing again
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    auto sky = world_->ambient_light_.getSkyColor(glm::vec3(background_color_[0], background_color_[1], background_color_[2]));
+    glClearColor(sky.r, sky.g, sky.b, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glDepthFunc(GL_LEQUAL);
+    glDepthMask(GL_FALSE); // The depth is already perfect; no need to write it again
 
     main_shader_->setVec3("view_pose", render_camera_.getPosition());
     main_shader_->setView(render_camera_.getViewMatrix());
     main_shader_->setProjection(render_camera_.getProjectionMatrix());
 
     shadow_.setUniforms(*main_shader_, 1);
-    // shadow_.setLightMatrices();
-
     setLightsUniforms(main_shader_, render_shadows_, render_shadows_);
-
-    auto cameraCull = [&](const glm::vec3& center, float radius) {
-      return render_camera_.getFrustum().isSphereVisible(center, radius);
-    };
 
     renderTexturedModels(main_shader_, 2, cameraCull);
 
-    // 1.2 draw background
+    // --- STEP 2: SKYBOX & DEBUG ---
+    glDepthMask(GL_TRUE); // Back on for skybox/debug
+    glDepthFunc(GL_LESS);
 
     if(use_sky_box_)
     {
@@ -559,10 +588,11 @@ namespace hws {
     if(render_camera_.shouldRenderDebug())
       renderDebug();
 
-    // 2. now blit multisampled buffer(s) to normal colorbuffer of intermediate FBO. Image is stored in screenTexture
+    // --- STEP 3: SCREEN ---
+    // blit multisampled buffer(s) to normal colorbuffer of intermediate FBO. Image is stored in screenTexture
     screen_.generateColorTexture();
 
-    // 3. now render quad with scene's visuals as its texture image
+    // render quad with scene's visuals as its texture image
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_FRAMEBUFFER_SRGB);
