@@ -157,15 +157,18 @@
   </link>
 
   <link name="adream_window_h10_2">
-    <inertial>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value=".0"/>
-      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
-    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="package://hello_worlds/assets/Adream/windows/window_outside_tall.obj" scale="1 1.022 1"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="adream_window_door_outside_3x3_1">
     <visual>
       <origin rpy="0 0 1.57" xyz="0 0 0.0"/>
       <geometry>
-        <mesh filename="package://hello_worlds/assets/Adream/windows/window_h10_2.obj" scale="1 1 1"/>
+        <mesh filename="package://hello_worlds/assets/Adream/windows/window_door_outside_3x3.obj" scale="1 1 1"/>
       </geometry>
       <material name="black">
         <color rgba="0.03 0.03 0.03 1"/>
@@ -173,16 +176,11 @@
     </visual>
   </link>
 
-  <link name="adream_window_h20_1">
-    <inertial>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value=".0"/>
-      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
-    </inertial>
+  <link name="adream_window_door_outside_3x3_2">
     <visual>
       <origin rpy="0 0 1.57" xyz="0 0 0.0"/>
       <geometry>
-        <mesh filename="package://hello_worlds/assets/Adream/windows/window_h20_1.obj" scale="1 1 1"/>
+        <mesh filename="package://hello_worlds/assets/Adream/windows/window_door_outside_3x3.obj" scale="1 1 1"/>
       </geometry>
       <material name="black">
         <color rgba="0.03 0.03 0.03 1"/>
@@ -190,37 +188,143 @@
     </visual>
   </link>
 
-  <link name="adream_window_h20_2">
-    <inertial>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value=".0"/>
-      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
-    </inertial>
+  <link name="adream_window_door_outside_3x3_3">
     <visual>
       <origin rpy="0 0 1.57" xyz="0 0 0.0"/>
       <geometry>
-        <mesh filename="package://hello_worlds/assets/Adream/windows/window_h20_2.obj" scale="1 1 1"/>
+        <mesh filename="package://hello_worlds/assets/Adream/windows/window_door_outside_3x3.obj" scale="1 1 1"/>
       </geometry>
       <material name="black">
         <color rgba="0.03 0.03 0.03 1"/>
       </material>
+    </visual>
+  </link>
+
+  <link name="adream_window_outside_3x3_1">
+    <visual>
+      <origin rpy="0 0 1.57" xyz="0 0 0.0"/>
+      <geometry>
+        <mesh filename="package://hello_worlds/assets/Adream/windows/window_outside_3x3.obj" scale="1 1 1"/>
+      </geometry>
+      <material name="black">
+        <color rgba="0.03 0.03 0.03 1"/>
+      </material>
+    </visual>
+  </link>
+
+  <link name="adream_window_outside_3x3_2">
+    <visual>
+      <origin rpy="0 0 1.57" xyz="0 0 0.0"/>
+      <geometry>
+        <mesh filename="package://hello_worlds/assets/Adream/windows/window_outside_3x3.obj" scale="1 1 1"/>
+      </geometry>
+      <material name="black">
+        <color rgba="0.03 0.03 0.03 1"/>
+      </material>
+    </visual>
+  </link>
+
+  <link name="adream_window_h22_1">
+    <visual>
+      <origin rpy="0 0 0" xyz="0. 0. 0."/>
+      <geometry>
+        <mesh filename="package://hello_worlds/assets/Adream/windows/window_h22.obj" scale="1 1 1"/>
+      </geometry>
+      <material name="white_wood">
+        <color rgba="1.0 0.948 0.8 1"/>
+      </material>
+    </visual>
+  </link>
+
+  <link name="adream_window_h22_2">
+    <visual>
+      <geometry>
+        <mesh filename="package://hello_worlds/assets/Adream/windows/window_h22.obj" scale="1 1 1"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="adream_window_h22_3">
+    <visual>
+      <origin rpy="0 0 1.57" xyz="0 0 0.0"/>
+      <geometry>
+        <mesh filename="package://hello_worlds/assets/Adream/windows/window_h22.obj" scale="1 1.12 1"/>
+      </geometry>
     </visual>
   </link>
 
   <link name="adream_window_h20_3">
-    <inertial>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value=".0"/>
-      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
-    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="package://hello_worlds/assets/Adream/windows/window_single_frame.obj" scale="1 1 1"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="adream_window_h20_4">
+    <visual>
+      <geometry>
+        <mesh filename="package://hello_worlds/assets/Adream/windows/window_single_frame.obj" scale="1 1 1"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="adream_window_h20_5">
+    <visual>
+      <geometry>
+        <mesh filename="package://hello_worlds/assets/Adream/windows/window_single_frame.obj" scale="1 1 1"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="adream_window_h20_6">
+    <visual>
+      <geometry>
+        <mesh filename="package://hello_worlds/assets/Adream/windows/window_single_frame.obj" scale="1 1 1"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="adream_window_h20_7">
     <visual>
       <origin rpy="0 0 1.57" xyz="0 0 0.0"/>
       <geometry>
-        <mesh filename="package://hello_worlds/assets/Adream/windows/window_h20_3.obj" scale="1 1 1"/>
+        <mesh filename="package://hello_worlds/assets/Adream/windows/window_four_frames.obj" scale="1 1 1"/>
       </geometry>
-      <material name="black">
-        <color rgba="1.0 0.948 0.8 1"/>
-      </material>
+    </visual>
+  </link>
+
+  <link name="adream_window_door_1">
+    <visual>
+      <origin rpy="0 0 3.1415" xyz="0 0 0.0"/>
+      <geometry>
+        <mesh filename="package://hello_worlds/assets/Adream/windows/window_door.obj" scale="1 1 1"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="adream_window_door_2">
+    <visual>
+      <origin rpy="0 0 -1.57" xyz="0 0 0.0"/>
+      <geometry>
+        <mesh filename="package://hello_worlds/assets/Adream/windows/window_door.obj" scale="1 1 1"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="adream_window_h20_8">
+    <visual>
+      <geometry>
+        <mesh filename="package://hello_worlds/assets/Adream/windows/window_outside_double.obj" scale="1 1 1"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="adream_window_h20_9">
+    <visual>
+      <geometry>
+        <mesh filename="package://hello_worlds/assets/Adream/windows/window_outside_double.obj" scale="1 1 1"/>
+      </geometry>
     </visual>
   </link>
 
@@ -361,21 +465,108 @@
   <joint name="base_to_adream_window_h10_2" type="fixed">
     <parent link="adream_walls"/>
     <child link="adream_window_h10_2"/>
+    <origin rpy="0 0 0" xyz="-2.8639 8.2988 1.4249"/>
   </joint>
 
-  <joint name="base_to_adream_window_h20_1" type="fixed">
+  <joint name="base_to_adream_window_h22_1" type="fixed">
     <parent link="adream_walls"/>
-    <child link="adream_window_h20_1"/>
+    <child link="adream_window_h22_1"/>
+    <origin rpy="0 0 0" xyz="5.0627 -1.0579 1.7611"/>
   </joint>
 
-  <joint name="base_to_adream_window_h20_2" type="fixed">
+  <joint name="base_to_adream_window_h22_2" type="fixed">
     <parent link="adream_walls"/>
-    <child link="adream_window_h20_2"/>
+    <child link="adream_window_h22_2"/>
+    <origin rpy="0 0 0" xyz="5.0627 -5.3393 1.7611"/>
+  </joint>
+
+  <joint name="base_to_adream_window_h22_3" type="fixed">
+    <parent link="adream_walls"/>
+    <child link="adream_window_h22_3"/>
+    <origin rpy="0 0 0" xyz="3.95 -0.04475 1.7611"/>
   </joint>
 
   <joint name="base_to_adream_window_h20_3" type="fixed">
     <parent link="adream_walls"/>
     <child link="adream_window_h20_3"/>
+    <origin rpy="0 0 0" xyz="10.06 18.508 1.5531"/>
+  </joint>
+
+  <joint name="base_to_adream_window_h20_4" type="fixed">
+    <parent link="adream_walls"/>
+    <child link="adream_window_h20_4"/>
+    <origin rpy="0 0 0" xyz="8.8243 18.508 1.5531"/>
+  </joint>
+
+  <joint name="base_to_adream_window_h20_5" type="fixed">
+    <parent link="adream_walls"/>
+    <child link="adream_window_h20_5"/>
+    <origin rpy="0 0 0" xyz="7.584 18.508 1.5531"/>
+  </joint>
+
+  <joint name="base_to_adream_window_h20_6" type="fixed">
+    <parent link="adream_walls"/>
+    <child link="adream_window_h20_6"/>
+    <origin rpy="0 0 0" xyz="6.3587 18.508 1.5531"/>
+  </joint>
+
+  <joint name="base_to_adream_window_h20_7" type="fixed">
+    <parent link="adream_walls"/>
+    <child link="adream_window_h20_7"/>
+  </joint>
+
+  <joint name="base_to_adream_window_h20_8" type="fixed">
+    <parent link="adream_walls"/>
+    <child link="adream_window_h20_8"/>
+    <origin rpy="0 0 0" xyz="-0.060667 1.2035 1.8868"/>
+  </joint>
+
+  <joint name="base_to_adream_window_h20_9" type="fixed">
+    <parent link="adream_walls"/>
+    <child link="adream_window_h20_9"/>
+    <origin rpy="0 0 0" xyz="-0.060667 3.6972 1.8868"/>
+  </joint>
+
+  <joint name="base_to_adream_window_door_1" type="fixed">
+    <parent link="adream_walls"/>
+    <child link="adream_window_door_1"/>
+    <origin rpy="0 0 0" xyz="-0.060789 6.0788 1.4258"/>
+  </joint>
+
+  <joint name="base_to_adream_window_door_2" type="fixed">
+    <parent link="adream_walls"/>
+    <child link="adream_window_door_2"/>
+    <origin rpy="0 0 0" xyz="-5.2078 8.2955 1.4258"/>
+  </joint>
+
+  <joint name="base_to_adream_window_outside_3x3_1" type="fixed">
+    <parent link="adream_walls"/>
+    <child link="adream_window_outside_3x3_1"/>
+    <origin rpy="0 0 0" xyz="11.573 1.0355 1.5932"/>
+  </joint>
+
+  <joint name="base_to_adream_window_outside_3x3_2" type="fixed">
+    <parent link="adream_walls"/>
+    <child link="adream_window_outside_3x3_2"/>
+    <origin rpy="0 0 0" xyz="11.571 11.001 1.5929"/>
+  </joint>
+
+  <joint name="base_to_adream_window_door_outside_3x3_1" type="fixed">
+    <parent link="adream_walls"/>
+    <child link="adream_window_door_outside_3x3_1"/>
+    <origin rpy="0 0 0" xyz="11.573 15.98 1.5938"/>
+  </joint>
+
+  <joint name="base_to_adream_window_door_outside_3x3_2" type="fixed">
+    <parent link="adream_walls"/>
+    <child link="adream_window_door_outside_3x3_2"/>
+    <origin rpy="0 0 0" xyz="11.573 6.0135 1.5938"/>
+  </joint>
+
+  <joint name="base_to_adream_window_door_outside_3x3_3" type="fixed">
+    <parent link="adream_walls"/>
+    <child link="adream_window_door_outside_3x3_3"/>
+    <origin rpy="0 0 0" xyz="11.573 -3.9512 1.5938"/>
   </joint>
 
 </robot>

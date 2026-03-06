@@ -1,10 +1,20 @@
-# Blender MTL File: 'None'
-# Material Count: 1
+# Blender 4.2.0 MTL File: 'None'
+# www.blender.org
+
+newmtl M_wood_white_painted
+Ns 0.000000
+Ka 1.000000 0.948000 0.800000
+Kd 0.800000 0.800000 0.800000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
 
 newmtl M_glass_frame_black_glossy
-Ns 900
+Ns 899.999939
 Ka 1.000000 1.000000 1.000000
-Kd 0.04896 0.04896 0.04896
+Kd 0.048960 0.048960 0.048960
 Ks 1.000000 1.000000 1.000000
 Ke 0.000000 0.000000 0.000000
 Ni 1.450000
