@@ -1,3 +1,4 @@
+#include <chrono>
 #include <thread>
 
 #include "hello_worlds/Engine.h"
@@ -13,7 +14,7 @@ void worldThread(const std::string& world_name, hws::Window* window)
 
   engine.world.setTimeStep(1. / 60.);
 
-  engine.runDetached();
+  engine.runDetached(60);
 
   /* Engine is running, just make things spawn*/
   engine.world.setLocatedAmbientLight({48.f, -2.f, 0.f},
@@ -47,14 +48,12 @@ void worldThread(const std::string& world_name, hws::Window* window)
   auto current_time = time(nullptr);
   while(engine.isRunning())
   {
-    usleep(10000);
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
     current_time += 10;
     engine.world.setAmbientLightTime(current_time);
 
     engine.world.setPointLightOn(ligth_4, engine.world.isAmbientNight());
   }
-
-  std::cout << "exiting" << std::endl;
 }
 
 int main()
@@ -69,14 +68,9 @@ int main()
 
   hws::Window::run();
 
-  std::cout << "window stop to run" << std::endl;
-
   world1.join();
-
-  std::cout << "join ok" << std::endl;
 
   hws::Renderer::release();
 
-  std::cout << "this is the end" << std::endl;
   return 0;
 }

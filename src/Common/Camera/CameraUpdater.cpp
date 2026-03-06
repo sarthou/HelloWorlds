@@ -240,6 +240,7 @@ namespace hws {
     camera_->planes_[0] = near_far_planes[0];
     camera_->planes_[1] = near_far_planes[1];
     camera_->updateProjectionMatrix();
+    camera_->updateFrustum();
   }
 
   void CameraUpdater::setPositionAndLookAt(const std::array<double, 3>& eye_position, const std::array<double, 3>& dst_position)

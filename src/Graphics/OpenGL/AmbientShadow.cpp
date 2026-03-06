@@ -101,9 +101,11 @@ namespace hws {
       else
       {
         lightspace_matrices_.push_back(getLightSpaceMatrix(camera, light_dir, shadow_cascade_levels_[i - 1], far_plane_));
-        master_frustum_ = ref_cam.getFrustum();
       }
     }
+
+    camera.setPlanes({near_plane_, far_plane_});
+    master_frustum_ = ref_cam.getFrustum();
   }
 
   glm::mat4 AmbientShadow::getLightSpaceMatrix(CameraUpdater& ref_cam, const glm::vec3& light_dir, float near_plane, float far_plane)
@@ -136,18 +138,6 @@ namespace hws {
       min_z = std::min(min_z, trf.z);
       max_z = std::max(max_z, trf.z);
     }
-
-    constexpr float z_mult = 7.f; // Can be tuned (increase to remove missing shadows)
-                                  // Increasing too much will require a higher bias_modifier
-    /*if(min_z < 0)
-      min_z *= z_mult;
-    else
-      min_z /= z_mult;
-
-    if(max_z < 0)
-      max_z /= z_mult;
-    else
-      max_z *= z_mult;*/
 
     const glm::mat4 light_projection = glm::ortho(min_x, max_x, min_y, max_y, min_z - 50, max_z + 50);
     return light_projection * light_view;

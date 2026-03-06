@@ -710,8 +710,13 @@ namespace hws {
 
       shadow_.setLightMatrices();
 
+      float sun_horizontalness = glm::length(glm::vec2(ambient_dir.x, ambient_dir.z));
+      float shadow_stretch = 1.0f + (sun_horizontalness * 1.0f);
+
       auto ambientCull = [&](const glm::vec3& center, float radius) {
-        return shadow_.getMasterFrustum().isSphereVisible(center, radius);
+        float shift_distance = radius * shadow_stretch;
+        glm::vec3 shifted_center = center - (glm::vec3(ambient_dir) * shift_distance);
+        return shadow_.getMasterFrustum().isSphereVisible(shifted_center, radius + shift_distance);
       };
 
       renderModels(shadow_shader, ambientCull);
