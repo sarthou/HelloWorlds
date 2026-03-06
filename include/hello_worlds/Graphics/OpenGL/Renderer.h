@@ -86,10 +86,10 @@ namespace hws {
     void loadActor(Actor* actor, const ShapeCylinder& shape, bool default_material = false);
     void loadActor(Actor* actor, const ShapeDummy& shape, bool default_material = false);
     void loadActor(Actor* actor, const ShapeSphere& shape, bool default_material = false);
-    void loadInstance(const Model& model, const Material& material, const glm::mat4& model_mat, uint32_t object_id);
+    void loadInstance(size_t model_id, const Material& material, const glm::mat4& model_mat, uint32_t object_id);
     Material combineMaterials(const Material& shape_material, const Material& model_material);
     std::vector<Texture2D> loadTextures(Material& material);
-    void loadModel(const Model& model, const Material& material, uint32_t instance_id);
+    void loadModel(Model const* model, const Material& material, uint32_t instance_id);
     void loadDebugLines();
 
     void renderModels(const ModelShader& shader,

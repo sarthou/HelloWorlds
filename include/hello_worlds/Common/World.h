@@ -39,9 +39,9 @@ namespace hws {
   protected:
     explicit World();
 
-    hws::Model& preloaded_box_model_;
-    hws::Model& preloaded_cylinder_model_;
-    hws::Model& preloaded_sphere_model_;
+    size_t preloaded_box_model_;
+    size_t preloaded_cylinder_model_;
+    size_t preloaded_sphere_model_;
 
     AmbientLight ambient_light_;
     PointLights point_lights_;

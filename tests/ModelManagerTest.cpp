@@ -23,15 +23,15 @@ TEST(ModelManagerTester, Load)
   EXPECT_FALSE(manager.isModelLoaded(window_obj_path));
   EXPECT_EQ(manager.getLoadedModelCount(), 0);
 
-  const hws::Model& model = manager.load(window_stl_path);
+  hws::Model const* model = manager.loadAndGet(window_stl_path);
   // EXPECT_NE(model.id_, 0);
-  EXPECT_FALSE(model.source_path_.empty());
-  EXPECT_EQ(model.meshes_.size(), 1);
-  EXPECT_EQ(model.scale_[0], 1.f);
-  EXPECT_EQ(model.scale_[1], 1.f);
-  EXPECT_EQ(model.scale_[2], 1.f);
+  EXPECT_FALSE(model->source_path_.empty());
+  EXPECT_EQ(model->meshes_.size(), 1);
+  EXPECT_EQ(model->scale_[0], 1.f);
+  EXPECT_EQ(model->scale_[1], 1.f);
+  EXPECT_EQ(model->scale_[2], 1.f);
 
-  const hws::Mesh& mesh = model.meshes_[0];
+  const hws::Mesh& mesh = model->meshes_[0];
   // EXPECT_NE(mesh.id_, 0);
   EXPECT_TRUE(mesh.name_.empty());
   EXPECT_NE(mesh.vertices_.size(), 0);
@@ -58,13 +58,13 @@ TEST(ModelManagerTester, Load)
   EXPECT_FALSE(manager.isModelLoaded(window_obj_path));
   EXPECT_EQ(manager.getLoadedModelCount(), 1);
 
-  const hws::Model& mode2 = manager.load(window_obj_path);
+  hws::Model const* mode2 = manager.loadAndGet(window_obj_path);
 
   EXPECT_TRUE(manager.isModelLoaded(window_stl_path));
   EXPECT_TRUE(manager.isModelLoaded(window_obj_path));
   EXPECT_EQ(manager.getLoadedModelCount(), 2);
 
-  const hws::Model& mode2bis = manager.load(window_obj_path);
+  hws::Model const* mode2bis = manager.loadAndGet(window_obj_path);
 
   EXPECT_TRUE(manager.isModelLoaded(window_stl_path));
   EXPECT_TRUE(manager.isModelLoaded(window_obj_path));

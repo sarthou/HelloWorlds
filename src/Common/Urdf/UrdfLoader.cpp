@@ -55,6 +55,13 @@ namespace hws {
       urdf.root_link = *roots.begin();
     }
 
+    std::cout << "UrdfLoader " << urdf.name << std::endl;
+    std::cout << urdf.links.size() << "links" << std::endl;
+    for(auto& link : urdf.links)
+    {
+      std::cout << " - link " << " : " << link.second.name << " material " << link.second.visual.material.name_ << std::endl;
+    }
+
     return urdf;
   }
 

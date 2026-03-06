@@ -130,6 +130,14 @@ namespace hws {
       }
     }
 
+    std::cout << "Model loaded " << (int)(model->id_) << " : " << model->source_path_ << std::endl;
+    std::cout << model->meshes_.size() << " meshes:" << std::endl;
+    for(auto& mesh : model->meshes_)
+    {
+      std::cout << " - mesh " << (int)(mesh.id_) << " : " << mesh.name_ << " material " << mesh.material_.name_ << std::endl;
+    }
+    std::cout << std::endl;
+
     computeTangentSpace(model);
 
     return model;

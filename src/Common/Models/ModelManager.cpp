@@ -1,52 +1,88 @@
 #include "hello_worlds/Common/Models/ModelManager.h"
 
 #include <cassert>
+#include <cstddef>
 #include <filesystem>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include "hello_worlds/Common/Models/Loaders/ModelLoader.h"
 #include "hello_worlds/Common/Models/Model.h"
 #include "hello_worlds/Utils/ShellDisplay.h"
 
 namespace hws {
-  ModelManager::ModelManager() = default;
-  ModelManager::~ModelManager() noexcept = default;
+  ModelManager::ModelManager()
+  {
+    // Reserve index 0 for "Null Model"
+    models_.emplace_back(nullptr);
+  }
 
   ModelManager& ModelManager::get()
   {
-    static ModelManager mgr_{};
-    return mgr_;
+    static ModelManager instance;
+    return instance;
   }
 
-  hws::Model& ModelManager::load(const std::filesystem::path& path)
+  size_t ModelManager::load(const std::filesystem::path& path)
   {
-    const auto absolute_path_str = path.string();
+    std::string key = std::filesystem::absolute(path).string();
 
-    mut_.lock();
-    if(models_.contains(absolute_path_str) == false)
     {
-      auto model = model_loader_.load(path);
-
-      if(model == nullptr)
-        ShellDisplay::error("Fail to load model: " + path.string());
-      assert(model && "Failed to load model");
-
-      models_[absolute_path_str] = std::move(model);
+      std::lock_guard<std::mutex> lock(mut_);
+      if(ids_.contains(key))
+      {
+        return ids_[key];
+      }
     }
 
-    hws::Model& res = *models_[absolute_path_str];
-    mut_.unlock();
+    auto model = model_loader_.load(path);
+    if(model == nullptr)
+    {
+      ShellDisplay::error("Fail to load model: " + key);
+      return 0;
+    }
 
-    return res;
+    std::lock_guard<std::mutex> lock(mut_);
+
+    if(ids_.contains(key))
+    {
+      return ids_[key];
+    }
+
+    size_t new_id = models_.size();
+    models_.emplace_back(std::move(model));
+    ids_[key] = new_id;
+
+    return new_id;
   }
 
-  bool ModelManager::isModelLoaded(const std::filesystem::path& path)
+  Model const* ModelManager::loadAndGet(const std::filesystem::path& path)
   {
-    const auto absolute_path_str = path.string();
-    mut_.lock();
-    bool res = models_.contains(absolute_path_str);
-    mut_.unlock();
-    return res;
+    size_t id = load(path);
+    return getModel(id);
+  }
+
+  Model const* ModelManager::getModel(size_t id) const
+  {
+    std::lock_guard<std::mutex> lock(mut_);
+    return (id < models_.size()) ? models_[id].get() : nullptr;
+  }
+
+  bool ModelManager::isModelLoaded(const std::filesystem::path& path) const
+  {
+    std::string key = std::filesystem::absolute(path).string();
+    std::lock_guard<std::mutex> lock(mut_);
+    return ids_.contains(key);
+  }
+
+  size_t ModelManager::getLoadedModelCount() const
+  {
+    std::lock_guard<std::mutex> lock(mut_);
+    return models_.size() - 1; // Subtract the null model at index 0
   }
 
 } // namespace hws

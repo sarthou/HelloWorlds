@@ -15,7 +15,7 @@ namespace hws {
   public:
     std::array<float, 3> half_extents_{};
     hws::Color diffuse_color_;
-    std::reference_wrapper<hws::Model> box_model_;
+    size_t box_model_;
     glm::mat4 shape_transform_{1.};
   };
 } // namespace hws

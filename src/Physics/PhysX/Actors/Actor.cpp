@@ -22,6 +22,7 @@
 #include <sys/stat.h>
 
 #include "hello_worlds/Common/Models/Model.h"
+#include "hello_worlds/Common/Models/ModelManager.h"
 #include "hello_worlds/Common/Shapes/Shape.h"
 #include "hello_worlds/Common/Shapes/ShapeBox.h"
 #include "hello_worlds/Common/Shapes/ShapeCapsule.h"
@@ -340,18 +341,20 @@ namespace hws::physx {
   {
     const auto params = createPxCookingParams(ctx_.minimize_memory_footprint_);
 
-    std::string model_name = getModelName(shape.custom_model_.get().source_path_);
+    Model const* model = ModelManager::get().getModel(shape.custom_model_);
 
-    for(const auto& mesh : shape.custom_model_.get().meshes_)
+    std::string model_name = getModelName(model->source_path_);
+
+    for(const auto& mesh : model->meshes_)
     {
-      std::string bin_path = "/tmp/hello_worlds/" + model_name;
+      std::string bin_path = "/tmp/hello_worlds/" + model_name; // TODO ERROR all meshes are cooked with the same name even if a model have several meshes
       if(mesh.name_.empty() == false)
         bin_path += "_" + mesh.name_ + ".bin";
 
       if(mesh.vertices_.size() < 4)
       {
         printf("[%s:%s] Ignoring! Less than 4 vertices..\n",
-               shape.custom_model_.get().source_path_.c_str(),
+               model->source_path_.c_str(),
                mesh.name_.c_str());
         continue;
       }

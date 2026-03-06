@@ -25,6 +25,7 @@
 #include "hello_worlds/Common/Models/Color.h"
 #include "hello_worlds/Common/Models/Mesh.h"
 #include "hello_worlds/Common/Models/Model.h"
+#include "hello_worlds/Common/Models/ModelManager.h"
 #include "hello_worlds/Common/Shapes/Shape.h"
 #include "hello_worlds/Common/Urdf/Actor.h"
 #include "hello_worlds/Common/World.h"
@@ -343,22 +344,26 @@ namespace hws {
     (void)default_material;
   }
 
-  void Renderer::loadInstance(const Model& model, const Material& material, const glm::mat4& model_mat, uint32_t object_id)
+  void Renderer::loadInstance(size_t model_id, const Material& material, const glm::mat4& model_mat, uint32_t object_id)
   {
-    loadModel(model, material, object_id);
-
-    for(const auto& mesh : model.meshes_)
+    Model const* model = ModelManager::get().getModel(model_id);
+    if(model != nullptr)
     {
-      glm::vec3 world_center = glm::vec3(model_mat[3]) + glm::mat3(model_mat) * mesh.getCenter();
+      loadModel(model, material, object_id);
 
-      float s1 = glm::dot(glm::vec3(model_mat[0]), glm::vec3(model_mat[0]));
-      float s2 = glm::dot(glm::vec3(model_mat[1]), glm::vec3(model_mat[1]));
-      float s3 = glm::dot(glm::vec3(model_mat[2]), glm::vec3(model_mat[2]));
+      for(const auto& mesh : model->meshes_)
+      {
+        glm::vec3 world_center = glm::vec3(model_mat[3]) + glm::mat3(model_mat) * mesh.getCenter();
 
-      float max_scale_sq = glm::max(s1, glm::max(s2, s3));
-      float world_radius = mesh.getRadius() * glm::sqrt(max_scale_sq);
+        float s1 = glm::dot(glm::vec3(model_mat[0]), glm::vec3(model_mat[0]));
+        float s2 = glm::dot(glm::vec3(model_mat[1]), glm::vec3(model_mat[1]));
+        float s3 = glm::dot(glm::vec3(model_mat[2]), glm::vec3(model_mat[2]));
 
-      current_mesh_batches_[model.id_][mesh.id_].emplace_back(InstanceData{model_mat, world_center, world_radius, {}, object_id}); // TODO add instance data ?
+        float max_scale_sq = glm::max(s1, glm::max(s2, s3));
+        float world_radius = mesh.getRadius() * glm::sqrt(max_scale_sq);
+
+        current_mesh_batches_[model->id_][mesh.id_].emplace_back(InstanceData{model_mat, world_center, world_radius, {}, object_id}); // TODO add instance data ?
+      }
     }
   }
 
@@ -461,16 +466,16 @@ namespace hws {
     return textures;
   }
 
-  void Renderer::loadModel(const Model& model, const Material& material, uint32_t instance_id)
+  void Renderer::loadModel(Model const* model, const Material& material, uint32_t instance_id)
   {
-    if(model.meshes_.empty())
+    if(model->meshes_.empty())
       return;
 
-    auto model_it = cached_models_.find(model.id_);
+    auto model_it = cached_models_.find(model->id_);
     if(model_it == cached_models_.end())
-      model_it = cached_models_.insert({model.id_, {}}).first;
+      model_it = cached_models_.insert({model->id_, {}}).first;
 
-    for(const auto& mesh : model.meshes_)
+    for(const auto& mesh : model->meshes_)
     {
       auto mesh_it = model_it->second.find(mesh.id_);
       if(mesh_it != model_it->second.end())
@@ -837,13 +842,17 @@ namespace hws {
                                       unsigned int texture_offset,
                                       std::function<bool(const glm::vec3&, float)> visibility_test)
   {
+    std::cout << "-------------------------" << std::endl;
     for(auto& [model_id, batch] : current_mesh_batches_)
     {
+      std::cout << "model id = " << (int)model_id << std::endl;
       auto& meshes = cached_models_.at(model_id);
+      std::cout << "  - nb meshes = " << meshes.size() << std::endl;
 
       for(auto& [mesh_id, transforms] : batch)
       {
         const MeshHandle& mesh = meshes.at(mesh_id);
+        std::cout << " - mesh = " << mesh.id << " \t nb instance = " << transforms.size() << std::endl;
 
         for(const InstanceData& transform : transforms)
         {

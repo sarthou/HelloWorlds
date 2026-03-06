@@ -13,7 +13,7 @@ namespace hws {
   {
   public:
     hws::Material material_;
-    std::reference_wrapper<hws::Model> skybox_model_;
+    size_t skybox_model_;
     glm::mat4 shape_transform_{1.};
   };
 } // namespace hws

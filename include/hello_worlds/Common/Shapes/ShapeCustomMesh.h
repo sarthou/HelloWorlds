@@ -11,15 +11,12 @@
 namespace hws {
   class Model;
 
-  /**
-   * WORK IN PROGRESS
-   */
   class ShapeCustomMesh
   {
   public:
     glm::vec3 scale_ = {1.f, 1.f, 1.f};
     hws::Material material_;
-    std::reference_wrapper<hws::Model> custom_model_;
+    size_t custom_model_;
     glm::mat4 shape_transform_{1.};
   };
 } // namespace hws

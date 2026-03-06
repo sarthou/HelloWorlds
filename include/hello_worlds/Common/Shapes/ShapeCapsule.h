@@ -18,8 +18,8 @@ namespace hws {
     float radius_{};
     float height_{};
     hws::Color diffuse_color_;
-    std::reference_wrapper<hws::Model> cylinder_model_;
-    std::reference_wrapper<hws::Model> sphere_model_;
+    size_t cylinder_model_;
+    size_t sphere_model_;
     glm::mat4 shape_transform_{1.};
   };
 } // namespace hws
