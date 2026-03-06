@@ -320,7 +320,6 @@ if(BUILD_TESTING)
     endif()
 
     target_link_libraries(${TEST_NAME}
-      PRIVATE
       GTest::gtest_main
       hello_worlds
     )
