@@ -10,9 +10,10 @@
 #include <vector>
 
 #include "hello_worlds/Common/Models/Loaders/ModelLoader.h"
+#include "hello_worlds/Common/Models/Mesh.h"
+#include "hello_worlds/Common/Models/Model.h"
 
 namespace hws {
-  class Model;
 
   class ModelManager
   {
@@ -27,6 +28,7 @@ namespace hws {
 
     // Returns nullptr if not found
     Model const* getModel(size_t id) const;
+    Mesh const* getMesh(size_t id) const;
 
     size_t getLoadedModelCount() const;
     bool isModelLoaded(const std::filesystem::path& path) const;
@@ -39,6 +41,9 @@ namespace hws {
     ModelLoader model_loader_;
     std::unordered_map<std::string, size_t> ids_;
     std::vector<std::unique_ptr<Model>> models_;
+
+    std::unordered_map<std::string, size_t> meshes_ids_;
+    std::vector<Mesh> meshes_;
   };
 } // namespace hws
 

@@ -4,19 +4,18 @@
 #include <filesystem>
 #include <memory>
 
-#include "hello_worlds/Common/Models/Mesh.h"
-#include "hello_worlds/Common/Models/Model.h"
+#include "hello_worlds/Common/Models/RawModel.h"
 
 namespace hws {
 
   class ModelLoader
   {
   public:
-    std::unique_ptr<hws::Model> load(const std::filesystem::path& path) const;
+    std::unique_ptr<RawModel_t> load(const std::filesystem::path& path) const;
 
   private:
-    void computeTangentSpace(const std::unique_ptr<hws::Model>& model) const;
-    void computeTangentSpace(Mesh& mesh) const;
+    void computeTangentSpace(const std::unique_ptr<RawModel_t>& model) const;
+    void computeTangentSpace(RawMesh_t& mesh) const;
   };
 
 } // namespace hws

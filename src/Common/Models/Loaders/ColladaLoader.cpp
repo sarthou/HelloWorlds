@@ -20,8 +20,7 @@
 
 #include "hello_worlds/Common/Models/Color.h"
 #include "hello_worlds/Common/Models/Material.h"
-#include "hello_worlds/Common/Models/Mesh.h"
-#include "hello_worlds/Common/Models/Model.h"
+#include "hello_worlds/Common/Models/RawModel.h"
 #include "hello_worlds/Utils/ShellDisplay.h"
 #include "hello_worlds/Utils/XmlTokenize.h"
 
@@ -81,7 +80,7 @@ namespace hws {
     }
   }
 
-  std::unique_ptr<hws::Model> ColladaLoader::read(const std::string& path)
+  std::unique_ptr<hws::RawModel_t> ColladaLoader::read(const std::string& path)
   {
     tinyxml2::XMLDocument doc;
     if(getXmlDocument(path, doc) == false)
@@ -100,9 +99,8 @@ namespace hws {
 
     if(instances.empty() == false)
     {
-      auto model = std::make_unique<Model>(Model::create());
+      auto model = std::make_unique<RawModel_t>();
       model->source_path_ = path;
-      model->scale_ = {1., 1., 1.};
       model->meshes_.swap(instances);
       for(auto& mesh : model->meshes_)
       {
@@ -324,9 +322,9 @@ namespace hws {
     return res;
   }
 
-  std::map<std::string, Mesh> ColladaLoader::getMeshLibrary(tinyxml2::XMLElement* root)
+  std::map<std::string, RawMesh_t> ColladaLoader::getMeshLibrary(tinyxml2::XMLElement* root)
   {
-    std::map<std::string, Mesh> res;
+    std::map<std::string, RawMesh_t> res;
     std::map<std::string, tinyxml2::XMLElement*> all_sources;
     std::map<std::string, VertexSource_t> vertex_sources;
 
@@ -482,7 +480,7 @@ namespace hws {
         } // if(primitive != nullptr)
       } // for each mesh_elem
 
-      Mesh& mesh = res.emplace(mesh_id, Mesh::create()).first->second;
+      RawMesh_t& mesh = res.emplace(mesh_id, RawMesh_t()).first->second;
 
       assert(vertex_normals.size() == vertex_positions.size());
       assert(vertex_uvs.size() == vertex_positions.size());
@@ -502,9 +500,9 @@ namespace hws {
     return res;
   }
 
-  std::vector<Mesh> ColladaLoader::readSceneGeometries(tinyxml2::XMLElement* root, std::map<std::string, Mesh>& meshes_library)
+  std::vector<RawMesh_t> ColladaLoader::readSceneGeometries(tinyxml2::XMLElement* root, std::map<std::string, RawMesh_t>& meshes_library)
   {
-    std::vector<Mesh> res;
+    std::vector<RawMesh_t> res;
     std::map<std::string, tinyxml2::XMLElement*> all_instances;
 
     tinyxml2::XMLElement* visual_scenes_elem = root->FirstChildElement("library_visual_scenes");
@@ -541,7 +539,7 @@ namespace hws {
     return res;
   }
 
-  void ColladaLoader::readNodeHierarchy(tinyxml2::XMLElement* node, std::map<std::string, Mesh>& meshes_library, std::vector<Mesh>& instances, const glm::mat4& parent_trans_mat)
+  void ColladaLoader::readNodeHierarchy(tinyxml2::XMLElement* node, std::map<std::string, RawMesh_t>& meshes_library, std::vector<RawMesh_t>& instances, const glm::mat4& parent_trans_mat)
   {
     glm::mat4 node_trans(1.);
 
@@ -603,7 +601,7 @@ namespace hws {
       if(geom_it != meshes_library.end())
       {
         instances.emplace_back(geom_it->second);
-        Mesh& instance = instances.back();
+        RawMesh_t& instance = instances.back();
         for(auto& v : instance.vertices_)
           v.position_ = glm::vec3(node_trans * glm::vec4(v.position_, 1.));
 

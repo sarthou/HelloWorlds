@@ -17,16 +17,13 @@ TEST(ModelLoaderTester, LoadWindowStl)
   path += "BuildingParts/window.stl";
 
   hws::ModelLoader loader;
-  std::unique_ptr<hws::Model> model_ptr = loader.load(path);
+  std::unique_ptr<hws::RawModel_t> model_ptr = loader.load(path);
   EXPECT_NE(model_ptr, nullptr);
   // EXPECT_NE(model_ptr->id_, 0);
   EXPECT_FALSE(model_ptr->source_path_.empty());
   EXPECT_EQ(model_ptr->meshes_.size(), 1);
-  EXPECT_EQ(model_ptr->scale_[0], 1.f);
-  EXPECT_EQ(model_ptr->scale_[1], 1.f);
-  EXPECT_EQ(model_ptr->scale_[2], 1.f);
 
-  const hws::Mesh& mesh = model_ptr->meshes_[0];
+  const hws::RawMesh_t& mesh = model_ptr->meshes_.at(0);
   // EXPECT_NE(mesh.id_, 0);
   EXPECT_TRUE(mesh.name_.empty());
   EXPECT_NE(mesh.vertices_.size(), 0);
@@ -56,16 +53,13 @@ TEST(ModelLoaderTester, LoadWindowObj)
   path += "BuildingParts/window.obj";
 
   hws::ModelLoader loader;
-  std::unique_ptr<hws::Model> model_ptr = loader.load(path);
+  std::unique_ptr<hws::RawModel_t> model_ptr = loader.load(path);
   EXPECT_NE(model_ptr, nullptr);
   // EXPECT_NE(model_ptr->id_, 0);
   EXPECT_FALSE(model_ptr->source_path_.empty());
   EXPECT_EQ(model_ptr->meshes_.size(), 1);
-  EXPECT_EQ(model_ptr->scale_[0], 1.f);
-  EXPECT_EQ(model_ptr->scale_[1], 1.f);
-  EXPECT_EQ(model_ptr->scale_[2], 1.f);
 
-  const hws::Mesh& mesh = model_ptr->meshes_[0];
+  const hws::RawMesh_t& mesh = model_ptr->meshes_.at(0);
   // EXPECT_NE(mesh.id_, 0);
   EXPECT_EQ(mesh.name_, "window_h10_Cube");
   EXPECT_NE(mesh.vertices_.size(), 0);
@@ -95,16 +89,13 @@ TEST(ModelLoaderTester, LoadEveHeadObj)
   path += "Eve/eve_head.obj";
 
   hws::ModelLoader loader;
-  std::unique_ptr<hws::Model> model_ptr = loader.load(path);
+  std::unique_ptr<hws::RawModel_t> model_ptr = loader.load(path);
   EXPECT_NE(model_ptr, nullptr);
   // EXPECT_NE(model_ptr->id_, 0);
   EXPECT_FALSE(model_ptr->source_path_.empty());
   EXPECT_EQ(model_ptr->meshes_.size(), 1);
-  EXPECT_EQ(model_ptr->scale_[0], 1.f);
-  EXPECT_EQ(model_ptr->scale_[1], 1.f);
-  EXPECT_EQ(model_ptr->scale_[2], 1.f);
 
-  const hws::Mesh& mesh = model_ptr->meshes_[0];
+  const hws::RawMesh_t& mesh = model_ptr->meshes_.at(0);
   // EXPECT_NE(mesh.id_, 0);
   EXPECT_EQ(mesh.name_, "Head.001");
   EXPECT_NE(mesh.vertices_.size(), 0);
@@ -136,16 +127,13 @@ TEST(ModelLoaderTester, LoadFrameDae)
   path += "Frame/frame_z.dae";
 
   hws::ModelLoader loader;
-  std::unique_ptr<hws::Model> model_ptr = loader.load(path);
+  std::unique_ptr<hws::RawModel_t> model_ptr = loader.load(path);
   EXPECT_NE(model_ptr, nullptr);
   // EXPECT_NE(model_ptr->id_, 0);
   EXPECT_FALSE(model_ptr->source_path_.empty());
   EXPECT_EQ(model_ptr->meshes_.size(), 1);
-  EXPECT_EQ(model_ptr->scale_[0], 1.f);
-  EXPECT_EQ(model_ptr->scale_[1], 1.f);
-  EXPECT_EQ(model_ptr->scale_[2], 1.f);
 
-  const hws::Mesh& mesh = model_ptr->meshes_[0];
+  const hws::RawMesh_t& mesh = model_ptr->meshes_.at(0);
   // EXPECT_NE(mesh.id_, 0);
   EXPECT_EQ(mesh.name_, "Cube_002-mesh");
   EXPECT_NE(mesh.vertices_.size(), 0);
@@ -177,17 +165,14 @@ TEST(ModelLoaderTester, LoadFramesObj)
   path += "Frame/frames.obj";
 
   hws::ModelLoader loader;
-  std::unique_ptr<hws::Model> model_ptr = loader.load(path);
+  std::unique_ptr<hws::RawModel_t> model_ptr = loader.load(path);
   EXPECT_NE(model_ptr, nullptr);
   // EXPECT_NE(model_ptr->id_, 0);
   EXPECT_FALSE(model_ptr->source_path_.empty());
   EXPECT_EQ(model_ptr->meshes_.size(), 2);
-  EXPECT_EQ(model_ptr->scale_[0], 1.f);
-  EXPECT_EQ(model_ptr->scale_[1], 1.f);
-  EXPECT_EQ(model_ptr->scale_[2], 1.f);
 
   {
-    const hws::Mesh& mesh = model_ptr->meshes_[0];
+    const hws::RawMesh_t& mesh = model_ptr->meshes_.at(0);
     // EXPECT_NE(mesh.id_, 0);
     EXPECT_EQ(mesh.name_, "Cube1");
     EXPECT_NE(mesh.vertices_.size(), 0);
@@ -214,7 +199,7 @@ TEST(ModelLoaderTester, LoadFramesObj)
   }
 
   {
-    const hws::Mesh& mesh = model_ptr->meshes_[1];
+    const hws::RawMesh_t& mesh = model_ptr->meshes_.at(1);
     // EXPECT_NE(mesh.id_, 0);
     EXPECT_EQ(mesh.name_, "Cube2");
     EXPECT_NE(mesh.vertices_.size(), 0);
@@ -247,17 +232,14 @@ TEST(ModelLoaderTester, LoadFramesDae)
   path += "Frame/frames.dae";
 
   hws::ModelLoader loader;
-  std::unique_ptr<hws::Model> model_ptr = loader.load(path);
+  std::unique_ptr<hws::RawModel_t> model_ptr = loader.load(path);
   EXPECT_NE(model_ptr, nullptr);
   // EXPECT_NE(model_ptr->id_, 0);
   EXPECT_FALSE(model_ptr->source_path_.empty());
   EXPECT_EQ(model_ptr->meshes_.size(), 2);
-  EXPECT_EQ(model_ptr->scale_[0], 1.f);
-  EXPECT_EQ(model_ptr->scale_[1], 1.f);
-  EXPECT_EQ(model_ptr->scale_[2], 1.f);
 
   {
-    const hws::Mesh& mesh = model_ptr->meshes_[0];
+    const hws::RawMesh_t& mesh = model_ptr->meshes_.at(0);
     // EXPECT_NE(mesh.id_, 0);
     EXPECT_EQ(mesh.name_, "Cube_002-mesh");
     EXPECT_NE(mesh.vertices_.size(), 0);
@@ -282,7 +264,7 @@ TEST(ModelLoaderTester, LoadFramesDae)
   }
 
   {
-    const hws::Mesh& mesh = model_ptr->meshes_[1];
+    const hws::RawMesh_t& mesh = model_ptr->meshes_.at(1);
     // EXPECT_NE(mesh.id_, 0);
     EXPECT_EQ(mesh.name_, "Cube_001-mesh");
     EXPECT_NE(mesh.vertices_.size(), 0);

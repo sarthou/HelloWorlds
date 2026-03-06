@@ -6,14 +6,7 @@
 #include <glm/gtx/norm.hpp>
 
 namespace hws {
-  static std::size_t s_global_id_counter = 1;
-
-  Mesh Mesh::create()
-  {
-    return Mesh(static_cast<Id_e>(s_global_id_counter++));
-  }
-
-  Mesh::Mesh(const Id_e id) : id_(id)
+  Mesh::Mesh(size_t id) : id_(id)
   {}
 
   void Mesh::finalize()

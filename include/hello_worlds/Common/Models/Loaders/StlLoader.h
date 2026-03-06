@@ -4,14 +4,14 @@
 #include <memory>
 #include <string>
 
-#include "hello_worlds/Common/Models/Model.h"
+#include "hello_worlds/Common/Models/RawModel.h"
 
 namespace hws {
 
   class StlLoader
   {
   public:
-    static std::unique_ptr<hws::Model> read(const std::string& path);
+    static std::unique_ptr<hws::RawModel_t> read(const std::string& path);
   };
 
 } // namespace hws

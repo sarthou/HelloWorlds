@@ -226,9 +226,8 @@ namespace hws {
 
     world_->processDebugLifeTime((double)delta_time_);
 
-    for(auto& model : current_mesh_batches_)
-      for(auto& mesh : model.second)
-        mesh.second.clear();
+    for(auto& mesh : current_mesh_batches_)
+      mesh.second.clear();
 
     render_collision_models_ = render_camera_.shouldRendercollisionModels();
     render_shadows_ = render_camera_.shouldShadows();
@@ -351,18 +350,20 @@ namespace hws {
     {
       loadModel(model, material, object_id);
 
-      for(const auto& mesh : model->meshes_)
+      for(const auto& mesh_id : model->meshes_)
       {
-        glm::vec3 world_center = glm::vec3(model_mat[3]) + glm::mat3(model_mat) * mesh.getCenter();
+        Mesh const* mesh = ModelManager::get().getMesh(mesh_id);
+
+        glm::vec3 world_center = glm::vec3(model_mat[3]) + glm::mat3(model_mat) * mesh->getCenter();
 
         float s1 = glm::dot(glm::vec3(model_mat[0]), glm::vec3(model_mat[0]));
         float s2 = glm::dot(glm::vec3(model_mat[1]), glm::vec3(model_mat[1]));
         float s3 = glm::dot(glm::vec3(model_mat[2]), glm::vec3(model_mat[2]));
 
         float max_scale_sq = glm::max(s1, glm::max(s2, s3));
-        float world_radius = mesh.getRadius() * glm::sqrt(max_scale_sq);
+        float world_radius = mesh->getRadius() * glm::sqrt(max_scale_sq);
 
-        current_mesh_batches_[model->id_][mesh.id_].emplace_back(InstanceData{model_mat, world_center, world_radius, {}, object_id}); // TODO add instance data ?
+        current_mesh_batches_[mesh_id].emplace_back(InstanceData{model_mat, world_center, world_radius, {}, object_id}); // TODO add instance data ?
       }
     }
   }
@@ -471,22 +472,20 @@ namespace hws {
     if(model->meshes_.empty())
       return;
 
-    auto model_it = cached_models_.find(model->id_);
-    if(model_it == cached_models_.end())
-      model_it = cached_models_.insert({model->id_, {}}).first;
-
-    for(const auto& mesh : model->meshes_)
+    for(const auto& mesh_id : model->meshes_)
     {
-      auto mesh_it = model_it->second.find(mesh.id_);
-      if(mesh_it != model_it->second.end())
+      Mesh const* mesh = ModelManager::get().getMesh(mesh_id);
+
+      auto mesh_it = cached_meshes_.find(mesh_id);
+      if(mesh_it != cached_meshes_.end())
       {
         if(mesh_it->second.materials.contains(instance_id))
           continue;
       }
       else
-        mesh_it = model_it->second.insert({mesh.id_, MeshHandle(mesh)}).first;
+        mesh_it = cached_meshes_.insert({mesh_id, MeshHandle(*mesh)}).first;
 
-      auto mesh_material = combineMaterials(mesh.material_, material);
+      auto mesh_material = combineMaterials(mesh->material_, material);
       auto textures = loadTextures(mesh_material);
 
       MeshMaterialHandle_t material_handle;
@@ -842,26 +841,17 @@ namespace hws {
                                       unsigned int texture_offset,
                                       std::function<bool(const glm::vec3&, float)> visibility_test)
   {
-    std::cout << "-------------------------" << std::endl;
-    for(auto& [model_id, batch] : current_mesh_batches_)
+    for(auto& [mesh_id, transforms] : current_mesh_batches_)
     {
-      std::cout << "model id = " << (int)model_id << std::endl;
-      auto& meshes = cached_models_.at(model_id);
-      std::cout << "  - nb meshes = " << meshes.size() << std::endl;
+      const MeshHandle& mesh = cached_meshes_.at(mesh_id);
 
-      for(auto& [mesh_id, transforms] : batch)
+      for(const InstanceData& transform : transforms)
       {
-        const MeshHandle& mesh = meshes.at(mesh_id);
-        std::cout << " - mesh = " << mesh.id << " \t nb instance = " << transforms.size() << std::endl;
+        if(visibility_test && !visibility_test(transform.world_center_, transform.world_radius_))
+          continue;
 
-        for(const InstanceData& transform : transforms)
-        {
-          if(visibility_test && !visibility_test(transform.world_center_, transform.world_radius_))
-            continue;
-
-          shader->setModel(transform.mvp_);
-          mesh.drawWithMaterial(*shader, transform.object_id_, texture_offset);
-        }
+        shader->setModel(transform.mvp_);
+        mesh.drawWithMaterial(*shader, transform.object_id_, texture_offset);
       }
     }
   }
@@ -869,22 +859,17 @@ namespace hws {
   void Renderer::renderModels(const ModelShader& shader,
                               std::function<bool(const glm::vec3&, float)> visibility_test)
   {
-    for(auto& [model_id, batch] : current_mesh_batches_)
+    for(auto& [mesh_id, transforms] : current_mesh_batches_)
     {
-      auto& meshes = cached_models_.at(model_id);
+      const MeshHandle& mesh = cached_meshes_.at(mesh_id);
 
-      for(auto& [mesh_id, transforms] : batch)
+      for(const InstanceData& transform : transforms)
       {
-        const MeshHandle& mesh = meshes.at(mesh_id);
+        if(visibility_test && !visibility_test(transform.world_center_, transform.world_radius_))
+          continue;
 
-        for(const InstanceData& transform : transforms)
-        {
-          if(visibility_test && !visibility_test(transform.world_center_, transform.world_radius_))
-            continue;
-
-          shader.setModel(transform.mvp_);
-          mesh.draw(shader);
-        }
+        shader.setModel(transform.mvp_);
+        mesh.draw(shader);
       }
     }
   }
@@ -892,22 +877,17 @@ namespace hws {
   void Renderer::renderModelsSegmented(const ModelShader& shader,
                                        std::function<bool(const glm::vec3&, float)> visibility_test)
   {
-    for(auto& [model_id, batch] : current_mesh_batches_)
+    for(auto& [mesh_id, transforms] : current_mesh_batches_)
     {
-      auto& meshes = cached_models_.at(model_id);
+      const MeshHandle& mesh = cached_meshes_.at(mesh_id);
 
-      for(auto& [mesh_id, transforms] : batch)
+      for(const InstanceData& transform : transforms)
       {
-        const MeshHandle& mesh = meshes.at(mesh_id);
+        if(visibility_test && !visibility_test(transform.world_center_, transform.world_radius_))
+          continue;
 
-        for(const InstanceData& transform : transforms)
-        {
-          if(visibility_test && !visibility_test(transform.world_center_, transform.world_radius_))
-            continue;
-
-          shader.setModel(transform.mvp_);
-          mesh.drawId(shader, (uint32_t)transform.object_id_);
-        }
+        shader.setModel(transform.mvp_);
+        mesh.drawId(shader, (uint32_t)transform.object_id_);
       }
     }
   }

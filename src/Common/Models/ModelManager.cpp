@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "hello_worlds/Common/Models/Loaders/ModelLoader.h"
+#include "hello_worlds/Common/Models/Mesh.h"
 #include "hello_worlds/Common/Models/Model.h"
 #include "hello_worlds/Utils/ShellDisplay.h"
 
@@ -19,6 +20,7 @@ namespace hws {
   {
     // Reserve index 0 for "Null Model"
     models_.emplace_back(nullptr);
+    meshes_.emplace_back(0);
   }
 
   ModelManager& ModelManager::get()
@@ -39,8 +41,8 @@ namespace hws {
       }
     }
 
-    auto model = model_loader_.load(path);
-    if(model == nullptr)
+    auto raw_model = model_loader_.load(path);
+    if(raw_model == nullptr)
     {
       ShellDisplay::error("Fail to load model: " + key);
       return 0;
@@ -54,7 +56,25 @@ namespace hws {
     }
 
     size_t new_id = models_.size();
-    models_.emplace_back(std::move(model));
+    models_.emplace_back(new Model(new_id));
+    models_.back()->source_path_ = std::move(raw_model->source_path_);
+    models_.back()->meshes_.reserve(raw_model->meshes_.size());
+
+    for(auto& mesh : raw_model->meshes_)
+    {
+      if(mesh.name_.empty())
+        mesh.name_ = models_.back()->source_path_;
+
+      meshes_ids_.emplace(mesh.name_, meshes_.size());
+      meshes_.emplace_back(meshes_.size());
+      meshes_.back().indices_ = std::move(mesh.indices_);
+      meshes_.back().vertices_ = std::move(mesh.vertices_);
+      meshes_.back().name_ = std::move(mesh.name_);
+      meshes_.back().material_ = std::move(mesh.material_);
+      meshes_.back().finalize();
+
+      models_.back()->meshes_.push_back(meshes_.back().getId());
+    }
     ids_[key] = new_id;
 
     return new_id;
@@ -70,6 +90,12 @@ namespace hws {
   {
     std::lock_guard<std::mutex> lock(mut_);
     return (id < models_.size()) ? models_[id].get() : nullptr;
+  }
+
+  Mesh const* ModelManager::getMesh(size_t id) const
+  {
+    std::lock_guard<std::mutex> lock(mut_);
+    return (id < meshes_.size()) ? &meshes_[id] : nullptr;
   }
 
   bool ModelManager::isModelLoaded(const std::filesystem::path& path) const

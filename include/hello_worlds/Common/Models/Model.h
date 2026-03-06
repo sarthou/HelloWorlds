@@ -11,20 +11,15 @@ namespace hws {
   class Model
   {
   public:
-    enum class Id_e : std::size_t
-    {
-    };
+    explicit Model(size_t id);
 
-    static Model create();
-
-    explicit Model(Id_e id);
-
-    // As for actors, each model is associated with a non-zero, unique id.
-    const Id_e id_;
+    size_t getId() const { return id_; }
 
     std::string source_path_;
-    std::vector<hws::Mesh> meshes_;
-    std::array<float, 3> scale_;
+    std::vector<size_t> meshes_;
+
+  private:
+    size_t id_; // Each model is associated with a non-zero, unique id.
   };
 } // namespace hws
 

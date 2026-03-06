@@ -345,23 +345,25 @@ namespace hws::physx {
 
     std::string model_name = getModelName(model->source_path_);
 
-    for(const auto& mesh : model->meshes_)
+    for(const auto& mesh_id : model->meshes_)
     {
-      std::string bin_path = "/tmp/hello_worlds/" + model_name; // TODO ERROR all meshes are cooked with the same name even if a model have several meshes
-      if(mesh.name_.empty() == false)
-        bin_path += "_" + mesh.name_ + ".bin";
+      std::string bin_path = "/tmp/hello_worlds/" + model_name;
+      Mesh const* mesh = ModelManager::get().getMesh(mesh_id);
 
-      if(mesh.vertices_.size() < 4)
+      if(mesh->name_.empty() == false)
+        bin_path += "_" + mesh->name_ + ".bin";
+
+      if(mesh->vertices_.size() < 4)
       {
         printf("[%s:%s] Ignoring! Less than 4 vertices..\n",
                model->source_path_.c_str(),
-               mesh.name_.c_str());
+               mesh->name_.c_str());
         continue;
       }
 
       auto* tringle_mesh = loadCookedFromDisk(bin_path);
       if(tringle_mesh == nullptr)
-        tringle_mesh = createPxTriangleMesh(mesh, params, bin_path);
+        tringle_mesh = createPxTriangleMesh(*mesh, params, bin_path);
 
       px_geometries_.emplace_back(std::make_unique<::physx::PxTriangleMeshGeometry>(
         tringle_mesh,

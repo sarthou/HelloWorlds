@@ -8,19 +8,11 @@
 #include "hello_worlds/Common/Models/Vertex.h"
 
 namespace hws {
+
   class Mesh
   {
   public:
-    enum class Id_e : std::size_t
-    {
-    };
-
-    static Mesh create();
-
-    explicit Mesh(Id_e id);
-
-    // As for actors, each mesh is associated with a non-zero, unique id.
-    const Id_e id_;
+    explicit Mesh(size_t id);
 
     std::string name_;
     std::vector<hws::Vertex> vertices_;
@@ -29,10 +21,14 @@ namespace hws {
 
     void finalize();
 
+    size_t getId() const { return id_; }
+
     float getRadius() const { return radius_; }
     glm::vec3 getCenter() const { return center_; }
 
   private:
+    size_t id_; // Each mesh is associated with a non-zero, unique id.
+
     float radius_;
     glm::vec3 center_; // Local space center
   };

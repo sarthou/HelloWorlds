@@ -17,14 +17,13 @@
 #include "hello_worlds/Common/Models/Color.h"
 #include "hello_worlds/Common/Models/Loaders/TinyObjReader.h"
 #include "hello_worlds/Common/Models/Material.h"
-#include "hello_worlds/Common/Models/Mesh.h"
-#include "hello_worlds/Common/Models/Model.h"
+#include "hello_worlds/Common/Models/RawModel.h"
 #include "hello_worlds/Common/Models/Vertex.h"
 #include "hello_worlds/Utils/ShellDisplay.h"
 
 namespace hws {
 
-  std::unique_ptr<hws::Model> ObjLoader::read(const std::string& path)
+  std::unique_ptr<hws::RawModel_t> ObjLoader::read(const std::string& path)
   {
     std::string mtl_path;
     auto pos = path.find_last_of("/\\");
@@ -40,7 +39,7 @@ namespace hws {
     std::vector<tinyobj::Mesh_t> meshes = getMeshes();
     std::vector<tinyobj::Material_t> materials = getMaterials();
 
-    std::unique_ptr<hws::Model> model = getModel(attributes, meshes, materials);
+    std::unique_ptr<hws::RawModel_t> model = getModel(attributes, meshes, materials);
     if(model != nullptr)
       model->source_path_ = path;
 
@@ -80,17 +79,16 @@ namespace hws {
     return vtx;
   }
 
-  std::unique_ptr<hws::Model> ObjLoader::getModel(const tinyobj::Attrib_t& attribute,
-                                                  std::vector<tinyobj::Mesh_t>& meshes,
-                                                  std::vector<tinyobj::Material_t>& materials)
+  std::unique_ptr<hws::RawModel_t> ObjLoader::getModel(const tinyobj::Attrib_t& attribute,
+                                                       std::vector<tinyobj::Mesh_t>& meshes,
+                                                       std::vector<tinyobj::Material_t>& materials)
   {
-    auto model = std::make_unique<Model>(Model::create());
-    model->scale_ = {1., 1., 1.};
+    auto model = std::make_unique<RawModel_t>();
 
     for(const auto& tiny_mesh : meshes)
     {
-      model->meshes_.emplace_back(Mesh::create());
-      Mesh* hws_mesh = &(model->meshes_.back());
+      model->meshes_.emplace_back();
+      RawMesh_t* hws_mesh = &(model->meshes_.back());
       hws_mesh->name_ = tiny_mesh.name;
 
       if(tiny_mesh.material_id >= 0)

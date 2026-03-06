@@ -14,15 +14,14 @@
 #include "hello_worlds/Common/Models/Loaders/ColladaLoader.h"
 #include "hello_worlds/Common/Models/Loaders/ObjLoader.h"
 #include "hello_worlds/Common/Models/Loaders/StlLoader.h"
-#include "hello_worlds/Common/Models/Mesh.h"
-#include "hello_worlds/Common/Models/Model.h"
+#include "hello_worlds/Common/Models/RawModel.h"
 #include "hello_worlds/Common/Models/Vertex.h"
 
 namespace hws {
 
-  hws::Mesh processMesh(const aiMesh* mesh)
+  hws::RawMesh_t processMesh(const aiMesh* mesh)
   {
-    hws::Mesh out_mesh = hws::Mesh::create();
+    hws::RawMesh_t out_mesh;
     out_mesh.name_ = mesh->mName.C_Str();
 
     for(auto i = 0u; i < mesh->mNumVertices; i++)
@@ -64,7 +63,7 @@ namespace hws {
     return out_mesh;
   }
 
-  void processNode(hws::Model& out, const aiNode* node, const aiScene* scene)
+  void processNode(hws::RawModel_t& out, const aiNode* node, const aiScene* scene)
   {
     for(auto i = 0u; i < node->mNumMeshes; i++)
     {
@@ -77,7 +76,7 @@ namespace hws {
     }
   }
 
-  bool loadModel(hws::Model& out, const std::filesystem::path& path)
+  bool loadModel(hws::RawModel_t& out, const std::filesystem::path& path)
   {
     Assimp::Importer importer;
 
@@ -102,9 +101,9 @@ namespace hws {
     return true;
   }
 
-  std::unique_ptr<hws::Model> ModelLoader::load(const std::filesystem::path& path) const
+  std::unique_ptr<hws::RawModel_t> ModelLoader::load(const std::filesystem::path& path) const
   {
-    std::unique_ptr<hws::Model> model = nullptr;
+    std::unique_ptr<RawModel_t> model = nullptr;
 
     if(path.string().rfind(".stl") != std::string::npos)
       model = StlLoader::read(path.string());
@@ -121,7 +120,7 @@ namespace hws {
 
     if(model == nullptr)
     {
-      model = std::make_unique<hws::Model>(hws::Model::create());
+      model = std::make_unique<hws::RawModel_t>();
       model->source_path_ = path.string();
 
       if(!loadModel(*model, path))
@@ -130,29 +129,18 @@ namespace hws {
       }
     }
 
-    std::cout << "Model loaded " << (int)(model->id_) << " : " << model->source_path_ << std::endl;
-    std::cout << model->meshes_.size() << " meshes:" << std::endl;
-    for(auto& mesh : model->meshes_)
-    {
-      std::cout << " - mesh " << (int)(mesh.id_) << " : " << mesh.name_ << " material " << mesh.material_.name_ << std::endl;
-    }
-    std::cout << std::endl;
-
     computeTangentSpace(model);
 
     return model;
   }
 
-  void ModelLoader::computeTangentSpace(const std::unique_ptr<hws::Model>& model) const
+  void ModelLoader::computeTangentSpace(const std::unique_ptr<hws::RawModel_t>& model) const
   {
     for(auto& mesh : model->meshes_)
-    {
       computeTangentSpace(mesh);
-      mesh.finalize();
-    }
   }
 
-  void ModelLoader::computeTangentSpace(Mesh& mesh) const
+  void ModelLoader::computeTangentSpace(RawMesh_t& mesh) const
   {
     for(unsigned int i = 0; i < mesh.indices_.size(); i = i + 3)
     {

@@ -6,8 +6,7 @@
 #include <memory>
 #include <string>
 
-#include "hello_worlds/Common/Models/Mesh.h"
-#include "hello_worlds/Common/Models/Model.h"
+#include "hello_worlds/Common/Models/RawModel.h"
 #include "hello_worlds/Common/Models/Vertex.h"
 #include "hello_worlds/Utils/ShellDisplay.h"
 
@@ -21,7 +20,7 @@ namespace hws {
     float vertex2[3]; // NOLINT
   };
 
-  std::unique_ptr<hws::Model> StlLoader::read(const std::string& path)
+  std::unique_ptr<hws::RawModel_t> StlLoader::read(const std::string& path)
   {
     FILE* file = fopen(path.c_str(), "rb");
     if(file == nullptr)
@@ -54,7 +53,7 @@ namespace hws {
       return nullptr;
     }
 
-    std::unique_ptr<hws::Model> model = nullptr;
+    std::unique_ptr<hws::RawModel_t> model = nullptr;
 
     int nb_triangles = *(int*)&buffer[80];
     if(nb_triangles > 0)
@@ -68,11 +67,10 @@ namespace hws {
         return nullptr;
       }
 
-      model = std::make_unique<Model>(Model::create());
+      model = std::make_unique<RawModel_t>();
       model->source_path_ = path;
-      model->scale_ = {1, 1, 1};
-      model->meshes_.emplace_back(Mesh::create());
-      Mesh* mesh = &(model->meshes_.front());
+      model->meshes_.emplace_back();
+      RawMesh_t* mesh = &(model->meshes_.front());
       mesh->indices_.reserve(3l * nb_triangles);
       mesh->vertices_.reserve(3l * nb_triangles);
 

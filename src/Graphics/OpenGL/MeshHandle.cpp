@@ -18,7 +18,8 @@
 
 namespace hws {
 
-  MeshHandle::MeshHandle(const Mesh& mesh) : vertices(mesh.vertices_),
+  MeshHandle::MeshHandle(const Mesh& mesh) : id(mesh.getId()),
+                                             vertices(mesh.vertices_),
                                              indices(mesh.indices_)
   {
     setupMesh();

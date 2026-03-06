@@ -27,11 +27,8 @@ TEST(ModelManagerTester, Load)
   // EXPECT_NE(model.id_, 0);
   EXPECT_FALSE(model->source_path_.empty());
   EXPECT_EQ(model->meshes_.size(), 1);
-  EXPECT_EQ(model->scale_[0], 1.f);
-  EXPECT_EQ(model->scale_[1], 1.f);
-  EXPECT_EQ(model->scale_[2], 1.f);
 
-  const hws::Mesh& mesh = model->meshes_[0];
+  const hws::Mesh& mesh = *manager.getMesh(model->meshes_[0]);
   // EXPECT_NE(mesh.id_, 0);
   EXPECT_TRUE(mesh.name_.empty());
   EXPECT_NE(mesh.vertices_.size(), 0);
