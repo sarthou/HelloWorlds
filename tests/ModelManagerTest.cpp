@@ -30,7 +30,7 @@ TEST(ModelManagerTester, Load)
 
   const hws::Mesh& mesh = *manager.getMesh(model->meshes_[0]);
   // EXPECT_NE(mesh.id_, 0);
-  EXPECT_TRUE(mesh.name_.empty());
+  EXPECT_FALSE(mesh.name_.empty());
   EXPECT_NE(mesh.vertices_.size(), 0);
   EXPECT_EQ(mesh.vertices_[0].uv_.x, 0.5); // default value as no uv map with stl
   EXPECT_EQ(mesh.vertices_[0].uv_.y, 0.5);
