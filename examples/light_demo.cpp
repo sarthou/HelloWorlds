@@ -5,7 +5,7 @@
 #include "hello_worlds/Utils/AssetResolver.h"
 #include "test_config.hpp"
 
-void worldThread(const std::string& world_name, hws::Window* window)
+void worldThread(hws::Window* window)
 {
   hws::Engine engine(window, false);
 
@@ -64,7 +64,7 @@ int main()
 
   hws::AssetResolver::instance().registerPackage("hello_worlds", hwd::tests::get_package_dir());
 
-  std::thread world1(worldThread, "light_demo", &window1);
+  std::thread world1(worldThread, &window1);
 
   hws::Window::run();
 

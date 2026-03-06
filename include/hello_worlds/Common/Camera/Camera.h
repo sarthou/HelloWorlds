@@ -39,14 +39,14 @@ namespace hws {
       }
     };
 
-    Plane_t planes[6]; // 0:Left, 1:Right, 2:Bottom, 3:Top, 4:Near, 5:Far
+    Plane_t planes[6]; // NOLINT 0:Left, 1:Right, 2:Bottom, 3:Top, 4:Near, 5:Far
 
     bool isSphereVisible(const glm::vec3& center, float radius) const
     {
-      for(int i = 0; i < 6; i++)
+      for(const auto& plane : planes)
       {
         // If the sphere is completely behind any one plane, it's culled
-        if(glm::dot(planes[i].normal, center) + planes[i].distance < -radius)
+        if(glm::dot(plane.normal, center) + plane.distance < -radius)
         {
           return false;
         }

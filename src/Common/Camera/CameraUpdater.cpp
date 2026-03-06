@@ -166,7 +166,7 @@ namespace hws {
     delta_time_ = current_frame - last_frame_;
     last_frame_ = current_frame;
 
-    float delta_seconds = std::chrono::duration_cast<std::chrono::microseconds>(delta_time_).count() / 1000000.f;
+    float delta_seconds = (float)std::chrono::duration_cast<std::chrono::microseconds>(delta_time_).count() / 1000000.f;
     float speed = key_speed_ ? 2.9 : 1.4; // m/s
     float dist = speed * delta_seconds;
 

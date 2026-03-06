@@ -24,7 +24,7 @@ namespace hws {
   }
 
   // Constructor 2: Geographic
-  AmbientLight::AmbientLight(const GeographicCoords& coords,
+  AmbientLight::AmbientLight(const GeographicCoords_t& coords,
                              const glm::vec3& color,
                              float intensity) : base_color_(color),
                                                 current_color_(color),

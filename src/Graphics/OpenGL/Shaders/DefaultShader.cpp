@@ -46,17 +46,17 @@ namespace hws {
   void DefaultShader::setPointLights(PointLightUBO_t* data, size_t nb) const
   {
     glBindBuffer(GL_UNIFORM_BUFFER, ubo_point_lights_);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(PointLightUBO_t) * nb, data);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, (long)(sizeof(PointLightUBO_t) * nb), data);
   }
 
   void DefaultShader::setUseAmbiantShadow(bool value) const
   {
-    glUniform1f(use_ambient_shadows_uniform_id_, value);
+    glUniform1f(use_ambient_shadows_uniform_id_, value ? 1. : 0.);
   }
 
   void DefaultShader::setUsePointLight(bool value) const
   {
-    glUniform1f(use_point_shadows_uniform_id_, value);
+    glUniform1f(use_point_shadows_uniform_id_, value ? 1. : 0.);
   }
 
   void DefaultShader::setNbPointLight(float value) const

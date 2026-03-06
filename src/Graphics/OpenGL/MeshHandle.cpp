@@ -38,7 +38,7 @@ namespace hws {
     glBindVertexArray(0);
   }
 
-  void MeshHandle::draw(const Shader& shader) const
+  void MeshHandle::draw() const
   {
     glBindVertexArray(vao_);
     glDrawElements(GL_TRIANGLES, static_cast<int>(indices.size()), GL_UNSIGNED_INT, nullptr);

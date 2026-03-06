@@ -17,7 +17,7 @@
 
 namespace hws {
 
-  size_t Window::nb_active_windows_ = 0;
+  size_t Window::nb_active_windows = 0;
 
   void Window::init()
   {
@@ -40,7 +40,7 @@ namespace hws {
 
   void Window::run()
   {
-    while(Window::nb_active_windows_ != 0)
+    while(Window::nb_active_windows != 0)
     {
       Window::pollEvent();
       std::this_thread::sleep_for(std::chrono::microseconds(500));
@@ -173,13 +173,13 @@ namespace hws {
       window->cam_mutex_.unlock();
     });
 
-    nb_active_windows_++;
+    nb_active_windows++;
   }
 
   Window::~Window()
   {
     glfwDestroyWindow(glfw_window_);
-    nb_active_windows_--;
+    nb_active_windows--;
   }
 
   void Window::makeCurrentContext() const
@@ -209,7 +209,7 @@ namespace hws {
   {
     if(glfwWindowShouldClose(glfw_window_) != 0)
     {
-      nb_active_windows_--;
+      nb_active_windows--;
       return true;
     }
     else

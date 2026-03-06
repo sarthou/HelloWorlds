@@ -95,12 +95,12 @@ namespace hws {
     void loadDebugLines();
 
     void renderModels(const ModelShader& shader,
-                      std::function<bool(const glm::vec3&, float)> visibility_test = nullptr);
+                      const std::function<bool(const glm::vec3&, float)>& visibility_test = nullptr);
     void renderTexturedModels(DefaultShader* shader,
                               unsigned int texture_offset,
-                              std::function<bool(const glm::vec3&, float)> visibility_test = nullptr);
+                              const std::function<bool(const glm::vec3&, float)>& visibility_test = nullptr);
     void renderModelsSegmented(const ModelShader& shader,
-                               std::function<bool(const glm::vec3&, float)> visibility_test = nullptr);
+                               const std::function<bool(const glm::vec3&, float)>& visibility_test = nullptr);
 
     void renderMainScreen();
     void renderOffScreens();

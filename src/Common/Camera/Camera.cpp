@@ -126,8 +126,8 @@ namespace hws {
     frustum_.planes[5].normal.z = m[2][3] - m[2][2];
     frustum_.planes[5].distance = m[3][3] - m[3][2];
 
-    for(int i = 0; i < 6; i++)
-      frustum_.planes[i].normalize();
+    for(auto& plane : frustum_.planes)
+      plane.normalize();
   }
 
   std::vector<glm::vec4> Camera::getFrustumCornersWorldSpace()

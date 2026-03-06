@@ -85,7 +85,7 @@ namespace hws {
     shader.setVec3("lightPos", positions_[id]);
 
     glBindBuffer(GL_UNIFORM_BUFFER, matrices_uniform_buffer_);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, (long)shadow_transforms_[id].size() * sizeof(glm::mat4x4), shadow_transforms_[id].data());
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, (long)shadow_transforms_[id].size() * (long)sizeof(glm::mat4x4), shadow_transforms_[id].data());
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
   }
 

@@ -525,7 +525,7 @@ namespace hws {
 
   void Renderer::renderMainScreen()
   {
-    auto cameraCull = [&](const glm::vec3& center, float radius) {
+    auto camera_cull = [&](const glm::vec3& center, float radius) {
       return render_camera_.getFrustum().isSphereVisible(center, radius);
     };
 
@@ -549,7 +549,7 @@ namespace hws {
 
     glEnable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(0.2f, 1.0f); // push pre-pass depth away // factor, units
-    renderModels(prepass, cameraCull);
+    renderModels(prepass, camera_cull);
     glDisable(GL_POLYGON_OFFSET_FILL);
 
     // --- STEP 1: COLOR PASS ---
@@ -571,7 +571,7 @@ namespace hws {
     shadow_.setUniforms(*main_shader_, 1);
     setLightsUniforms(main_shader_, render_shadows_, render_shadows_);
 
-    renderTexturedModels(main_shader_, 2, cameraCull);
+    renderTexturedModels(main_shader_, 2, camera_cull);
 
     // --- STEP 2: SKYBOX & DEBUG ---
     glDepthMask(GL_TRUE); // Back on for skybox/debug
@@ -653,11 +653,11 @@ namespace hws {
     // shadow_.setLightMatrices();
     setLightsUniforms(main_shader_, false, render_shadows_); // We never use the ambient shadows for offscreen
 
-    auto cameraCull = [&](const glm::vec3& center, float radius) {
+    auto camera_cull = [&](const glm::vec3& center, float radius) {
       return camera->getFrustum().isSphereVisible(center, radius);
     };
 
-    renderTexturedModels(main_shader_, 2, cameraCull);
+    renderTexturedModels(main_shader_, 2, camera_cull);
 
     // 1.2 draw background
     if(use_sky_box_)
@@ -685,11 +685,11 @@ namespace hws {
     shader.setView(camera->getViewMatrix());
     shader.setProjection(camera->getProjectionMatrix());
 
-    auto cameraCull = [&](const glm::vec3& center, float radius) {
+    auto camera_cull = [&](const glm::vec3& center, float radius) {
       return camera->getFrustum().isSphereVisible(center, radius);
     };
 
-    renderModelsSegmented(shader, cameraCull);
+    renderModelsSegmented(shader, camera_cull);
   }
 
   void Renderer::renderAmbientShadowDepth()
@@ -713,13 +713,13 @@ namespace hws {
       float sun_horizontalness = glm::length(glm::vec2(ambient_dir.x, ambient_dir.z));
       float shadow_stretch = 1.0f + (sun_horizontalness * 1.0f);
 
-      auto ambientCull = [&](const glm::vec3& center, float radius) {
+      auto ambient_cull = [&](const glm::vec3& center, float radius) {
         float shift_distance = radius * shadow_stretch;
         glm::vec3 shifted_center = center - (glm::vec3(ambient_dir) * shift_distance);
         return shadow_.getMasterFrustum().isSphereVisible(shifted_center, radius + shift_distance);
       };
 
-      renderModels(shadow_shader, ambientCull);
+      renderModels(shadow_shader, ambient_cull);
     }
   }
 
@@ -739,7 +739,7 @@ namespace hws {
       if(world_->point_lights_.isUsed(i) && world_->point_lights_.isOn(i))
       {
         glm::vec3 light_pos = world_->point_lights_.getPosition(i);
-        float light_radius = world_->point_lights_.getAttenuationDistance(i) * 1.2;
+        float light_radius = world_->point_lights_.getAttenuationDistance(i) * 1.2f;
 
         if(!cam_frustum.isSphereVisible(light_pos, light_radius)) // /!\ point shadows may not be computed for offscreen rendering
           continue;
@@ -753,12 +753,12 @@ namespace hws {
 
         point_shadows_.setUniforms(i, shadow_point_shader);
 
-        auto pointLightCull = [&](const glm::vec3& center, float radius) {
+        auto point_light_cull = [&](const glm::vec3& center, float radius) {
           float d = glm::distance(light_pos, center);
           return d < (light_radius + radius);
         };
 
-        renderModels(shadow_point_shader, pointLightCull);
+        renderModels(shadow_point_shader, point_light_cull);
       }
     }
   }
@@ -844,7 +844,7 @@ namespace hws {
 
   void Renderer::renderTexturedModels(DefaultShader* shader,
                                       unsigned int texture_offset,
-                                      std::function<bool(const glm::vec3&, float)> visibility_test)
+                                      const std::function<bool(const glm::vec3&, float)>& visibility_test)
   {
     for(auto& [mesh_id, transforms] : current_mesh_batches_)
     {
@@ -862,7 +862,7 @@ namespace hws {
   }
 
   void Renderer::renderModels(const ModelShader& shader,
-                              std::function<bool(const glm::vec3&, float)> visibility_test)
+                              const std::function<bool(const glm::vec3&, float)>& visibility_test)
   {
     for(auto& [mesh_id, transforms] : current_mesh_batches_)
     {
@@ -874,13 +874,13 @@ namespace hws {
           continue;
 
         shader.setModel(transform.mvp_);
-        mesh.draw(shader);
+        mesh.draw();
       }
     }
   }
 
   void Renderer::renderModelsSegmented(const ModelShader& shader,
-                                       std::function<bool(const glm::vec3&, float)> visibility_test)
+                                       const std::function<bool(const glm::vec3&, float)>& visibility_test)
   {
     for(auto& [mesh_id, transforms] : current_mesh_batches_)
     {
@@ -935,7 +935,7 @@ namespace hws {
       }
     }
 
-    PointLightUBO_t gpu_data[20];
+    PointLightUBO_t gpu_data[20]; // NOLINT
     const auto& points = world_->point_lights_;
 
     for(size_t i = 0; i < points.getNbLightsSize(); i++)

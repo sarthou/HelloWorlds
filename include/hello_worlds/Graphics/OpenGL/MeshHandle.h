@@ -33,7 +33,7 @@ namespace hws {
 
     void drawId(const Shader& shader, uint32_t model_id) const;
 
-    void draw(const Shader& shader) const;
+    void draw() const;
 
     void drawWithMaterial(const DefaultShader& shader, uint32_t model_id, unsigned int texture_pose_offset = 0) const;
 

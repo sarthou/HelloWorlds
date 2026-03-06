@@ -83,7 +83,7 @@ namespace hws {
   void AmbientShadow::setLightMatrices()
   {
     glBindBuffer(GL_UNIFORM_BUFFER, matrices_uniform_buffer_);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, (long)lightspace_matrices_.size() * sizeof(glm::mat4x4), lightspace_matrices_.data());
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, (long)lightspace_matrices_.size() * (long)sizeof(glm::mat4x4), lightspace_matrices_.data());
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
   }
 

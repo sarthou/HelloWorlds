@@ -44,7 +44,7 @@ namespace hws {
     std::string pkg_name = uri.substr(prefix.size(), first_slash - prefix.size());
     std::string relative_path = uri.substr(first_slash);
 
-    if(package_map_.count(pkg_name) != 0)
+    if(package_map_.contains(pkg_name))
       return package_map_[pkg_name] + relative_path;
 
     std::string searched_path = findPackageRoot(pkg_name);

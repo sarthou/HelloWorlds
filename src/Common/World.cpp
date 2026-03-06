@@ -361,7 +361,7 @@ namespace hws {
                                      const std::array<float, 3>& color,
                                      float intensity)
   {
-    AmbientLight::GeographicCoords coords;
+    AmbientLight::GeographicCoords_t coords;
     coords.latitude = lat_long_alt[0];
     coords.longitude = lat_long_alt[1];
     coords.altitude = lat_long_alt[2];

@@ -25,8 +25,8 @@ namespace hws {
 
   ModelManager& ModelManager::get()
   {
-    static ModelManager instance;
-    return instance;
+    static ModelManager instance_;
+    return instance_;
   }
 
   size_t ModelManager::load(const std::filesystem::path& path)

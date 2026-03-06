@@ -46,7 +46,7 @@ namespace hws {
     std::function<void(Key_e, bool)> key_callback_;
 
   private:
-    static size_t nb_active_windows_;
+    static size_t nb_active_windows;
   };
 } // namespace hws
 

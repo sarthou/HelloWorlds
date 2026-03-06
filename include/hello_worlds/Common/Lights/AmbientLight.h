@@ -11,7 +11,7 @@ namespace hws {
   class AmbientLight
   {
   public:
-    struct GeographicCoords
+    struct GeographicCoords_t
     {
       double latitude;
       double longitude;
@@ -24,7 +24,7 @@ namespace hws {
                  float intensity = 1.0f);
 
     // Constructor 2: Geographic Based
-    AmbientLight(const GeographicCoords& coords,
+    AmbientLight(const GeographicCoords_t& coords,
                  const glm::vec3& color = glm::vec3(1.0f),
                  float intensity = 1.0f);
 
@@ -39,7 +39,7 @@ namespace hws {
       updateVisuals();
     }
     void setIntensity(float intensity) { intensity_ = intensity; }
-    void setCoords(const GeographicCoords& coords) { geo_coords_ = coords; }
+    void setCoords(const GeographicCoords_t& coords) { geo_coords_ = coords; }
 
     // Getters for Shaders
     glm::vec4 getDirection() const { return glm::vec4(direction_, 1.0); }
@@ -58,7 +58,7 @@ namespace hws {
     glm::vec3 current_color_;
     float intensity_;
 
-    GeographicCoords geo_coords_{0, 0, 0};
+    GeographicCoords_t geo_coords_{0, 0, 0};
 
     float ambient_factor_ = 0.2f;
     float diffuse_factor_ = 0.8f;
