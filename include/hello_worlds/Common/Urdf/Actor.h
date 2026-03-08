@@ -17,6 +17,14 @@ namespace hws {
     size_t body_id;
   };
 
+  enum class ActorMode_e
+  {
+    static_mode,    // Kinematic + Teleporting movement
+    simulated_mode, // Dynamic + Gravity
+    kinematic_mode, // Kinematic + Interpolated movement
+    ghost_mode      // Kinematic + No Collision (Triggers/Preview items)
+  };
+
   class Actor
   {
     friend class Joint;
@@ -32,16 +40,7 @@ namespace hws {
                        const std::array<double, 4>& orientation) = 0;
     virtual void remove() = 0;
 
-    /**
-     * @param enabled Determines whether the actor should be influenced by the world (ie: move when it collides with other actors) or not.
-     *                Set it as Kinematic (avoid teleportation).
-     */
-    virtual void setPhysicsEnabled(bool enabled) = 0;
-
-    /**
-     * @param enabled Determines whether the actor should influence the world (ie: can collide with other actors) or not.
-     */
-    virtual void setSimulationEnabled(bool enabled) = 0;
+    virtual void setMode(ActorMode_e mode) = 0;
 
     /**
      * @param mass_kg Mass in kg(s), must be non-zero.

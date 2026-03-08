@@ -32,8 +32,7 @@ namespace hws::physx {
                const std::array<double, 4>& orientation) override = 0;
     void remove() override = 0;
 
-    void setPhysicsEnabled(bool enabled) override = 0;
-    void setSimulationEnabled(bool enabled) override = 0;
+    void setMode(hws::ActorMode_e mode) override = 0;
 
     void setMass(float mass_kg) override = 0;
     void setStaticFriction(float coefficient) override;

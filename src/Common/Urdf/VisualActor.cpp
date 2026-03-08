@@ -22,16 +22,10 @@ namespace hws {
     orientation_ = orientation;
   }
 
-  void VisualActor::setPhysicsEnabled(bool enabled)
+  void VisualActor::setMode(ActorMode_e mode)
   {
-    (void)enabled;
-    assert(false && "[VisualActor] Physics cannot be enabled on visual actor.");
-  }
-
-  void VisualActor::setSimulationEnabled(bool enabled)
-  {
-    (void)enabled;
-    assert(false && "[VisualActor] Simulation cannot be enabled on visual actor.");
+    (void)mode;
+    assert(false && "[VisualActor] Physics cannot be changed.");
   }
 
   void VisualActor::setMass(float mass_kg)

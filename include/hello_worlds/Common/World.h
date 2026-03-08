@@ -15,6 +15,7 @@
 #include "hello_worlds/Common/Lights/AmbientLight.h"
 #include "hello_worlds/Common/Lights/PointLights.h"
 #include "hello_worlds/Common/Shapes/Shape.h"
+#include "hello_worlds/Common/Urdf/Actor.h"
 #include "hello_worlds/Common/Urdf/UrdfLoader.h"
 #include "hello_worlds/Common/WorldTypes.h"
 
@@ -105,8 +106,7 @@ namespace hws {
     void setDynamicFriction(int body_id, int link_index, double friction);
     void setRestitution(int body_id, int link_index, double restitution);
 
-    void setSimulation(int body_id, bool activate);
-    void setPhysics(int body_id, bool activate);
+    void setActorMode(int body_id, ActorMode_e mode);
 
     const std::unordered_map<std::size_t, Actor*>& getActors() const { return actors_; }
 

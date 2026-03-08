@@ -60,16 +60,10 @@ namespace hws::physx {
     ctx_.physx_mutex_.unlock();
   }
 
-  void StaticActor::setPhysicsEnabled(bool enabled)
+  void StaticActor::setMode(hws::ActorMode_e mode)
   {
-    (void)enabled;
-    assert(false && "Static actors cannot have physics.");
-  }
-
-  void StaticActor::setSimulationEnabled(bool enabled)
-  {
-    (void)enabled;
-    assert(false && "Static actors cannot have physics.");
+    (void)mode;
+    assert(false && "Static actors cannot be changed of mode.");
   }
 
   void StaticActor::remove()

@@ -21,8 +21,7 @@ namespace hws {
 
     void remove() override {}
 
-    void setPhysicsEnabled(bool enabled) override;
-    void setSimulationEnabled(bool enabled) override;
+    void setMode(ActorMode_e mode) override;
     void setMass(float mass_kg) override;
     void setStaticFriction(float coefficient) override;
     void setDynamicFriction(float coefficient) override;

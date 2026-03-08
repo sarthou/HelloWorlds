@@ -8,6 +8,7 @@
 #include <foundation/PxVec3.h>
 #include <glm/detail/type_quat.hpp>
 #include <glm/ext/vector_float3.hpp>
+#include <iostream>
 #include <string>
 #include <thread>
 #include <vector>

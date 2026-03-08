@@ -59,26 +59,54 @@ namespace hws::physx {
 
     setPositionAndOrientation(position, orientation);
 
-    setPhysicsEnabled(true);
+    setMode(hws::ActorMode_e::kinematic_mode);
   }
 
-  void DynamicActor::setPhysicsEnabled(bool enabled)
+  void DynamicActor::setMode(hws::ActorMode_e mode)
   {
-    ctx_.physx_mutex_.lock();
-    px_actor_->setRigidBodyFlag(::physx::PxRigidBodyFlag::eKINEMATIC, enabled);
-    if(enabled)
-      px_actor_->setActorFlag(::physx::PxActorFlag::eDISABLE_GRAVITY, enabled);
-    is_kinematic_ = enabled;
-    if(is_kinematic_ == false)
+    std::lock_guard<std::mutex> lock(ctx_.physx_mutex_);
+
+    px_actor_->setLinearVelocity(::physx::PxVec3(0, 0, 0));
+    px_actor_->setAngularVelocity(::physx::PxVec3(0, 0, 0));
+    px_actor_->clearForce();
+    px_actor_->clearTorque();
+
+    px_actor_->setActorFlag(::physx::PxActorFlag::eDISABLE_SIMULATION, false);
+
+    switch(mode)
+    {
+    case hws::ActorMode_e::static_mode:
+      px_actor_->setRigidBodyFlag(::physx::PxRigidBodyFlag::eKINEMATIC, true);
+      px_actor_->setActorFlag(::physx::PxActorFlag::eDISABLE_GRAVITY, true);
+      px_actor_->putToSleep(); // Static shouldn't waste CPU cycles
+      is_kinematic_ = true;
       was_kinematic_ = false;
-    ctx_.physx_mutex_.unlock();
-  }
+      break;
 
-  void DynamicActor::setSimulationEnabled(bool enabled)
-  {
-    ctx_.physx_mutex_.lock();
-    px_actor_->setActorFlag(::physx::PxActorFlag::eDISABLE_GRAVITY, !enabled);
-    ctx_.physx_mutex_.unlock();
+    case hws::ActorMode_e::simulated_mode:
+      px_actor_->setRigidBodyFlag(::physx::PxRigidBodyFlag::eKINEMATIC, false);
+      px_actor_->setActorFlag(::physx::PxActorFlag::eDISABLE_GRAVITY, false);
+      px_actor_->wakeUp(); // Ensure it starts falling/reacting immediately
+      is_kinematic_ = false;
+      was_kinematic_ = false;
+      break;
+
+    case hws::ActorMode_e::kinematic_mode:
+      px_actor_->setRigidBodyFlag(::physx::PxRigidBodyFlag::eKINEMATIC, true);
+      px_actor_->setActorFlag(::physx::PxActorFlag::eDISABLE_GRAVITY, true);
+      px_actor_->wakeUp(); // Kinematics need to be "awake" to move
+      is_kinematic_ = true;
+      was_kinematic_ = true;
+      break;
+
+    case hws::ActorMode_e::ghost_mode:
+      px_actor_->setRigidBodyFlag(::physx::PxRigidBodyFlag::eKINEMATIC, true);
+      px_actor_->setActorFlag(::physx::PxActorFlag::eDISABLE_GRAVITY, true);
+      px_actor_->setActorFlag(::physx::PxActorFlag::eDISABLE_SIMULATION, true);
+      is_kinematic_ = true;
+      was_kinematic_ = false;
+      break;
+    }
   }
 
   void DynamicActor::remove()

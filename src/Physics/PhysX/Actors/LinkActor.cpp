@@ -56,16 +56,10 @@ namespace hws::physx {
     ctx_.physx_mutex_.unlock();
   }
 
-  void LinkActor::setPhysicsEnabled(bool enabled)
+  void LinkActor::setMode(hws::ActorMode_e mode)
   {
-    (void)enabled;
-    assert(false && "LinkActor cannot enabled the physics.");
-  }
-
-  void LinkActor::setSimulationEnabled(bool enabled)
-  {
-    (void)enabled;
-    assert(false && "LinkActor cannot enabled simulation.");
+    (void)mode;
+    assert(false && "LinkActor cannot be changed of mode.");
   }
 
   void LinkActor::remove()

@@ -276,7 +276,7 @@ namespace hws {
     }
   }
 
-  void World::setSimulation(int body_id, bool activate)
+  void World::setActorMode(int body_id, ActorMode_e mode)
   {
     auto urdf_it = urdfs_.find(body_id);
     if(urdf_it != urdfs_.end())
@@ -285,20 +285,7 @@ namespace hws {
     {
       auto actor_it = actors_.find(body_id);
       if(actor_it != actors_.end())
-        actor_it->second->setSimulationEnabled(activate);
-    }
-  }
-
-  void World::setPhysics(int body_id, bool activate)
-  {
-    auto urdf_it = urdfs_.find(body_id);
-    if(urdf_it != urdfs_.end())
-      return;
-    else
-    {
-      auto actor_it = actors_.find(body_id);
-      if(actor_it != actors_.end())
-        actor_it->second->setPhysicsEnabled(activate);
+        actor_it->second->setMode(mode);
     }
   }
 

@@ -32,8 +32,7 @@ namespace hws::physx {
 
     void setMass(float mass_kg) override;
 
-    void setPhysicsEnabled(bool enabled) override;
-    void setSimulationEnabled(bool enabled) override;
+    void setMode(hws::ActorMode_e mode) override;
 
     void setPositionAndOrientation() override;
     void setPositionAndOrientation(const std::array<double, 3>& position, const std::array<double, 4>& orientation) override;
