@@ -12,10 +12,23 @@
 
 namespace hws::physx {
 
+  // Helper for Linear Interpolation of PxTransform
+  ::physx::PxTransform interpolateTransform(const ::physx::PxTransform& start, const ::physx::PxTransform& end, float t)
+  {
+    t = std::clamp(t, 0.0f, 1.0f);
+    return ::physx::PxTransform(
+      start.p * (1.0f - t) + end.p * t,
+      ::physx::PxSlerp(t, start.q, end.q));
+  }
+
   DynamicActor::DynamicActor(hws::physx::Context& ctx,
                              const hws::Shape& collision_shape,
                              const std::vector<hws::Shape>& visual_shapes) : hws::physx::Actor(ctx, collision_shape, visual_shapes),
-                                                                             is_kinematic_(false)
+                                                                             catchup_remaining_steps_(0),
+                                                                             is_kinematic_(false),
+                                                                             was_kinematic_(false),
+                                                                             has_first_pose_(false),
+                                                                             pending_data_gap_(false)
   {}
 
   DynamicActor::~DynamicActor() noexcept = default;
@@ -68,8 +81,11 @@ namespace hws::physx {
 
     px_actor_->setLinearVelocity(::physx::PxVec3(0, 0, 0));
     px_actor_->setAngularVelocity(::physx::PxVec3(0, 0, 0));
-    px_actor_->clearForce();
-    px_actor_->clearTorque();
+    if(is_kinematic_ == false)
+    {
+      px_actor_->clearForce();
+      px_actor_->clearTorque();
+    }
 
     px_actor_->setActorFlag(::physx::PxActorFlag::eDISABLE_SIMULATION, false);
 
@@ -78,15 +94,15 @@ namespace hws::physx {
     case hws::ActorMode_e::static_mode:
       px_actor_->setRigidBodyFlag(::physx::PxRigidBodyFlag::eKINEMATIC, true);
       px_actor_->setActorFlag(::physx::PxActorFlag::eDISABLE_GRAVITY, true);
-      px_actor_->putToSleep(); // Static shouldn't waste CPU cycles
+      px_actor_->putToSleep();
       is_kinematic_ = true;
-      was_kinematic_ = false;
+      was_kinematic_ = false; // Forces next move to be a Teleport
       break;
 
     case hws::ActorMode_e::simulated_mode:
       px_actor_->setRigidBodyFlag(::physx::PxRigidBodyFlag::eKINEMATIC, false);
       px_actor_->setActorFlag(::physx::PxActorFlag::eDISABLE_GRAVITY, false);
-      px_actor_->wakeUp(); // Ensure it starts falling/reacting immediately
+      px_actor_->wakeUp();
       is_kinematic_ = false;
       was_kinematic_ = false;
       break;
@@ -94,9 +110,9 @@ namespace hws::physx {
     case hws::ActorMode_e::kinematic_mode:
       px_actor_->setRigidBodyFlag(::physx::PxRigidBodyFlag::eKINEMATIC, true);
       px_actor_->setActorFlag(::physx::PxActorFlag::eDISABLE_GRAVITY, true);
-      px_actor_->wakeUp(); // Kinematics need to be "awake" to move
+      px_actor_->wakeUp();
       is_kinematic_ = true;
-      was_kinematic_ = true;
+      was_kinematic_ = true; // Enables interpolation
       break;
 
     case hws::ActorMode_e::ghost_mode:
@@ -107,34 +123,27 @@ namespace hws::physx {
       was_kinematic_ = false;
       break;
     }
+
+    // Ensure the next position update re-anchors the interpolation
+    has_first_pose_ = false;
+    catchup_remaining_steps_ = 0;
   }
 
   void DynamicActor::remove()
   {
-    ctx_.physx_mutex_.lock();
+    std::lock_guard<std::mutex> lock(ctx_.physx_mutex_);
     ctx_.px_scene_->removeActor(*px_actor_);
-    ctx_.physx_mutex_.unlock();
   }
 
   void DynamicActor::setMass(const float mass_kg)
   {
-    ctx_.physx_mutex_.lock();
+    std::lock_guard<std::mutex> lock(ctx_.physx_mutex_);
     px_actor_->setMass(static_cast<::physx::PxReal>(mass_kg));
-    ctx_.physx_mutex_.unlock();
-  }
-
-  // Interpolation function for PxTransform
-  ::physx::PxTransform interpolateTransform(const ::physx::PxTransform& start, const ::physx::PxTransform& end, float t)
-  {
-    return ::physx::PxTransform(
-      start.p * (1.0f - t) + end.p * t,   // Interpolate position
-      ::physx::PxSlerp(t, start.q, end.q) // Interpolate rotation
-    );
   }
 
   void DynamicActor::setPositionAndOrientation()
   {
-    pending_steps_ += ctx_.sub_step_;
+    pending_data_gap_ = true;
   }
 
   void DynamicActor::setPositionAndOrientation(const std::array<double, 3>& position, const std::array<double, 4>& orientation)
@@ -151,49 +160,63 @@ namespace hws::physx {
           static_cast<::physx::PxReal>(orientation[2]),
           static_cast<::physx::PxReal>(orientation[3])));
 
+    std::lock_guard<std::mutex> lock(ctx_.physx_mutex_);
     goal_pose_ = px_transform;
 
-    ctx_.physx_mutex_.lock();
     if(is_kinematic_ && was_kinematic_)
     {
-      pending_steps_ += ctx_.sub_step_;
-      if((pending_steps_ == 1) || (has_first_pose_ == false))
+      if(!has_first_pose_ || pending_data_gap_)
       {
-        pending_steps_ = 0;
-        px_actor_->setKinematicTarget(px_transform);
+        interpolation_start_ = px_actor_->getGlobalPose();
+
+        catchup_remaining_steps_ = (RECOVERY_STEPS * ctx_.sub_step_);
+
+        pending_data_gap_ = false;
         has_first_pose_ = true;
       }
-      else if(pending_steps_ != 0)
+
+      // IMPORTANT: We must set the target for Sub-step 0 immediately.
+      // If we are in catch-up mode, we calculate the first t.
+      // If not, we just set the goal_pose_.
+      if(catchup_remaining_steps_ > 0)
       {
-        ::physx::PxTransform smoothed_pose = interpolateTransform(px_base_->getGlobalPose(), goal_pose_, 1.f / (float)pending_steps_);
-        px_actor_->setKinematicTarget(smoothed_pose);
-        pending_steps_--;
+        float t = 1.0f - (static_cast<float>(catchup_remaining_steps_) / (RECOVERY_STEPS * ctx_.sub_step_));
+        px_actor_->setKinematicTarget(interpolateTransform(interpolation_start_, goal_pose_, t));
+        catchup_remaining_steps_--;
+      }
+      else
+      {
+        px_actor_->setKinematicTarget(goal_pose_);
       }
     }
-    else
+    else // Teleport (Static/Ghost/Snap)
     {
-      pending_steps_ = 0;
       px_actor_->setGlobalPose(px_transform);
       was_kinematic_ = is_kinematic_;
+      has_first_pose_ = true;
+      pending_data_gap_ = false;
+      catchup_remaining_steps_ = 0;
     }
-    ctx_.physx_mutex_.unlock();
   }
 
   void DynamicActor::stepPose()
   {
-    if(is_kinematic_ && was_kinematic_)
+    if(!is_kinematic_ || !was_kinematic_ || !has_first_pose_)
+      return;
+
+    if(catchup_remaining_steps_ > 0) // Handle Interpolation
     {
-      if(pending_steps_ == 1)
-      {
-        pending_steps_ = 0;
-        px_actor_->setKinematicTarget(goal_pose_);
-      }
-      else if(pending_steps_ != 0)
-      {
-        ::physx::PxTransform smoothed_pose = interpolateTransform(px_base_->getGlobalPose(), goal_pose_, 1.f / (float)pending_steps_);
-        px_actor_->setKinematicTarget(smoothed_pose);
-        pending_steps_--;
-      }
+      // Linear progression from 0.0 to 1.0
+      float t = 1.0f - (static_cast<float>(catchup_remaining_steps_) / (RECOVERY_STEPS * ctx_.sub_step_));
+
+      ::physx::PxTransform next_step = interpolateTransform(interpolation_start_, goal_pose_, t);
+      px_actor_->setKinematicTarget(next_step);
+
+      catchup_remaining_steps_--;
+    }
+    else // We have reached the goal, just maintain it
+    {
+      px_actor_->setKinematicTarget(goal_pose_);
     }
   }
 
@@ -207,7 +230,8 @@ namespace hws::physx {
     if(is_kinematic_)
       return;
 
-    ctx_.physx_mutex_.lock();
+    std::lock_guard<std::mutex> lock(ctx_.physx_mutex_);
+
     px_actor_->setLinearVelocity(::physx::PxVec3(
       static_cast<::physx::PxReal>(linear_velocity[0]),
       static_cast<::physx::PxReal>(linear_velocity[1]),
@@ -217,7 +241,6 @@ namespace hws::physx {
       static_cast<::physx::PxReal>(angular_velocity[0]),
       static_cast<::physx::PxReal>(angular_velocity[1]),
       static_cast<::physx::PxReal>(angular_velocity[2])));
-    ctx_.physx_mutex_.unlock();
   }
 
 } // namespace hws::physx

@@ -43,11 +43,16 @@ namespace hws::physx {
   private:
     PxPtr<::physx::PxRigidDynamic> px_actor_;
 
-    bool is_kinematic_ = false;
-    bool was_kinematic_ = false;
-    size_t pending_steps_ = 0;
-    bool has_first_pose_ = false;
+    static constexpr int RECOVERY_STEPS = 10; // Number of sub-steps to finish a transition
+
     ::physx::PxTransform goal_pose_;
+    ::physx::PxTransform interpolation_start_;
+
+    int catchup_remaining_steps_;
+    bool is_kinematic_;
+    bool was_kinematic_;
+    bool has_first_pose_;
+    bool pending_data_gap_;
   };
 
 } // namespace hws::physx
