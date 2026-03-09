@@ -276,6 +276,10 @@ add_executable(demo_light examples/light_demo.cpp)
 target_link_libraries(demo_light PRIVATE hello_worlds)
 target_include_directories(demo_light PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
 
+add_executable(demo_physics examples/physics_demo.cpp)
+target_link_libraries(demo_physics PRIVATE hello_worlds)
+target_include_directories(demo_physics PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
+
 # --- Testing ---
 option(BUILD_TESTING "Build tests" ON)
 
