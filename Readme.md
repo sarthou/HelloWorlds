@@ -106,7 +106,7 @@ To build and install the library without ROS, use standard CMake commands:
 ``` bash
 mkdir build && cd build
 cmake ..
-make
+make -j
 sudo make install # Installs to system directories (e.g., /usr/local/lib, /usr/local/include)
                   # -DCMAKE_INSTALL_PREFIX can also be used
 ```
@@ -129,4 +129,42 @@ Use an ament workspace:
 cd ~/ros2_ws/
 source /opt/ros/humble/setup.bash # Example for Humble
 colcon build --packages-select hello_worlds
+```
+
+## Test HelloWorlds
+
+### 1. Standalone Test (No ROS)
+
+In standalone mode, we use ctest to manage and run the GoogleTest suite.
+
+``` bash
+# Run all tests
+ctest --output-on-failure
+
+# Run a specific test (e.g., ModelManager)
+./tests/ModelManagerTests
+```
+
+### 2. ROS 1 Test
+
+In a ROS 1 workspace, tests are handled via the run_tests target provided by Catkin.
+
+``` bash
+# Run the tests for this specific package
+catkin_make run_tests_hello_worlds
+
+# Alternatively, using catkin_tools:
+catkin run_tests hello_worlds --no-deps
+```
+
+### 3. ROS 2 Test
+
+For ROS 2, we use colcon to build the package and colcon test to execute the integrated ament tests..
+
+``` bash
+# Run the tests
+colcon test --packages-select hello_worlds --event-handlers console_direct+
+
+# View detailed results
+colcon test-result --all --verbose
 ```
