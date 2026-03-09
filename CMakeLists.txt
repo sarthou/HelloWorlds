@@ -317,16 +317,22 @@ if(BUILD_TESTING)
   function(hws_add_test TEST_NAME SOURCES)
     if(ROS_BUILD_TYPE STREQUAL "ROS1")
       catkin_add_gtest(${TEST_NAME} ${SOURCES})
+      target_link_libraries(${TEST_NAME} hello_worlds)
     elseif(ROS_BUILD_TYPE STREQUAL "ROS2")
       ament_add_gtest(${TEST_NAME} ${SOURCES})
+      target_link_libraries(${TEST_NAME} hello_worlds)
     else()
       add_executable(${TEST_NAME} ${SOURCES})
+
+      if(TARGET GTest::gtest_main)
+        target_link_libraries(${TEST_NAME} PRIVATE GTest::gtest_main hello_worlds)
+      else()
+        target_link_libraries(${TEST_NAME} PRIVATE gtest_main hello_worlds)
+      endif()
+
+      gtest_discover_tests(${TEST_NAME})
     endif()
 
-    target_link_libraries(${TEST_NAME}
-      GTest::gtest_main
-      hello_worlds
-    )
     target_include_directories(${TEST_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
 
     if(ROS_BUILD_TYPE STREQUAL "STANDALONE")
