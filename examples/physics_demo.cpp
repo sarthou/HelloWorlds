@@ -52,7 +52,7 @@ void worldThread(hws::Window* window)
         double pz = 4.0 + z * 0.6;
 
         // auto c = engine.world.createActor(cube_geo, {cube_geo}, {px, py, pz}, {rot_dist(generator), rot_dist(generator), rot_dist(generator)});
-        auto c = engine.world.createActor(cube_geo, {cube_geo}, {px, py, pz}, {0., 0., 0., 1.});
+        int c = (int)engine.world.createActor(cube_geo, {cube_geo}, {px, py, pz}, {0., 0., 0., 1.});
 
         engine.world.setMass(c, -1, 0.5);
         engine.world.setStaticFriction(c, -1, 0.6);   // Harder to start sliding
@@ -69,7 +69,7 @@ void worldThread(hws::Window* window)
   sweeper_geo.type = hws::urdf::GeometryType_e::geometry_box;
   sweeper_geo.scale = {1.0, 1.0, 1.0};
   sweeper_geo.material.diffuse_color_ = {0.2, 0.8, 0.2}; // Green sweeper
-  auto sweeper = engine.world.createActor(sweeper_geo, {sweeper_geo}, {-5.0, 0.0, 0.5});
+  int sweeper = (int)engine.world.createActor(sweeper_geo, {sweeper_geo}, {-5.0, 0.0, 0.5});
   engine.world.setActorMode(sweeper, hws::ActorMode_e::kinematic_mode);
 
   // Lighting
@@ -82,7 +82,7 @@ void worldThread(hws::Window* window)
   time_t current_time = 1000000;
   engine.world.setAmbientLightTime(current_time);
 
-  int direction = 1.;
+  float direction = 1.;
   double x_pos = -5.0;
   double y_pos = -1.;
 

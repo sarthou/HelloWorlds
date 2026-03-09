@@ -1,5 +1,6 @@
 #include "hello_worlds/Physics/PhysX/Actors/DynamicActor.h"
 
+#include <algorithm>
 #include <array>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/euler_angles.hpp>
@@ -169,7 +170,7 @@ namespace hws::physx {
       {
         interpolation_start_ = px_actor_->getGlobalPose();
 
-        catchup_remaining_steps_ = (RECOVERY_STEPS * ctx_.sub_step_);
+        catchup_remaining_steps_ = (RECOVERY_STEPS * (int)ctx_.sub_step_);
 
         pending_data_gap_ = false;
         has_first_pose_ = true;
@@ -180,7 +181,7 @@ namespace hws::physx {
       // If not, we just set the goal_pose_.
       if(catchup_remaining_steps_ > 0)
       {
-        float t = 1.0f - (static_cast<float>(catchup_remaining_steps_) / (RECOVERY_STEPS * ctx_.sub_step_));
+        float t = 1.0f - (static_cast<float>(catchup_remaining_steps_) / (float)(RECOVERY_STEPS * (int)ctx_.sub_step_));
         px_actor_->setKinematicTarget(interpolateTransform(interpolation_start_, goal_pose_, t));
         catchup_remaining_steps_--;
       }
@@ -207,7 +208,7 @@ namespace hws::physx {
     if(catchup_remaining_steps_ > 0) // Handle Interpolation
     {
       // Linear progression from 0.0 to 1.0
-      float t = 1.0f - (static_cast<float>(catchup_remaining_steps_) / (RECOVERY_STEPS * ctx_.sub_step_));
+      float t = 1.0f - (static_cast<float>(catchup_remaining_steps_) / (float)(RECOVERY_STEPS * (int)ctx_.sub_step_));
 
       ::physx::PxTransform next_step = interpolateTransform(interpolation_start_, goal_pose_, t);
       px_actor_->setKinematicTarget(next_step);
