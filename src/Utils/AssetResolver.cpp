@@ -2,6 +2,8 @@
 
 #include <cstdlib>
 #include <filesystem>
+#include <fstream>
+#include <iostream>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -10,6 +12,26 @@
 namespace fs = std::filesystem;
 
 namespace hws {
+
+  std::string getPackageNameFromManifest(const fs::path& manifest_path)
+  {
+    std::ifstream file(manifest_path);
+    if(!file.is_open())
+      return "";
+
+    std::string line;
+    while(std::getline(file, line))
+    {
+      size_t start = line.find("<name>");
+      size_t end = line.find("</name>");
+      if(start != std::string::npos && end != std::string::npos)
+      {
+        start += 6; // Length of <name>
+        return line.substr(start, end - start);
+      }
+    }
+    return "";
+  }
 
   void AssetResolver::registerPackage(const std::string& name, const std::string& path)
   {
@@ -125,6 +147,8 @@ namespace hws {
         return path;
     }
 
+    std::cout << "fail to find " << pkg_name << std::endl;
+
     return "";
   }
 
@@ -132,11 +156,40 @@ namespace hws {
   {
     std::stringstream ss(list);
     std::string item;
+
     while(std::getline(ss, item, ':'))
     {
-      fs::path potential = fs::path(item).string() + suffix + pkg;
-      if(fs::exists(potential))
-        return potential.string();
+      fs::path search_root = fs::path(item).string() + suffix;
+
+      if(!fs::exists(search_root))
+        continue;
+
+      // --- Optimization: Check the "Expected" folder first ---
+      fs::path expected_path = search_root / pkg;
+      if(fs::exists(expected_path / "package.xml"))
+      {
+        if(getPackageNameFromManifest(expected_path / "package.xml") == pkg)
+        {
+          return expected_path.string();
+        }
+      }
+
+      // --- Fallback: Exhaustive scan of siblings ---
+      // This handles cases where folder_name != pkg_name
+      for(const auto& entry : fs::directory_iterator(search_root))
+      {
+        if(!entry.is_directory())
+          continue;
+
+        fs::path manifest = entry.path() / "package.xml";
+        if(fs::exists(manifest))
+        {
+          if(getPackageNameFromManifest(manifest) == pkg)
+          {
+            return entry.path().string();
+          }
+        }
+      }
     }
     return "";
   }
