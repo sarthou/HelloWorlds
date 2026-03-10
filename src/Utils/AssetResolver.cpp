@@ -120,7 +120,7 @@ namespace hws {
     // Try ROS 1 Package Paths (looks directly in <path>/<pkg_name>)
     if(const char* ros_ptr = std::getenv("ROS_PACKAGE_PATH"))
     {
-      std::string path = searchInPathList(ros_ptr, pkg_name, "");
+      std::string path = searchInPathList(ros_ptr, pkg_name, "/");
       if(!path.empty())
         return path;
     }
