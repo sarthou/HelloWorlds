@@ -32,6 +32,7 @@ find_package(glm CONFIG REQUIRED)
 find_package(Freetype REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(assimp REQUIRED)
+find_package(Threads REQUIRED)
 
 pkg_check_modules(TINYXML2 REQUIRED tinyxml2)
 
@@ -249,7 +250,7 @@ target_include_directories(hello_worlds_physics PUBLIC
   $<BUILD_INTERFACE:${PHYSX_INCLUDE_DIR}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/PhysXExternal>
 )
-target_link_libraries(hello_worlds_physics PUBLIC hello_worlds_engine_common)
+target_link_libraries(hello_worlds_physics PUBLIC hello_worlds_engine_common Threads::Threads)
 
 foreach(LIB_NAME ${PHYSX_COMPONENTS})
   set(LIB_FILE "lib${LIB_NAME}_static_64.a")

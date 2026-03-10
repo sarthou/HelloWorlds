@@ -112,8 +112,12 @@ namespace hws::physx {
     ctx_.physx_mutex_.unlock();
     const auto translation_mat = glm::translate(glm::mat4(1), glm::vec3(px_pose.p.x, px_pose.p.y, px_pose.p.z));
     const auto rotation_mat = glm::mat4_cast(glm::quat(px_pose.q.w, px_pose.q.x, px_pose.q.y, px_pose.q.z));
+    const glm::mat4 model_mat = translation_mat * rotation_mat;
 
-    return std::bit_cast<std::array<float, 16>>(translation_mat * rotation_mat);
+    std::array<float, 16> result;
+    // Copy the 16 floats from GLM's internal storage to the array
+    std::copy(glm::value_ptr(model_mat), glm::value_ptr(model_mat) + 16, result.begin());
+    return result;
   }
 
   std::pair<std::array<double, 3>, std::array<double, 4>> Actor::getPositionAndOrientation() const

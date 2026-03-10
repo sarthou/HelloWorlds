@@ -1,9 +1,9 @@
 #include "hello_worlds/Graphics/OpenGL/TextRenderer.h"
 
-#include <freetype/freetype.h>
 #include <ft2build.h>
-#include FT_GLYPH_H
 // Before Freetype
+#include <freetype/freetype.h>
+#include FT_GLYPH_H
 
 #include <glm/ext/matrix_float4x4.hpp>
 #include <glm/ext/vector_float3.hpp>
