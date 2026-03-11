@@ -19,8 +19,15 @@ namespace hws {
 
   size_t Window::nb_active_windows = 0;
 
+  void glfw_error_callback(int error, const char* description)
+  {
+    std::cerr << "GLFW Error (" << error << "): " << description << std::endl;
+  }
+
   void Window::init()
   {
+    glfwSetErrorCallback(glfw_error_callback);
+
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
@@ -52,6 +59,13 @@ namespace hws {
                  float screen_height,
                  const std::string& icon_path) : glfw_window_(glfwCreateWindow((int)screen_width, (int)screen_height, name.c_str(), nullptr, nullptr))
   {
+    /*const char** err;
+    if(glfwGetError(err) != GLFW_NO_ERROR)
+    {
+      std::cout << "error" << std::endl;
+      std::cout << *err << std::endl;
+    }*/
+
     camera_.setFieldOfView(60.f);
     camera_.setOutputAA(hws::ViewAntiAliasing_e::msaa_x4);
     camera_.setOutputResolution({screen_width, screen_height});
