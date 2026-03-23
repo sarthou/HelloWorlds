@@ -560,7 +560,7 @@ namespace hws {
     geometry_shader_->setProjection(render_camera_.getProjectionMatrix());
 
     // We use renderTexturedModels here so the geometry shader can access Normal Maps
-    renderTexturedModels(geometry_shader_, 0, camera_cull); // TODO verify if we do not set too many data
+    renderTexturedModels(geometry_shader_, 0, camera_cull, true); // set to normal_only
     geometry_buffer_.unbind();
 
     // --- STEP 2: SSAO GENERATION ---
@@ -907,7 +907,8 @@ namespace hws {
 
   void Renderer::renderTexturedModels(DefaultShader* shader,
                                       unsigned int texture_offset,
-                                      const std::function<bool(const glm::vec3&, float)>& visibility_test)
+                                      const std::function<bool(const glm::vec3&, float)>& visibility_test,
+                                      bool normal_only)
   {
     for(auto& [mesh_id, transforms] : current_mesh_batches_)
     {
@@ -919,7 +920,7 @@ namespace hws {
           continue;
 
         shader->setModel(transform.mvp_);
-        mesh.drawWithMaterial(*shader, transform.object_id_, texture_offset);
+        mesh.drawWithMaterial(*shader, transform.object_id_, texture_offset, normal_only);
       }
     }
   }

@@ -45,7 +45,7 @@ namespace hws {
     glBindVertexArray(0);
   }
 
-  void MeshHandle::drawWithMaterial(const DefaultShader& shader, uint32_t model_id, unsigned int texture_pose_offset) const
+  void MeshHandle::drawWithMaterial(const DefaultShader& shader, uint32_t model_id, unsigned int texture_pose_offset, bool normal_only) const
   {
     auto material_it = materials.find(model_id);
     if(material_it == materials.end())
@@ -57,20 +57,27 @@ namespace hws {
 
     for(unsigned int i = 0; i < material_it->second.textures.size(); i++)
     {
-      glActiveTexture(GL_TEXTURE0 + texture_pose_offset + i);            // active proper texture unit before binding
-      glBindTexture(GL_TEXTURE_2D, material_it->second.textures[i].id_); // now bind the texture
-
       switch(material_it->second.textures[i].type_)
       {
       case texture_diffuse:
+        if(normal_only)
+          break;
+        glActiveTexture(GL_TEXTURE0 + texture_pose_offset + i);            // active proper texture unit before binding
+        glBindTexture(GL_TEXTURE_2D, material_it->second.textures[i].id_); // now bind the texture
         shader.setInt("texture_diffuse", (int)(texture_pose_offset + i));
         use_diffuse_texture = true;
         break;
       case texture_specular:
+        if(normal_only)
+          break;
+        glActiveTexture(GL_TEXTURE0 + texture_pose_offset + i);            // active proper texture unit before binding
+        glBindTexture(GL_TEXTURE_2D, material_it->second.textures[i].id_); // now bind the texture
         shader.setInt("texture_specular", (int)(texture_pose_offset + i));
         use_specular_texture = true;
         break;
       case texture_normal:
+        glActiveTexture(GL_TEXTURE0 + texture_pose_offset + i);            // active proper texture unit before binding
+        glBindTexture(GL_TEXTURE_2D, material_it->second.textures[i].id_); // now bind the texture
         shader.setInt("texture_normal", (int)(texture_pose_offset + i));
         use_normal_texture = true;
         break;
@@ -79,50 +86,26 @@ namespace hws {
       }
     }
 
-    /*unsigned int nb_used = material_it->second.textures.size();
-
-    if(use_diffuse_texture == false)
-    {
-      glActiveTexture(GL_TEXTURE0 + texture_pose_offset + nb_used);
-      glBindTexture(GL_TEXTURE_2D, 0);
-      shader.setInt("texture_diffuse", (int)(texture_pose_offset + nb_used));
-      nb_used++;
-    }
-
-    if(use_specular_texture == false)
-    {
-      glActiveTexture(GL_TEXTURE0 + texture_pose_offset + nb_used);
-      glBindTexture(GL_TEXTURE_2D, 0);
-      shader.setInt("texture_specular", (int)(texture_pose_offset + nb_used));
-      nb_used++;
-    }
-
-    if(use_normal_texture == false)
-    {
-      glActiveTexture(GL_TEXTURE0 + texture_pose_offset + nb_used);
-      glBindTexture(GL_TEXTURE_2D, 0);
-      shader.setInt("texture_normal", (int)(texture_pose_offset + nb_used));
-      nb_used++;
-    }*/
-
     MaterialUBO_t data;
-    data.color = glm::vec4(material_it->second.color.r_,
-                           material_it->second.color.g_,
-                           material_it->second.color.b_,
-                           (use_diffuse_texture ? 0. : material_it->second.color.a_));
-    data.shininess = material_it->second.shininess;
-    data.specular = use_specular_texture ? -1 : material_it->second.specular;
+    if(normal_only == false)
+    {
+      data.color = glm::vec4(material_it->second.color.r_,
+                             material_it->second.color.g_,
+                             material_it->second.color.b_,
+                             (use_diffuse_texture ? 0. : material_it->second.color.a_));
+      data.shininess = material_it->second.shininess;
+      data.specular = use_specular_texture ? -1 : material_it->second.specular;
+    }
     data.use_normal = use_normal_texture ? 1. : 0.0f;
-    data.padding = 0.;
 
     shader.setMaterial(&data);
 
     glBindVertexArray(vao_);
     glDrawElements(GL_TRIANGLES, static_cast<int>(indices.size()), GL_UNSIGNED_INT, nullptr);
-    glBindVertexArray(0);
+    // glBindVertexArray(0);
 
     // always good practice to set everything back to defaults once configured.
-    glActiveTexture(GL_TEXTURE0);
+    // glActiveTexture(GL_TEXTURE0);
   }
 
   // initializes all the buffer objects/arrays

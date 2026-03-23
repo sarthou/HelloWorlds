@@ -109,7 +109,8 @@ namespace hws {
                       const std::function<bool(const glm::vec3&, float)>& visibility_test = nullptr);
     void renderTexturedModels(DefaultShader* shader,
                               unsigned int texture_offset,
-                              const std::function<bool(const glm::vec3&, float)>& visibility_test = nullptr);
+                              const std::function<bool(const glm::vec3&, float)>& visibility_test = nullptr,
+                              bool normal_only = false);
     void renderModelsSegmented(const ModelShader& shader,
                                const std::function<bool(const glm::vec3&, float)>& visibility_test = nullptr);
 
