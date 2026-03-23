@@ -10,14 +10,16 @@ namespace hws {
     static std::array<float, 24> screen_vertices;
 
   public:
-    void init();
-
-    void setSize(unsigned int width, unsigned int height);
+    void init(unsigned int width, unsigned int height);
+    void reinit(unsigned int width, unsigned int height);
 
     void initBuffers(unsigned int msaa_samples);
     void reinitBuffers() const;
     void bindFrameBuffer() const;
     void generateColorTexture() const;
+
+    void renderQuad() const;
+
     void draw() const;
 
     int width_;

@@ -45,12 +45,20 @@
 #include "hello_worlds_embedded/embedded_depthcube_shader.fs.h"
 #include "hello_worlds_embedded/embedded_depthcube_shader.gs.h"
 #include "hello_worlds_embedded/embedded_depthcube_shader.vs.h"
+#include "hello_worlds_embedded/embedded_geometry.fs.h"
+#include "hello_worlds_embedded/embedded_geometry.vs.h"
 #include "hello_worlds_embedded/embedded_light_shader.fs.h"
 #include "hello_worlds_embedded/embedded_light_shader.vs.h"
+#include "hello_worlds_embedded/embedded_lighting.fs.h"
+#include "hello_worlds_embedded/embedded_lighting.vs.h"
 #include "hello_worlds_embedded/embedded_screen_shader.fs.h"
 #include "hello_worlds_embedded/embedded_screen_shader.vs.h"
 #include "hello_worlds_embedded/embedded_sky_shader.fs.h"
 #include "hello_worlds_embedded/embedded_sky_shader.vs.h"
+#include "hello_worlds_embedded/embedded_ssao.fs.h"
+#include "hello_worlds_embedded/embedded_ssao.vs.h"
+#include "hello_worlds_embedded/embedded_ssao_blur.fs.h"
+#include "hello_worlds_embedded/embedded_ssao_blur.vs.h"
 #include "hello_worlds_embedded/embedded_text_shader.fs.h"
 #include "hello_worlds_embedded/embedded_text_shader.vs.h"
 
@@ -125,28 +133,35 @@ namespace hws {
     glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
 
     glEnable(GL_MULTISAMPLE);
-    screen_.init();
-    screen_.setSize((unsigned int)render_camera_.getWidth(), (unsigned int)render_camera_.getHeight());
+    screen_.init((unsigned int)render_camera_.getWidth(), (unsigned int)render_camera_.getHeight());
+    geometry_buffer_.init((unsigned int)render_camera_.getWidth(), (unsigned int)render_camera_.getHeight());
+    ssao_manager_.init((unsigned int)render_camera_.getWidth(), (unsigned int)render_camera_.getHeight());
+
     if(render_camera_.getAASetting() != ViewAntiAliasing_e::off)
       setAntiAliasing(render_camera_.getAASetting());
 
-    screen_sharder_ = new Shader(resources::screen_shader_vs_data, resources::screen_shader_fs_data);
-    main_shader_ = new DefaultShader(resources::light_shader_vs_data, resources::light_shader_fs_data);
+    screen_sharder_ = new Shader("screen shader", resources::screen_shader_vs_data, resources::screen_shader_fs_data);
+    main_shader_ = new DefaultShader("light shader", resources::light_shader_vs_data, resources::light_shader_fs_data);
+
+    lighting_shader_ = new DefaultShader("lighting", resources::lighting_vs_data, resources::lighting_fs_data);
+    geometry_shader_ = new DefaultShader("geometry", resources::geometry_vs_data, resources::geometry_fs_data);
+    ssao_shader_ = new ModelShader("ssao", resources::ssao_vs_data, resources::ssao_fs_data);
+    ssao_blur_shader_ = new Shader("ssao blur", resources::ssao_blur_vs_data, resources::ssao_blur_fs_data);
 
     shaders_.insert({
-      "depth", {resources::depth_shader_vs_data, resources::depth_shader_fs_data, resources::depth_shader_gs_data}
+      "depth", {"depth", resources::depth_shader_vs_data, resources::depth_shader_fs_data, resources::depth_shader_gs_data}
     });
     shaders_.insert({
-      "depth_prepass", {resources::depth_prepass_vs_data, resources::depth_prepass_fs_data}
+      "depth_prepass", {"depth_prepass", resources::depth_prepass_vs_data, resources::depth_prepass_fs_data}
     });
     shaders_.insert({
-      "depthcube", {resources::depthcube_shader_vs_data, resources::depthcube_shader_fs_data, resources::depthcube_shader_gs_data}
+      "depthcube", {"depthcube", resources::depthcube_shader_vs_data, resources::depthcube_shader_fs_data, resources::depthcube_shader_gs_data}
     });
     shaders_.insert({
-      "text", {resources::text_shader_vs_data, resources::text_shader_fs_data}
+      "text", {"text", resources::text_shader_vs_data, resources::text_shader_fs_data}
     });
     shaders_.insert({
-      "color", {resources::color_shader_vs_data, resources::color_shader_fs_data}
+      "color", {"color", resources::color_shader_vs_data, resources::color_shader_fs_data}
     });
 
     shadow_.init(render_camera_.getNearPlane(), render_camera_.getFarPlane());
@@ -188,7 +203,7 @@ namespace hws {
     if(sky_.init(images_folder))
     {
       shaders_.insert({
-        "sky", {resources::sky_shader_vs_data, resources::sky_shader_fs_data}
+        "sky", {"sky", resources::sky_shader_vs_data, resources::sky_shader_fs_data}
       });
       use_sky_box_ = true;
     }
@@ -245,9 +260,8 @@ namespace hws {
     render_camera_ = *camera;
     if(render_camera_.sizeHasChanged())
     {
-      screen_.setSize((unsigned int)render_camera_.getWidth(), (unsigned int)render_camera_.getHeight());
+      screen_.reinit((unsigned int)render_camera_.getWidth(), (unsigned int)render_camera_.getHeight());
       glViewport(0, 0, (int)render_camera_.getWidth(), (int)render_camera_.getHeight());
-      screen_.reinitBuffers();
     }
   }
 
@@ -529,60 +543,112 @@ namespace hws {
       return render_camera_.getFrustum().isSphereVisible(center, radius);
     };
 
-    // --- SETUP ---
+    float width = (float)render_camera_.getWidth();
+    float height = (float)render_camera_.getHeight();
+
+    // --- STEP 1: GEOMETRY PASS (G-BUFFER) ---
+    // Fill the textures with View-Space Normals and Depth
+    geometry_buffer_.bind();
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Clear normals to black
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    geometry_shader_->use();
+    geometry_shader_->bindBuffers();
+    geometry_shader_->setView(render_camera_.getViewMatrix());
+    geometry_shader_->setProjection(render_camera_.getProjectionMatrix());
+
+    // We use renderTexturedModels here so the geometry shader can access Normal Maps
+    renderTexturedModels(geometry_shader_, 0, camera_cull); // TODO verify if we do not set too many data
+    geometry_buffer_.unbind();
+
+    // --- STEP 2: SSAO GENERATION ---
+    // Calculate the raw, noisy occlusion
+    glBindFramebuffer(GL_FRAMEBUFFER, ssao_manager_.getSSAOFrameBuffer());
+    glClear(GL_COLOR_BUFFER_BIT);
+    ssao_shader_->use(); // TODO: avoid uniform settings with strings
+
+    // Bind the data from the Geometry Pass
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, geometry_buffer_.getNormalTexture());
+    ssao_shader_->setInt("gNormal", 0);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, geometry_buffer_.getDepthTexture());
+    ssao_shader_->setInt("gDepth", 1);
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, ssao_manager_.getNoiseTexture());
+    ssao_shader_->setInt("texNoise", 2);
+
+    // Send the Kernel and Projection (needed for position reconstruction)
+    ssao_shader_->setProjection(render_camera_.getProjectionMatrix());
+    ssao_shader_->setVec2("noiseScale", glm::vec2(width / 4.0f, height / 4.0f));
+
+    // Pass the 64 sample vectors
+    const auto& kernel = ssao_manager_.getKernel();
+    for(unsigned int i = 0; i < 64; ++i)
+    {
+      ssao_shader_->setVec3("samples[" + std::to_string(i) + "]", kernel[i]);
+    }
+
+    screen_.renderQuad();
+
+    // --- STEP 3: SSAO BLUR ---
+    // Smooth out the noise
+    glBindFramebuffer(GL_FRAMEBUFFER, ssao_manager_.getBlurFrameBuffer());
+    glClear(GL_COLOR_BUFFER_BIT);
+    ssao_blur_shader_->use();
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, ssao_manager_.getSSAOTexture());
+    ssao_blur_shader_->setInt("ssaoInput", 0);
+
+    screen_.renderQuad();
+
+    // --- STEP 4: LIGHTING PASS (FINAL COLOR) ---
+    /* Slots:
+    0 - 2 : Materials (Diffuse, Specular, Normal)
+    3 : Directional Shadows
+    4 : SSAO Texture
+    10 - 29 : Point Light Shadows (20 lights)
+    */
+    // Now we do your standard PBR lighting, but with the AO map
     screen_.bindFrameBuffer();
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_FRAMEBUFFER_SRGB);
 
-    // --- STEP 0: DEPTH PRE-PASS ---
-    auto& prepass = shaders_.at("depth_prepass");
-    prepass.use();
-    prepass.setView(render_camera_.getViewMatrix());
-    prepass.setProjection(render_camera_.getProjectionMatrix());
+    auto skyColor = world_->ambient_light_.getSkyColor(glm::vec3(background_color_[0], background_color_[1], background_color_[2]));
+    glClearColor(skyColor.r, skyColor.g, skyColor.b, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Prepare for Depth-Only
-    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-    glDepthMask(GL_TRUE);
-    glDepthFunc(GL_LESS);
+    lighting_shader_->use();
+    lighting_shader_->bindBuffers();
+    lighting_shader_->setVec3("view_pose", render_camera_.getPosition());
+    lighting_shader_->setView(render_camera_.getViewMatrix());
+    lighting_shader_->setProjection(render_camera_.getProjectionMatrix());
+    lighting_shader_->setVec2("viewport_size", glm::vec2(width, height));
 
-    glClear(GL_DEPTH_BUFFER_BIT);
+    // Bind the Blurred SSAO texture to Slot 4
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, ssao_manager_.getBlurredSSAOTexture());
+    lighting_shader_->setInt("texture_ssao", 4);
 
-    glEnable(GL_POLYGON_OFFSET_FILL);
-    glPolygonOffset(0.2f, 1.0f); // push pre-pass depth away // factor, units
-    renderModels(prepass, camera_cull);
-    glDisable(GL_POLYGON_OFFSET_FILL);
+    // Standard Lights & Shadows
+    shadow_.setUniforms(*lighting_shader_, 3); // Uses slots 3 for Directional Shadows
+    setLightsUniforms(lighting_shader_, 10, render_shadows_, render_shadows_);
 
-    // --- STEP 1: COLOR PASS ---
-    main_shader_->use();
+    renderTexturedModels(lighting_shader_, 0, camera_cull); // Uses slots 0 - 2 for material textures
 
-    // Enable color writing again
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    auto sky = world_->ambient_light_.getSkyColor(glm::vec3(background_color_[0], background_color_[1], background_color_[2]));
-    glClearColor(sky.r, sky.g, sky.b, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    glDepthFunc(GL_LEQUAL);
-    glDepthMask(GL_FALSE); // The depth is already perfect; no need to write it again
-
-    main_shader_->setVec3("view_pose", render_camera_.getPosition());
-    main_shader_->setView(render_camera_.getViewMatrix());
-    main_shader_->setProjection(render_camera_.getProjectionMatrix());
-
-    shadow_.setUniforms(*main_shader_, 1);
-    setLightsUniforms(main_shader_, render_shadows_, render_shadows_);
-
-    renderTexturedModels(main_shader_, 2, camera_cull);
-
-    // --- STEP 2: SKYBOX & DEBUG ---
+    // --- STEP 5: SKYBOX & DEBUG (Standard) ---
     glDepthMask(GL_TRUE); // Back on for skybox/debug
     glDepthFunc(GL_LESS);
-
     if(use_sky_box_)
     {
       auto& sky_shader = shaders_.at("sky");
       sky_shader.use();
-      glm::mat4 view = glm::mat4(glm::mat3(render_camera_.getViewMatrix()));
-      sky_shader.setView(view);
+      sky_shader.setView(glm::mat4(glm::mat3(render_camera_.getViewMatrix())));
       sky_shader.setProjection(render_camera_.getProjectionMatrix());
       sky_shader.setVec4("color", world_->ambient_light_.getDiffuse());
 
@@ -592,16 +658,12 @@ namespace hws {
     if(render_camera_.shouldRenderDebug())
       renderDebug();
 
-    // --- STEP 3: SCREEN ---
+    // --- STEP 6: SCREEN BLIT ---
     // blit multisampled buffer(s) to normal colorbuffer of intermediate FBO. Image is stored in screenTexture
     screen_.generateColorTexture();
-
-    // render quad with scene's visuals as its texture image
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_FRAMEBUFFER_SRGB);
-
-    // draw Screen quad
     screen_sharder_->use();
     screen_.draw();
   }
@@ -644,6 +706,7 @@ namespace hws {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     main_shader_->use();
+    main_shader_->bindBuffers();
 
     main_shader_->setVec3("view_pose", camera->getPosition());
     main_shader_->setView(camera->getViewMatrix());
@@ -651,7 +714,7 @@ namespace hws {
 
     shadow_.setUniforms(*main_shader_, 1);
     // shadow_.setLightMatrices();
-    setLightsUniforms(main_shader_, false, render_shadows_); // We never use the ambient shadows for offscreen
+    setLightsUniforms(main_shader_, POINT_SHADOW_TEXTURE, false, render_shadows_); // We never use the ambient shadows for offscreen
 
     auto camera_cull = [&](const glm::vec3& center, float radius) {
       return camera->getFrustum().isSphereVisible(center, radius);
@@ -904,9 +967,15 @@ namespace hws {
     {
       main_shader_->setInt("point_lights_depth_maps[" + std::to_string(i) + "]", POINT_SHADOW_TEXTURE + i);
     }
+
+    lighting_shader_->use();
+    for(size_t i = 0; i < PointLights::MAX_POINT_LIGHTS; i++)
+    {
+      lighting_shader_->setInt("point_lights_depth_maps[" + std::to_string(i) + "]", 10 + i);
+    }
   }
 
-  void Renderer::setLightsUniforms(DefaultShader* shader, bool use_ambient_shadows, bool use_points_shadows)
+  void Renderer::setLightsUniforms(DefaultShader* shader, size_t texture_offset, bool use_ambient_shadows, bool use_points_shadows)
   {
     const AmbientLight& ambient = world_->ambient_light_;
 
@@ -929,7 +998,7 @@ namespace hws {
       {
         if(world_->point_lights_.isUsed(i) && world_->point_lights_.isOn(i))
         {
-          glActiveTexture(GL_TEXTURE0 + POINT_SHADOW_TEXTURE + i);
+          glActiveTexture(GL_TEXTURE0 + texture_offset + i);
           glBindTexture(GL_TEXTURE_CUBE_MAP, point_shadows_.getCubeMapId(i));
         }
       }

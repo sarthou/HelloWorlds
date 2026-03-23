@@ -7,8 +7,11 @@
 
 namespace hws {
 
-  void Screen::init()
+  void Screen::init(unsigned int width, unsigned int height)
   {
+    width_ = (int)width;
+    height_ = (int)height;
+
     glGenVertexArrays(1, &screen_vao_);
     glGenBuffers(1, &screen_vbo_);
     glBindVertexArray(screen_vao_);
@@ -20,10 +23,24 @@ namespace hws {
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
   }
 
-  void Screen::setSize(unsigned int width, unsigned int height)
+  void Screen::reinit(unsigned int width, unsigned int height)
   {
+    if(init_ == false)
+      return;
+
     width_ = (int)width;
     height_ = (int)height;
+
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture_color_buffer_ms_);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, (int)msaa_samples_, GL_RGB, width_, height_, GL_TRUE);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+
+    glBindRenderbuffer(GL_RENDERBUFFER, msaa_renderbuffer_);
+    glRenderbufferStorageMultisample(GL_RENDERBUFFER, (int)msaa_samples_, GL_DEPTH24_STENCIL8, width_, height_);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+    glBindTexture(GL_TEXTURE_2D, screen_texture_);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width_, height_, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
   }
 
   void Screen::initBuffers(unsigned int msaa_samples)
@@ -96,12 +113,20 @@ namespace hws {
     glBlitFramebuffer(0, 0, width_, height_, 0, 0, width_, height_, GL_COLOR_BUFFER_BIT, GL_NEAREST);
   }
 
+  void Screen::renderQuad() const
+  {
+    glBindVertexArray(screen_vao_);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+  }
+
   void Screen::draw() const
   {
     glBindVertexArray(screen_vao_);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, screen_texture_); // use the now resolved color attachment as the quad's texture
+    glBindTexture(GL_TEXTURE_2D, screen_texture_);
     glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
   }
 
   std::array<float, 24> Screen::screen_vertices = {

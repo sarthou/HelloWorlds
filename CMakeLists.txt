@@ -58,12 +58,20 @@ set(SHADER_FILES
   shaders/depthcube_shader.fs
   shaders/depthcube_shader.gs
   shaders/depthcube_shader.vs
+  shaders/geometry.fs
+  shaders/geometry.vs
   shaders/light_shader.fs
   shaders/light_shader.vs
+  shaders/lighting.fs
+  shaders/lighting.vs
   shaders/screen_shader.fs
   shaders/screen_shader.vs
   shaders/sky_shader.fs
   shaders/sky_shader.vs
+  shaders/ssao_blur.fs
+  shaders/ssao_blur.vs
+  shaders/ssao.fs
+  shaders/ssao.vs
   shaders/text_shader.fs
   shaders/text_shader.vs
 )
@@ -188,6 +196,11 @@ target_include_directories(hello_worlds_engine_common PRIVATE ${CMAKE_CURRENT_BI
 
 # ------ hello_worlds_graphics ------
 hws_add_library(hello_worlds_graphics
+  src/Graphics/OpenGL/Buffers/GeometryBuffer.cpp
+  src/Graphics/OpenGL/Buffers/SSAOManager.cpp
+  src/Graphics/OpenGL/Shaders/Shader.cpp
+  src/Graphics/OpenGL/Shaders/DefaultShader.cpp
+  src/Graphics/OpenGL/Shaders/ModelShader.cpp
   src/Graphics/GLFW/Window.cpp
   src/Graphics/OpenGL/Cubemap.cpp
   src/Graphics/OpenGL/LinesHandle.cpp
@@ -196,9 +209,6 @@ hws_add_library(hello_worlds_graphics
   src/Graphics/OpenGL/PointShadow.cpp
   src/Graphics/OpenGL/Renderer.cpp
   src/Graphics/OpenGL/Screen.cpp
-  src/Graphics/OpenGL/Shaders/Shader.cpp
-  src/Graphics/OpenGL/Shaders/DefaultShader.cpp
-  src/Graphics/OpenGL/Shaders/ModelShader.cpp
   src/Graphics/OpenGL/TextRenderer.cpp
   src/Graphics/OpenGL/AmbientShadow.cpp
   src/Graphics/OpenGL/Texture2D.cpp
@@ -276,6 +286,10 @@ target_link_libraries(hello_worlds PUBLIC hello_worlds_physics hello_worlds_grap
 add_executable(demo_light examples/light_demo.cpp)
 target_link_libraries(demo_light PRIVATE hello_worlds)
 target_include_directories(demo_light PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
+
+add_executable(instance_test examples/instance_test.cpp)
+target_link_libraries(instance_test PRIVATE hello_worlds)
+target_include_directories(instance_test PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
 
 add_executable(demo_physics examples/physics_demo.cpp)
 target_link_libraries(demo_physics PRIVATE hello_worlds)

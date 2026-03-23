@@ -13,18 +13,22 @@
 
 namespace hws {
 
-  DefaultShader::DefaultShader(const std::string& vertex_path,
+  DefaultShader::DefaultShader(const std::string& name,
+                               const std::string& vertex_path,
                                const std::string& fragment_path,
-                               const std::string& geometry_path) : ModelShader(vertex_path,
+                               const std::string& geometry_path) : ModelShader(name,
+                                                                               vertex_path,
                                                                                fragment_path,
                                                                                geometry_path)
   {
     setUniformIds();
   }
 
-  DefaultShader::DefaultShader(const char* v_shader_code,
+  DefaultShader::DefaultShader(const std::string& name,
+                               const char* v_shader_code,
                                const char* f_shader_code,
-                               const char* g_shader_code) : ModelShader(v_shader_code,
+                               const char* g_shader_code) : ModelShader(name,
+                                                                        v_shader_code,
                                                                         f_shader_code,
                                                                         g_shader_code)
   {
@@ -64,25 +68,33 @@ namespace hws {
     glUniform1f(nb_point_lights_uniform_id_, value);
   }
 
+  void DefaultShader::bindBuffers()
+  {
+    // Bind to the same index as the shader: "binding = 1"
+    glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubo_material_);
+
+    // Bind to the same index as the shader: "binding = 2"
+    glBindBufferBase(GL_UNIFORM_BUFFER, 2, ubo_dir_light_);
+
+    // Bind to the same index as the shader: "binding = 3"
+    glBindBufferBase(GL_UNIFORM_BUFFER, 3, ubo_point_lights_);
+  }
+
   void DefaultShader::setUniformIds()
   {
     glGenBuffers(1, &ubo_material_);
     glBindBuffer(GL_UNIFORM_BUFFER, ubo_material_);
     glBufferData(GL_UNIFORM_BUFFER, sizeof(MaterialUBO_t), nullptr, GL_DYNAMIC_DRAW);
-    // Bind to the same index as the shader: "binding = 1"
-    glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubo_material_);
 
     glGenBuffers(1, &ubo_dir_light_);
     glBindBuffer(GL_UNIFORM_BUFFER, ubo_dir_light_);
     glBufferData(GL_UNIFORM_BUFFER, sizeof(DirLightUBO_t), nullptr, GL_DYNAMIC_DRAW);
-    // Bind to the same index as the shader: "binding = 2"
-    glBindBufferBase(GL_UNIFORM_BUFFER, 2, ubo_dir_light_);
 
     glGenBuffers(1, &ubo_point_lights_);
     glBindBuffer(GL_UNIFORM_BUFFER, ubo_point_lights_);
     glBufferData(GL_UNIFORM_BUFFER, sizeof(PointLightUBO_t) * 20, nullptr, GL_DYNAMIC_DRAW);
-    // Bind to the same index as the shader: "binding = 3"
-    glBindBufferBase(GL_UNIFORM_BUFFER, 3, ubo_point_lights_);
+
+    bindBuffers();
 
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 

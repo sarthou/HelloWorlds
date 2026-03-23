@@ -13,6 +13,8 @@
 #include "hello_worlds/Common/Urdf/Actor.h"
 #include "hello_worlds/Graphics/Common/InstanceData.h"
 #include "hello_worlds/Graphics/OpenGL/AmbientShadow.h"
+#include "hello_worlds/Graphics/OpenGL/Buffers/GeometryBuffer.h"
+#include "hello_worlds/Graphics/OpenGL/Buffers/SSAOManager.h"
 #include "hello_worlds/Graphics/OpenGL/Cubemap.h"
 #include "hello_worlds/Graphics/OpenGL/LinesHandle.h"
 #include "hello_worlds/Graphics/OpenGL/MeshHandle.h"
@@ -49,11 +51,20 @@ namespace hws {
   private:
     World* world_ = nullptr;
     Camera render_camera_;
+
     std::unordered_map<std::string, ModelShader> shaders_;
     Shader* screen_sharder_;
     DefaultShader* main_shader_;
+    DefaultShader* lighting_shader_;
+    DefaultShader* geometry_shader_;
+    ModelShader* ssao_shader_;
+    Shader* ssao_blur_shader_;
+
     Screen screen_;
+    GeometryBuffer geometry_buffer_;
+    SSAOManager ssao_manager_;
     std::vector<OffScreen> off_screens_;
+
     Cubemap sky_;
     AmbientShadow shadow_;
     PointShadow point_shadows_;
@@ -111,7 +122,7 @@ namespace hws {
     void renderDebug();
 
     void initShadowSamplers();
-    void setLightsUniforms(DefaultShader* shader, bool use_ambient_shadows = true, bool use_points_shadows = true);
+    void setLightsUniforms(DefaultShader* shader, size_t texture_offset, bool use_ambient_shadows = true, bool use_points_shadows = true);
     void setAntiAliasing(ViewAntiAliasing_e setting);
 
     Material createColisionMaterial(size_t uid);
