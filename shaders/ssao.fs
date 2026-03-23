@@ -19,10 +19,16 @@ void main()
 {
     // 1. Reconstruct View-Space Position from Depth
     float z = texture(gDepth, TexCoords).r;
+    if(z > 100.)
+    {
+        FragColor = 1.0;
+        return;
+    }
+    mat4 inv_projection = inverse(projection);
     // Standard transformation from [0,1] depth to View-Space Z
     // (Note: This assumes a standard perspective projection)
     vec4 clipSpacePos = vec4(TexCoords * 2.0 - 1.0, z * 2.0 - 1.0, 1.0);
-    vec4 viewSpacePos = inverse(projection) * clipSpacePos;
+    vec4 viewSpacePos = inv_projection * clipSpacePos;
     vec3 fragPos = viewSpacePos.xyz / viewSpacePos.w;
 
     // 2. Get Normal and Noise
@@ -52,7 +58,7 @@ void main()
         float sampleDepth = texture(gDepth, offset.xy).r;
         // Reconstruct that neighbor's View-Z
         vec4 neighborClip = vec4(offset.xy * 2.0 - 1.0, sampleDepth * 2.0 - 1.0, 1.0);
-        vec4 neighborView = inverse(projection) * neighborClip;
+        vec4 neighborView = inv_projection * neighborClip;
         float neighborZ = neighborView.z / neighborView.w;
 
         // Range check: Prevents shadows from "bleeding" onto objects far behind
