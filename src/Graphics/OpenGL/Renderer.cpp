@@ -132,13 +132,9 @@ namespace hws {
     glDebugMessageCallback(messageCallback, nullptr);
     glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
 
-    glEnable(GL_MULTISAMPLE);
     screen_.init((unsigned int)render_camera_.getWidth(), (unsigned int)render_camera_.getHeight());
     geometry_buffer_.init((unsigned int)render_camera_.getWidth(), (unsigned int)render_camera_.getHeight());
     ssao_manager_.init((unsigned int)render_camera_.getWidth(), (unsigned int)render_camera_.getHeight());
-
-    if(render_camera_.getAASetting() != ViewAntiAliasing_e::off)
-      setAntiAliasing(render_camera_.getAASetting());
 
     screen_sharder_ = new Shader("screen shader", resources::screen_shader_vs_data, resources::screen_shader_fs_data);
     main_shader_ = new DefaultShader("light shader", resources::light_shader_vs_data, resources::light_shader_fs_data);
@@ -261,6 +257,8 @@ namespace hws {
     if(render_camera_.sizeHasChanged())
     {
       screen_.reinit((unsigned int)render_camera_.getWidth(), (unsigned int)render_camera_.getHeight());
+      geometry_buffer_.reinit((unsigned int)render_camera_.getWidth(), (unsigned int)render_camera_.getHeight());
+      ssao_manager_.reinit((unsigned int)render_camera_.getWidth(), (unsigned int)render_camera_.getHeight());
       glViewport(0, 0, (int)render_camera_.getWidth(), (int)render_camera_.getHeight());
     }
   }
@@ -565,7 +563,11 @@ namespace hws {
 
     // --- STEP 2: SSAO GENERATION ---
     // Calculate the raw, noisy occlusion
+    float ssao_width = width / 2.0f;
+    float ssao_height = height / 2.0f;
+
     glBindFramebuffer(GL_FRAMEBUFFER, ssao_manager_.getSSAOFrameBuffer());
+    glViewport(0, 0, ssao_width, ssao_height);
     glClear(GL_COLOR_BUFFER_BIT);
     ssao_shader_->use(); // TODO: avoid uniform settings with strings
 
@@ -584,11 +586,11 @@ namespace hws {
 
     // Send the Kernel and Projection (needed for position reconstruction)
     ssao_shader_->setProjection(render_camera_.getProjectionMatrix());
-    ssao_shader_->setVec2("noiseScale", glm::vec2(width / 4.0f, height / 4.0f));
+    ssao_shader_->setVec2("noiseScale", glm::vec2(ssao_width / 4.0f, ssao_height / 4.0f));
 
-    // Pass the 64 sample vectors
+    // Pass the sample vectors
     const auto& kernel = ssao_manager_.getKernel();
-    for(unsigned int i = 0; i < 64; ++i)
+    for(unsigned int i = 0; i < kernel.size(); ++i)
     {
       ssao_shader_->setVec3("samples[" + std::to_string(i) + "]", kernel[i]);
     }
@@ -598,6 +600,7 @@ namespace hws {
     // --- STEP 3: SSAO BLUR ---
     // Smooth out the noise
     glBindFramebuffer(GL_FRAMEBUFFER, ssao_manager_.getBlurFrameBuffer());
+    // Viewport is still width/2, height/2
     glClear(GL_COLOR_BUFFER_BIT);
     ssao_blur_shader_->use();
 
@@ -608,6 +611,12 @@ namespace hws {
     screen_.renderQuad();
 
     // --- STEP 4: LIGHTING PASS (FINAL COLOR) ---
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, geometry_buffer_.getFBO());
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, screen_.getFrameBuffer());
+    glBlitFramebuffer(
+      0, 0, width, height,
+      0, 0, width, height,
+      GL_DEPTH_BUFFER_BIT, GL_NEAREST);
     /* Slots:
     0 - 2 : Materials (Diffuse, Specular, Normal)
     3 : Directional Shadows
@@ -615,8 +624,10 @@ namespace hws {
     10 - 29 : Point Light Shadows (20 lights)
     */
     // Now we do your standard PBR lighting, but with the AO map
-    screen_.bindFrameBuffer();
+    screen_.bindFrameBuffer(); // This sets viewport back to Full-Res width/height
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_EQUAL);
+    glDepthMask(GL_FALSE);
     glEnable(GL_FRAMEBUFFER_SRGB);
 
     auto skyColor = world_->ambient_light_.getSkyColor(glm::vec3(background_color_[0], background_color_[1], background_color_[2]));
@@ -660,7 +671,6 @@ namespace hws {
 
     // --- STEP 6: SCREEN BLIT ---
     // blit multisampled buffer(s) to normal colorbuffer of intermediate FBO. Image is stored in screenTexture
-    screen_.generateColorTexture();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_FRAMEBUFFER_SRGB);
@@ -1021,23 +1031,6 @@ namespace hws {
 
     shader->setPointLights(gpu_data, points.getNbLightsSize());
     shader->setNbPointLight(points.getNbLightsFloat());
-  }
-
-  void Renderer::setAntiAliasing(ViewAntiAliasing_e setting)
-  {
-    int samples = 1;
-    if(setting == ViewAntiAliasing_e::msaa_x1)
-      samples = 1;
-    else if(setting == ViewAntiAliasing_e::msaa_x2)
-      samples = 2;
-    else if(setting == ViewAntiAliasing_e::msaa_x4)
-      samples = 4;
-    else if(setting == ViewAntiAliasing_e::msaa_x8)
-      samples = 8;
-    else if(setting == ViewAntiAliasing_e::msaa_x16)
-      samples = 16;
-
-    screen_.initBuffers(samples);
   }
 
   Material Renderer::createColisionMaterial(size_t uid)

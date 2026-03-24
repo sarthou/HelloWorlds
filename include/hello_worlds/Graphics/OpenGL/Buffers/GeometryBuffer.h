@@ -14,6 +14,7 @@ namespace hws {
 
     unsigned int getNormalTexture() const { return g_normal_; }
     unsigned int getDepthTexture() const { return g_depth_; }
+    unsigned int getFBO() const { return fbo_; }
 
   private:
     unsigned int fbo_ = 0;

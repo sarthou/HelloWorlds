@@ -11,11 +11,18 @@ namespace hws {
 
   void SSAOManager::init(unsigned int width, unsigned int height)
   {
+    // SSAO textures are half-resolution
+    unsigned int ssao_w = width / 2;
+    unsigned int ssao_h = height / 2;
+
     // Generate Sample Kernel
     std::uniform_real_distribution<float> randomFloats(0.0, 1.0);
     std::default_random_engine generator;
 
-    for(unsigned int i = 0; i < 64; ++i)
+    unsigned int kernel_size = 32;
+    ssao_kernel_.clear();
+    ssao_kernel_.reserve(kernel_size);
+    for(unsigned int i = 0; i < kernel_size; ++i)
     {
       glm::vec3 sample(
         randomFloats(generator) * 2.0 - 1.0,
@@ -26,7 +33,7 @@ namespace hws {
       sample *= randomFloats(generator);
 
       // Scale samples so they're more clustered near origin
-      float scale = (float)i / 64.0f;
+      float scale = (float)i / kernel_size;
       scale = lerp(0.1f, 1.0f, scale * scale);
       ssao_kernel_.push_back(sample * scale);
     }
@@ -45,19 +52,19 @@ namespace hws {
     glGenTextures(1, &noise_texture_);
     glBindTexture(GL_TEXTURE_2D, noise_texture_);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 4, 4, 0, GL_RGB, GL_FLOAT, &ssaoNoise[0]);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     // Create SSAO FBOs (SSAO result is a single channel float)
     glGenFramebuffers(1, &ssao_fbo_);
     glBindFramebuffer(GL_FRAMEBUFFER, ssao_fbo_);
     glGenTextures(1, &ssao_color_buffer_);
     glBindTexture(GL_TEXTURE_2D, ssao_color_buffer_);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, ssao_w, ssao_h, 0, GL_RED, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssao_color_buffer_, 0);
 
     // Create Blur FBO
@@ -65,9 +72,9 @@ namespace hws {
     glBindFramebuffer(GL_FRAMEBUFFER, blur_fbo_);
     glGenTextures(1, &ssao_blur_buffer_);
     glBindTexture(GL_TEXTURE_2D, ssao_blur_buffer_);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, ssao_w, ssao_h, 0, GL_RED, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssao_blur_buffer_, 0);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -75,13 +82,17 @@ namespace hws {
 
   void SSAOManager::reinit(unsigned int width, unsigned int height)
   {
+    // SSAO textures are half-resolution
+    unsigned int ssao_w = width / 2;
+    unsigned int ssao_h = height / 2;
+
     // Resize the raw SSAO result buffer
     glBindTexture(GL_TEXTURE_2D, ssao_color_buffer_);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, ssao_w, ssao_h, 0, GL_RED, GL_FLOAT, NULL);
 
     // Resize the blurred SSAO result buffer
     glBindTexture(GL_TEXTURE_2D, ssao_blur_buffer_);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, ssao_w, ssao_h, 0, GL_RED, GL_FLOAT, NULL);
 
     glBindTexture(GL_TEXTURE_2D, 0);
   }

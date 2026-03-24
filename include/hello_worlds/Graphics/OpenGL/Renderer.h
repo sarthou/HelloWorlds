@@ -124,7 +124,6 @@ namespace hws {
 
     void initShadowSamplers();
     void setLightsUniforms(DefaultShader* shader, size_t texture_offset, bool use_ambient_shadows = true, bool use_points_shadows = true);
-    void setAntiAliasing(ViewAntiAliasing_e setting);
 
     Material createColisionMaterial(size_t uid);
   };

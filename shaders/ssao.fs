@@ -7,13 +7,13 @@ uniform sampler2D gNormal;
 uniform sampler2D gDepth;
 uniform sampler2D texNoise;
 
-uniform vec3 samples[64];
+#define KERNEL_SIZE 32
+
+uniform vec3 samples[KERNEL_SIZE];
 uniform mat4 projection;
+uniform vec2 noiseScale;
 uniform float radius = 0.5;
 uniform float bias = 0.025;
-
-// We need the screen dimensions to scale the 4x4 noise texture properly
-const vec2 noiseScale = vec2(1920.0/4.0, 1080.0/4.0); 
 
 void main()
 {
@@ -42,7 +42,7 @@ void main()
 
     // 4. Calculate Occlusion Factor
     float occlusion = 0.0;
-    for(int i = 0; i < 64; ++i)
+    for(int i = 0; i < KERNEL_SIZE; ++i)
     {
         // Get sample position in View-Space
         vec3 samplePos = TBN * samples[i]; 
@@ -67,5 +67,5 @@ void main()
     }
     
     // Normalize and invert (0 = occluded, 1 = open)
-    FragColor = 1.0 - (occlusion / 64.0);
+    FragColor = 1.0 - (occlusion / KERNEL_SIZE);
 }
