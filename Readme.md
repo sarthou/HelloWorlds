@@ -96,7 +96,7 @@ HelloWorlds/
 HelloWorlds is ROS independent but supports to be a ROS package. In such a way it can be built in different way depending on you usage.
 
 ```bash
-sudo apt install -y libglm-dev libglfw3-dev
+sudo apt install -y libglm-dev libglfw3-dev libfreetype-dev
 ```
 
 ### 1. Standalone Build (No ROS)

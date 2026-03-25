@@ -23,22 +23,22 @@ void worldThread(hws::Window* window)
 
   auto ligth_1 = engine.world.addPointLight({5.f, 7.0f, 2.9f},
                                             {1.0f, 1.0f, 1.0f},
-                                            0.4, 0.5, 1.0,
+                                            0.05, 0.8, 1.0,
                                             6.f);
 
   auto ligth_2 = engine.world.addPointLight({8.5f, 7.0f, 2.9f},
                                             {1.0f, 1.0f, 1.0f},
-                                            0.5, 0.6, 1.0,
+                                            0.05, 0.8, 1.0,
                                             6.0f);
 
   auto ligth_3 = engine.world.addPointLight({5.f, 12.0f, 2.9f},
                                             {1.0f, 1.0f, 1.0f},
-                                            0.4, 0.5, 1.0,
+                                            0.05, 0.8, 1.0,
                                             6.f);
 
   auto ligth_4 = engine.world.addPointLight({2.5f, -2.5f, 2.5f},
                                             {1.0f, 1.0f, 1.0f},
-                                            0.4, 0.5, 1.0,
+                                            0.05, 0.8, 1.0,
                                             6.f);
 
   engine.world.loadUrdf(hwd::tests::get_asset_dir() + "Adream/adream.urdf", {0., 0., 0.}, {0., 0., 0.});
