@@ -64,6 +64,7 @@ namespace hws {
     GeometryBuffer geometry_buffer_;
     SSAOManager ssao_manager_;
     std::vector<OffScreen> off_screens_;
+    float render_scale_ = 1.0;
 
     Cubemap sky_;
     AmbientShadow shadow_;
@@ -126,6 +127,7 @@ namespace hws {
     void setLightsUniforms(DefaultShader* shader, size_t texture_offset, bool use_ambient_shadows = true, bool use_points_shadows = true);
 
     Material createColisionMaterial(size_t uid);
+    void computeDynamicScale(int native_width, int native_height);
   };
 } // namespace hws
 

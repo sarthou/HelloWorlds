@@ -256,9 +256,14 @@ namespace hws {
     render_camera_ = *camera;
     if(render_camera_.sizeHasChanged())
     {
-      screen_.reinit((unsigned int)render_camera_.getWidth(), (unsigned int)render_camera_.getHeight());
-      geometry_buffer_.reinit((unsigned int)render_camera_.getWidth(), (unsigned int)render_camera_.getHeight());
-      ssao_manager_.reinit((unsigned int)render_camera_.getWidth(), (unsigned int)render_camera_.getHeight());
+      computeDynamicScale((int)render_camera_.getWidth(), (int)render_camera_.getHeight());
+      unsigned int render_width = (unsigned int)(render_camera_.getWidth() * render_scale_);
+      unsigned int render_height = (unsigned int)(render_camera_.getHeight() * render_scale_);
+
+      screen_.reinit(render_width, render_height);
+      geometry_buffer_.reinit(render_width, render_height);
+      ssao_manager_.reinit(render_width, render_height);
+
       glViewport(0, 0, (int)render_camera_.getWidth(), (int)render_camera_.getHeight());
     }
   }
@@ -544,6 +549,9 @@ namespace hws {
     float width = (float)render_camera_.getWidth();
     float height = (float)render_camera_.getHeight();
 
+    float render_width = width * render_scale_;
+    float render_height = height * render_scale_;
+
     // --- STEP 1: GEOMETRY PASS (G-BUFFER) ---
     // Fill the textures with View-Space Normals and Depth
     geometry_buffer_.bind();
@@ -563,8 +571,8 @@ namespace hws {
 
     // --- STEP 2: SSAO GENERATION ---
     // Calculate the raw, noisy occlusion
-    float ssao_width = width / 2.0f;
-    float ssao_height = height / 2.0f;
+    float ssao_width = render_width / 2.0f;
+    float ssao_height = render_height / 2.0f;
 
     glBindFramebuffer(GL_FRAMEBUFFER, ssao_manager_.getSSAOFrameBuffer());
     glViewport(0, 0, ssao_width, ssao_height);
@@ -600,7 +608,7 @@ namespace hws {
     // --- STEP 3: SSAO BLUR ---
     // Smooth out the noise
     glBindFramebuffer(GL_FRAMEBUFFER, ssao_manager_.getBlurFrameBuffer());
-    // Viewport is still width/2, height/2
+    // Viewport is still render_width/2, render_height/2
     glClear(GL_COLOR_BUFFER_BIT);
     ssao_blur_shader_->use();
 
@@ -614,8 +622,8 @@ namespace hws {
     glBindFramebuffer(GL_READ_FRAMEBUFFER, geometry_buffer_.getFBO());
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, screen_.getFrameBuffer());
     glBlitFramebuffer(
-      0, 0, width, height,
-      0, 0, width, height,
+      0, 0, render_width, render_height,
+      0, 0, render_width, render_height,
       GL_DEPTH_BUFFER_BIT, GL_NEAREST);
     /* Slots:
     0 - 2 : Materials (Diffuse, Specular, Normal)
@@ -624,7 +632,7 @@ namespace hws {
     10 - 29 : Point Light Shadows (20 lights)
     */
     // Now we do your standard PBR lighting, but with the AO map
-    screen_.bindFrameBuffer(); // This sets viewport back to Full-Res width/height
+    screen_.bindFrameBuffer(); // This sets viewport back to Full-Res render_width/render_height
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_EQUAL);
     glDepthMask(GL_FALSE);
@@ -639,7 +647,7 @@ namespace hws {
     lighting_shader_->setVec3("view_pose", render_camera_.getPosition());
     lighting_shader_->setView(render_camera_.getViewMatrix());
     lighting_shader_->setProjection(render_camera_.getProjectionMatrix());
-    lighting_shader_->setVec2("viewport_size", glm::vec2(width, height));
+    lighting_shader_->setVec2("viewport_size", glm::vec2(render_width, render_height));
 
     // Bind the Blurred SSAO texture to Slot 4
     glActiveTexture(GL_TEXTURE4);
@@ -672,6 +680,7 @@ namespace hws {
     // --- STEP 6: SCREEN BLIT ---
     // blit multisampled buffer(s) to normal colorbuffer of intermediate FBO. Image is stored in screenTexture
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, width, height);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_FRAMEBUFFER_SRGB);
     screen_sharder_->use();
@@ -1042,6 +1051,22 @@ namespace hws {
     material.shininess_ = 0;
 
     return material;
+  }
+
+  void Renderer::computeDynamicScale(int native_width, int native_height)
+  {
+    // Target: 1080p worth of pixels (approx 2.07 million)
+    const float target_pixels = 1920.0f * 1080.0f;
+    float current_pixels = (float)native_width * (float)native_height;
+
+    if(current_pixels <= target_pixels)
+      render_scale_ = 1.0f;
+    else
+    {
+      float scale = std::sqrt(target_pixels / current_pixels);
+
+      render_scale_ = std::max(0.5f, scale);
+    }
   }
 
 } // namespace hws

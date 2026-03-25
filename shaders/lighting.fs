@@ -179,7 +179,8 @@ void main()
 }
 
 // --- PBR & SHADOW FUNCTIONS ---
-vec3 CalcPBR(vec3 L, vec3 radiance, vec3 N, vec3 V, float NdotV, float NdotL, vec3 albedo, float roughness, float metallic, float shadow) {
+vec3 CalcPBR(vec3 L, vec3 radiance, vec3 N, vec3 V, float NdotV, float NdotL, vec3 albedo, float roughness, float metallic, float shadow)
+{
   if (shadow > 0.99) return vec3(0.0);
 
   vec3 H = normalize(V + L);
