@@ -178,7 +178,10 @@ namespace hws {
 
     /* CAMERAS */
 
-    int addCamera(unsigned int width, unsigned int height, float fov, hws::CameraView_e view_type, float near_plane, float far_plane);
+    int addCamera(unsigned int width, unsigned int height,
+                  float fov, hws::CameraView_e view_type,
+                  float near_plane, float far_plane,
+                  hws::CameraConvention_e convention = hws::CameraConvention_e::z_forward_y_down);
     bool setCameraPositionAndLookAt(int id, const std::array<double, 3>& eye_position, const std::array<double, 3>& dst_position);
     bool setCameraPositionAndDirection(int id, const std::array<double, 3>& eye_position, const std::array<double, 3>& eye_direction);
     bool setCameraPositionAndOrientation(int id, const std::array<double, 3>& eye_position, const std::array<double, 4>& orientation);

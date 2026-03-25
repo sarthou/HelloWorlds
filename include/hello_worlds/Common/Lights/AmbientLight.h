@@ -60,8 +60,8 @@ namespace hws {
 
     GeographicCoords_t geo_coords_{0, 0, 0};
 
-    float ambient_factor_ = 0.2f;
-    float diffuse_factor_ = 0.8f;
+    float ambient_factor_ = 0.3f;
+    float diffuse_factor_ = 0.65f;
     float specular_factor_ = 1.0f;
   };
 

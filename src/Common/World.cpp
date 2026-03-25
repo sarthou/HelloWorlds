@@ -20,6 +20,7 @@
 #include <utility>
 #include <vector>
 
+#include "hello_worlds/Common/Camera/Camera.h"
 #include "hello_worlds/Common/Camera/CameraView.h"
 #include "hello_worlds/Common/Debug/DebugLine.h"
 #include "hello_worlds/Common/Debug/DebugText.h"
@@ -596,9 +597,12 @@ namespace hws {
 
   /* CAMERAS */
 
-  int World::addCamera(unsigned int width, unsigned int height, float fov, hws::CameraView_e view_type, float near_plane, float far_plane)
+  int World::addCamera(unsigned int width, unsigned int height,
+                       float fov, hws::CameraView_e view_type,
+                       float near_plane, float far_plane,
+                       hws::CameraConvention_e convention)
   {
-    cameras_.emplace_back(width, height, fov, view_type, near_plane, far_plane);
+    cameras_.emplace_back(width, height, fov, view_type, near_plane, far_plane, convention);
     return (int)cameras_.size() - 1;
   }
 

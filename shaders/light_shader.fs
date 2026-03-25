@@ -72,7 +72,7 @@ const float PI = 3.14159265359;
 // --- PROTOTYPES ---
 vec3 CalcPBR(vec3 L, vec3 radiance, vec3 N, vec3 V, float NdotV, float NdotL, vec3 albedo, float roughness, float metallic, float shadow);
 float directionalShadowCalculation(vec3 fragPosWorldSpace, vec3 normal, float distToCamera, float NdotL);
-float pointShadowCalculation(int index, vec3 fragPosWorldSpace, float currentDepth, float distToCamera);
+float pointShadowCalculation(int index, vec3 fragPosWorldSpace, vec3 normal, float NdotL, float distToLight, float distToCamera);
 
 // --- PBR MATH ---
 
@@ -146,18 +146,21 @@ void main()
 
       vec3 L = L_unnormalized / dist;
       float NdotL = max(dot(N, L), 0.0);
-      if (NdotL < 0.001) continue; // Skip shadow/PBR if light is behind or parallel
+      // if (NdotL < 0.001) continue; // Skip shadow/PBR if light is behind or parallel
 
       float attenuation = 1.0 / (point_lights[i].attenuation.x + 
                                 point_lights[i].attenuation.y * dist + 
                                 point_lights[i].attenuation.z * (dist * dist));
       if (attenuation < 0.001) continue;
 
-      float shadowPoint = pointShadowCalculation(i, FragPos, dist, distToCamera);
-      
       totalAmbient += point_lights[i].ambient.rgb * albedo * attenuation;
-      vec3 radiance = point_lights[i].diffuse.rgb * attenuation;
-      totalDirect += CalcPBR(L, radiance, N, V, NdotV, NdotL, albedo, roughness, 0.0, shadowPoint); 
+
+      if (NdotL > 0.0)
+      {
+        float shadowPoint = pointShadowCalculation(i, FragPos, N, NdotL, dist, distToCamera);
+        vec3 radiance = point_lights[i].diffuse.rgb * attenuation;
+        totalDirect += CalcPBR(L, radiance, N, V, NdotV, NdotL, albedo, roughness, 0.0, shadowPoint); 
+      }      
     }
 
     // 4. Composition & Tone Mapping
@@ -229,24 +232,37 @@ vec3 sampleOffsets[20] = vec3[](
   vec3(0, 1, 1), vec3(0, -1, 1), vec3(0, -1, -1), vec3(0, 1, -1)
 );
 
-float pointShadowCalculation(int index, vec3 fragPosWorldSpace, float distToLight, float distToCamera)
+float pointShadowCalculation(int index, vec3 fragPosWorldSpace, vec3 normal, float NdotL, float distToLight, float distToCamera)
 {
   if(use_point_shadows < 0.5) return 0.0;
   
-  vec3 fragToLight = fragPosWorldSpace - point_lights[index].position.xyz;
-  float bias = 0.04; 
+  // 1. DYNAMIC BIAS
+  // We scale the bias based on the angle. Grazing angles need more bias.
+  float bias = max(0.05 * (1.0 - NdotL), 0.005); 
+
+  // 2. NORMAL OFFSET
+  // This is the "magic" fix for the chest grid. We move the lookup 
+  // slightly away from the surface along the normal.
+  // 0.015 is a good starting point for a small robot.
+  vec3 offsetFragPos = fragPosWorldSpace + normal * 0.015;
+  vec3 fragToLight = offsetFragPos - point_lights[index].position.xyz;
 
   // Point Shadow LOD
   int samples = (distToCamera < 6.0) ? 20 : (distToCamera < 12.0 ? 8 : 1);
 
   if (samples == 1) {
       float closestDepth = texture(point_lights_depth_maps[index], fragToLight).r;
+      // Convert normalized [0,1] depth back to world units
       return (distToLight - bias > closestDepth * point_lights[index].far_plane) ? 1.0 : 0.0;
   }
 
   float shadow = 0.0;
+  // Use a disk radius that scales slightly with distance to keep it soft
+  float diskRadius = (1.0 + (distToLight / point_lights[index].far_plane)) / 50.0; 
+
   for(int i = 0; i < samples; ++i) {
-      float closestDepth = texture(point_lights_depth_maps[index], fragToLight + sampleOffsets[i] * 0.002).r;
+      // Use the offset sampleOffsets with our dynamic diskRadius
+      float closestDepth = texture(point_lights_depth_maps[index], fragToLight + sampleOffsets[i] * diskRadius).r;
       if(distToLight - bias > closestDepth * point_lights[index].far_plane) shadow += 1.0;
   }
   return shadow / float(samples);
