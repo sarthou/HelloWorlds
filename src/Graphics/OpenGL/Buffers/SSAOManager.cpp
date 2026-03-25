@@ -36,7 +36,7 @@ namespace hws {
       // Scale samples so they're more clustered near origin
       float scale = (float)i / (float)kernel_size;
       scale = lerp(0.1f, 1.0f, scale * scale);
-      ssao_kernel_.push_back(glm::vec4(sample * scale, 0.));
+      ssao_kernel_.emplace_back(sample * scale, 0.);
     }
 
     // Generate Noise Texture (4x4)

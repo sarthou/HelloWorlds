@@ -39,7 +39,7 @@ namespace hws {
   void SsaoShader::setSamples(const std::vector<glm::vec4>& samples) const
   {
     glBindBuffer(GL_UNIFORM_BUFFER, ubo_samples_);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::vec4) * samples.size(), samples.data());
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, (long)(sizeof(glm::vec4) * samples.size()), samples.data());
   }
 
   void SsaoShader::setNormalTexture(int texture_id) const

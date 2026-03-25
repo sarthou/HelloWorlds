@@ -546,8 +546,8 @@ namespace hws {
       return render_camera_.getFrustum().isSphereVisible(center, radius);
     };
 
-    float width = (float)render_camera_.getWidth();
-    float height = (float)render_camera_.getHeight();
+    float width = render_camera_.getWidth();
+    float height = render_camera_.getHeight();
 
     float render_width = width * render_scale_;
     float render_height = height * render_scale_;
