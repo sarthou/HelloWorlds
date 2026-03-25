@@ -68,7 +68,7 @@ namespace hws {
     glUniform1f(nb_point_lights_uniform_id_, value);
   }
 
-  void DefaultShader::bindBuffers()
+  void DefaultShader::bindBuffers() const
   {
     // Bind to the same index as the shader: "binding = 1"
     glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubo_material_);

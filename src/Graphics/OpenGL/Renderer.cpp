@@ -575,7 +575,7 @@ namespace hws {
     float ssao_height = render_height / 2.0f;
 
     glBindFramebuffer(GL_FRAMEBUFFER, ssao_manager_.getSSAOFrameBuffer());
-    glViewport(0, 0, ssao_width, ssao_height);
+    glViewport(0, 0, (int)ssao_width, (int)ssao_height);
     glClear(GL_COLOR_BUFFER_BIT);
     ssao_shader_->use(); // TODO: avoid uniform settings with strings
 
@@ -622,8 +622,8 @@ namespace hws {
     glBindFramebuffer(GL_READ_FRAMEBUFFER, geometry_buffer_.getFBO());
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, screen_.getFrameBuffer());
     glBlitFramebuffer(
-      0, 0, render_width, render_height,
-      0, 0, render_width, render_height,
+      0, 0, (int)render_width, (int)render_height,
+      0, 0, (int)render_width, (int)render_height,
       GL_DEPTH_BUFFER_BIT, GL_NEAREST);
     /* Slots:
     0 - 2 : Materials (Diffuse, Specular, Normal)
@@ -638,8 +638,8 @@ namespace hws {
     glDepthMask(GL_FALSE);
     glEnable(GL_FRAMEBUFFER_SRGB);
 
-    auto skyColor = world_->ambient_light_.getSkyColor(glm::vec3(background_color_[0], background_color_[1], background_color_[2]));
-    glClearColor(skyColor.r, skyColor.g, skyColor.b, 1.0f);
+    auto sky_color = world_->ambient_light_.getSkyColor(glm::vec3(background_color_[0], background_color_[1], background_color_[2]));
+    glClearColor(sky_color.r, sky_color.g, sky_color.b, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     lighting_shader_->use();
@@ -680,7 +680,7 @@ namespace hws {
     // --- STEP 6: SCREEN BLIT ---
     // blit multisampled buffer(s) to normal colorbuffer of intermediate FBO. Image is stored in screenTexture
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, width, height);
+    glViewport(0, 0, (int)width, (int)height);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_FRAMEBUFFER_SRGB);
     screen_sharder_->use();
@@ -991,7 +991,7 @@ namespace hws {
     lighting_shader_->use();
     for(size_t i = 0; i < PointLights::MAX_POINT_LIGHTS; i++)
     {
-      lighting_shader_->setInt("point_lights_depth_maps[" + std::to_string(i) + "]", 10 + i);
+      lighting_shader_->setInt("point_lights_depth_maps[" + std::to_string(i) + "]", (int)(10 + i));
     }
   }
 

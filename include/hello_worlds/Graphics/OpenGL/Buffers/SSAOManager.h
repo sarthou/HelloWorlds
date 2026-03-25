@@ -10,7 +10,7 @@ namespace hws {
   {
   public:
     void init(unsigned int width, unsigned int height);
-    void reinit(unsigned int width, unsigned int height);
+    void reinit(unsigned int width, unsigned int height) const;
 
     // Getters for the shaders
     unsigned int getNoiseTexture() const { return noise_texture_; }

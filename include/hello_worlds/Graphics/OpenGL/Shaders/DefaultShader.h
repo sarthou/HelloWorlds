@@ -49,7 +49,7 @@ namespace hws {
     DefaultShader(const std::string& name, const std::string& vertex_path, const std::string& fragment_path, const std::string& geometry_path = "");
     DefaultShader(const std::string& name, const char* v_shader_code, const char* f_shader_code, const char* g_shader_code = nullptr);
 
-    void bindBuffers();
+    void bindBuffers() const;
 
     void setMaterial(MaterialUBO_t* data) const;
 
