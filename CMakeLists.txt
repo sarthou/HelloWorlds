@@ -201,6 +201,7 @@ hws_add_library(hello_worlds_graphics
   src/Graphics/OpenGL/Shaders/Shader.cpp
   src/Graphics/OpenGL/Shaders/DefaultShader.cpp
   src/Graphics/OpenGL/Shaders/ModelShader.cpp
+  src/Graphics/OpenGL/Shaders/SsaoShader.cpp
   src/Graphics/GLFW/Window.cpp
   src/Graphics/OpenGL/Cubemap.cpp
   src/Graphics/OpenGL/LinesHandle.cpp

@@ -1,7 +1,7 @@
 #ifndef HWS_SSAO_MANAGER_H
 #define HWS_SSAO_MANAGER_H
 
-#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
 #include <vector>
 
 namespace hws {
@@ -14,7 +14,7 @@ namespace hws {
 
     // Getters for the shaders
     unsigned int getNoiseTexture() const { return noise_texture_; }
-    const std::vector<glm::vec3>& getKernel() const { return ssao_kernel_; }
+    const std::vector<glm::vec4>& getKernel() const { return ssao_kernel_; }
 
     // FBO handles for rendering
     unsigned int getSSAOFrameBuffer() const { return ssao_fbo_; }
@@ -33,7 +33,7 @@ namespace hws {
 
     unsigned int noise_texture_;
 
-    std::vector<glm::vec3> ssao_kernel_;
+    std::vector<glm::vec4> ssao_kernel_;
     float lerp(float a, float b, float f) { return a + f * (b - a); }
   };
 

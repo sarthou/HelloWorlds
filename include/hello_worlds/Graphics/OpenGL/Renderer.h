@@ -24,6 +24,7 @@
 #include "hello_worlds/Graphics/OpenGL/Shaders/DefaultShader.h"
 #include "hello_worlds/Graphics/OpenGL/Shaders/ModelShader.h"
 #include "hello_worlds/Graphics/OpenGL/Shaders/Shader.h"
+#include "hello_worlds/Graphics/OpenGL/Shaders/SsaoShader.h"
 #include "hello_worlds/Graphics/OpenGL/TextRenderer.h"
 #include "hello_worlds/Graphics/OpenGL/Texture2D.h"
 
@@ -57,7 +58,7 @@ namespace hws {
     DefaultShader* main_shader_;
     DefaultShader* lighting_shader_;
     DefaultShader* geometry_shader_;
-    ModelShader* ssao_shader_;
+    SsaoShader* ssao_shader_;
     Shader* ssao_blur_shader_;
 
     Screen screen_;

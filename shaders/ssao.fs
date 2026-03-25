@@ -9,7 +9,11 @@ uniform sampler2D texNoise;
 
 #define KERNEL_SIZE 32
 
-uniform vec3 samples[KERNEL_SIZE];
+layout (std140, binding = 5) uniform SamplesBlock {
+    vec4 samples[KERNEL_SIZE];
+};
+
+//uniform vec3 samples[KERNEL_SIZE];
 uniform mat4 projection;
 uniform vec2 noiseScale;
 uniform float radius = 0.5;
@@ -45,7 +49,7 @@ void main()
     for(int i = 0; i < KERNEL_SIZE; ++i)
     {
         // Get sample position in View-Space
-        vec3 samplePos = TBN * samples[i]; 
+        vec3 samplePos = TBN * samples[i].xyz; 
         samplePos = fragPos + samplePos * radius; 
         
         // Project sample back to screen UVs to check its depth

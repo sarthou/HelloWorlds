@@ -141,7 +141,7 @@ namespace hws {
 
     lighting_shader_ = new DefaultShader("lighting", resources::lighting_vs_data, resources::lighting_fs_data);
     geometry_shader_ = new DefaultShader("geometry", resources::geometry_vs_data, resources::geometry_fs_data);
-    ssao_shader_ = new ModelShader("ssao", resources::ssao_vs_data, resources::ssao_fs_data);
+    ssao_shader_ = new SsaoShader("ssao", resources::ssao_vs_data, resources::ssao_fs_data);
     ssao_blur_shader_ = new Shader("ssao blur", resources::ssao_blur_vs_data, resources::ssao_blur_fs_data);
 
     shaders_.insert({
@@ -577,31 +577,28 @@ namespace hws {
     glBindFramebuffer(GL_FRAMEBUFFER, ssao_manager_.getSSAOFrameBuffer());
     glViewport(0, 0, (int)ssao_width, (int)ssao_height);
     glClear(GL_COLOR_BUFFER_BIT);
-    ssao_shader_->use(); // TODO: avoid uniform settings with strings
+    ssao_shader_->use();
 
     // Bind the data from the Geometry Pass
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, geometry_buffer_.getNormalTexture());
-    ssao_shader_->setInt("gNormal", 0);
+    ssao_shader_->setNormalTexture(0);
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, geometry_buffer_.getDepthTexture());
-    ssao_shader_->setInt("gDepth", 1);
+    ssao_shader_->setDepthTexture(1);
 
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, ssao_manager_.getNoiseTexture());
-    ssao_shader_->setInt("texNoise", 2);
+    ssao_shader_->setNoiseTexture(2);
 
     // Send the Kernel and Projection (needed for position reconstruction)
     ssao_shader_->setProjection(render_camera_.getProjectionMatrix());
-    ssao_shader_->setVec2("noiseScale", glm::vec2(ssao_width / 4.0f, ssao_height / 4.0f));
+    ssao_shader_->setNoiseScale(glm::vec2(ssao_width / 4.0f, ssao_height / 4.0f));
 
     // Pass the sample vectors
     const auto& kernel = ssao_manager_.getKernel();
-    for(unsigned int i = 0; i < kernel.size(); ++i)
-    {
-      ssao_shader_->setVec3("samples[" + std::to_string(i) + "]", kernel[i]);
-    }
+    ssao_shader_->setSamples(kernel);
 
     screen_.renderQuad();
 
