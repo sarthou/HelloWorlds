@@ -13,6 +13,8 @@
 #include "hello_worlds/Common/Urdf/Actor.h"
 #include "hello_worlds/Graphics/Common/InstanceData.h"
 #include "hello_worlds/Graphics/OpenGL/AmbientShadow.h"
+#include "hello_worlds/Graphics/OpenGL/Buffers/GeometryBuffer.h"
+#include "hello_worlds/Graphics/OpenGL/Buffers/SSAOManager.h"
 #include "hello_worlds/Graphics/OpenGL/Cubemap.h"
 #include "hello_worlds/Graphics/OpenGL/LinesHandle.h"
 #include "hello_worlds/Graphics/OpenGL/MeshHandle.h"
@@ -22,6 +24,7 @@
 #include "hello_worlds/Graphics/OpenGL/Shaders/DefaultShader.h"
 #include "hello_worlds/Graphics/OpenGL/Shaders/ModelShader.h"
 #include "hello_worlds/Graphics/OpenGL/Shaders/Shader.h"
+#include "hello_worlds/Graphics/OpenGL/Shaders/SsaoShader.h"
 #include "hello_worlds/Graphics/OpenGL/TextRenderer.h"
 #include "hello_worlds/Graphics/OpenGL/Texture2D.h"
 
@@ -49,11 +52,21 @@ namespace hws {
   private:
     World* world_ = nullptr;
     Camera render_camera_;
+
     std::unordered_map<std::string, ModelShader> shaders_;
     Shader* screen_sharder_;
     DefaultShader* main_shader_;
+    DefaultShader* lighting_shader_;
+    DefaultShader* geometry_shader_;
+    SsaoShader* ssao_shader_;
+    Shader* ssao_blur_shader_;
+
     Screen screen_;
+    GeometryBuffer geometry_buffer_;
+    SSAOManager ssao_manager_;
     std::vector<OffScreen> off_screens_;
+    float render_scale_ = 1.0;
+
     Cubemap sky_;
     AmbientShadow shadow_;
     PointShadow point_shadows_;
@@ -98,7 +111,8 @@ namespace hws {
                       const std::function<bool(const glm::vec3&, float)>& visibility_test = nullptr);
     void renderTexturedModels(DefaultShader* shader,
                               unsigned int texture_offset,
-                              const std::function<bool(const glm::vec3&, float)>& visibility_test = nullptr);
+                              const std::function<bool(const glm::vec3&, float)>& visibility_test = nullptr,
+                              bool normal_only = false);
     void renderModelsSegmented(const ModelShader& shader,
                                const std::function<bool(const glm::vec3&, float)>& visibility_test = nullptr);
 
@@ -111,10 +125,10 @@ namespace hws {
     void renderDebug();
 
     void initShadowSamplers();
-    void setLightsUniforms(DefaultShader* shader, bool use_ambient_shadows = true, bool use_points_shadows = true);
-    void setAntiAliasing(ViewAntiAliasing_e setting);
+    void setLightsUniforms(DefaultShader* shader, size_t texture_offset, bool use_ambient_shadows = true, bool use_points_shadows = true);
 
     Material createColisionMaterial(size_t uid);
+    void computeDynamicScale(int native_width, int native_height);
   };
 } // namespace hws
 

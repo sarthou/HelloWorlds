@@ -35,7 +35,9 @@ namespace hws {
 
     void draw() const;
 
-    void drawWithMaterial(const DefaultShader& shader, uint32_t model_id, unsigned int texture_pose_offset = 0) const;
+    void drawWithMaterial(const DefaultShader& shader, uint32_t model_id,
+                          unsigned int texture_pose_offset = 0,
+                          bool normal_only = false) const;
 
   private:
     unsigned int vbo_; // vertex buffer object

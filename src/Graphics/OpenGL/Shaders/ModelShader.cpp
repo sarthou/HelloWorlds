@@ -13,18 +13,22 @@
 
 namespace hws {
 
-  ModelShader::ModelShader(const std::string& vertex_path,
+  ModelShader::ModelShader(const std::string& name,
+                           const std::string& vertex_path,
                            const std::string& fragment_path,
-                           const std::string& geometry_path) : Shader(vertex_path,
+                           const std::string& geometry_path) : Shader(name,
+                                                                      vertex_path,
                                                                       fragment_path,
                                                                       geometry_path)
   {
     setUniformIds();
   }
 
-  ModelShader::ModelShader(const char* v_shader_code,
+  ModelShader::ModelShader(const std::string& name,
+                           const char* v_shader_code,
                            const char* f_shader_code,
-                           const char* g_shader_code) : Shader(v_shader_code,
+                           const char* g_shader_code) : Shader(name,
+                                                               v_shader_code,
                                                                f_shader_code,
                                                                g_shader_code)
   {

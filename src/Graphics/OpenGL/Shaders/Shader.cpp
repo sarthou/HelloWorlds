@@ -17,7 +17,7 @@
 
 namespace hws {
 
-  void checkCompileErrors(GLuint shader, const std::string& type)
+  void checkCompileErrors(const std::string& name, GLuint shader, const std::string& type)
   {
     GLint success = 0;
     std::array<GLchar, 1024> info_log;
@@ -27,7 +27,7 @@ namespace hws {
       if(success == 0)
       {
         glGetShaderInfoLog(shader, 1024, nullptr, info_log.data());
-        std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n"
+        std::cout << "[" << name << "]ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n"
                   << info_log.data() << "\n -- --------------------------------------------------- -- " << std::endl;
       }
     }
@@ -37,7 +37,7 @@ namespace hws {
       if(success == 0)
       {
         glGetProgramInfoLog(shader, 1024, nullptr, info_log.data());
-        std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n"
+        std::cout << "[" << name << "]ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n"
                   << info_log.data() << "\n -- --------------------------------------------------- -- " << std::endl;
       }
     }
@@ -45,7 +45,7 @@ namespace hws {
 
   std::string Shader::shaders_directory;
 
-  Shader::Shader(const std::string& vertex_path, const std::string& fragment_path, const std::string& geometry_path)
+  Shader::Shader(const std::string& name, const std::string& vertex_path, const std::string& fragment_path, const std::string& geometry_path)
   {
     // 1. retrieve the vertex/fragment source code from filePath
     std::string vertex_code;
@@ -74,7 +74,7 @@ namespace hws {
     catch(std::ifstream::failure& e)
     {
       (void)e;
-      std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
+      std::cout << "[" << name << "]ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
     }
     const char* v_shader_code = vertex_code.c_str();
     const char* f_shader_code = fragment_code.c_str();
@@ -95,34 +95,34 @@ namespace hws {
       catch(std::ifstream::failure& e)
       {
         (void)e;
-        std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
+        std::cout << "[" << name << "]ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
       }
       const char* g_shader_code = geometry_code.c_str();
 
-      compileShader(v_shader_code, f_shader_code, g_shader_code);
+      compileShader(name, v_shader_code, f_shader_code, g_shader_code);
     }
     else
-      compileShader(v_shader_code, f_shader_code, nullptr);
+      compileShader(name, v_shader_code, f_shader_code, nullptr);
   }
 
-  Shader::Shader(const char* v_shader_code, const char* f_shader_code, const char* g_shader_code)
+  Shader::Shader(const std::string& name, const char* v_shader_code, const char* f_shader_code, const char* g_shader_code)
   {
-    compileShader(v_shader_code, f_shader_code, g_shader_code);
+    compileShader(name, v_shader_code, f_shader_code, g_shader_code);
   }
 
-  void Shader::compileShader(const char* v_shader_code, const char* f_shader_code, const char* g_shader_code)
+  void Shader::compileShader(const std::string& name, const char* v_shader_code, const char* f_shader_code, const char* g_shader_code)
   {
     // vertex Shader
     unsigned int vertex = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex, 1, &v_shader_code, nullptr);
     glCompileShader(vertex);
-    checkCompileErrors(vertex, "VERTEX");
+    checkCompileErrors(name, vertex, "VERTEX");
 
     // similiar for Fragment Shader
     unsigned int fragment = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment, 1, &f_shader_code, nullptr);
     glCompileShader(fragment);
-    checkCompileErrors(fragment, "FRAGMENT");
+    checkCompileErrors(name, fragment, "FRAGMENT");
 
     unsigned int geometry = 0;
     if(g_shader_code != nullptr)
@@ -131,7 +131,7 @@ namespace hws {
       geometry = glCreateShader(GL_GEOMETRY_SHADER);
       glShaderSource(geometry, 1, &g_shader_code, nullptr);
       glCompileShader(geometry);
-      checkCompileErrors(geometry, "GEOMETRY");
+      checkCompileErrors(name, geometry, "GEOMETRY");
     }
 
     // shader Program
@@ -141,7 +141,7 @@ namespace hws {
     if(g_shader_code != nullptr)
       glAttachShader(id_, geometry);
     glLinkProgram(id_);
-    checkCompileErrors(id_, "PROGRAM");
+    checkCompileErrors(name, id_, "PROGRAM");
 
     // delete the shaders as they're linked into our program now and no longer necessary
     glDeleteShader(vertex);
@@ -190,9 +190,19 @@ namespace hws {
     glUniformMatrix4fv(glGetUniformLocation(id_, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
   }
 
+  void Shader::setVec2(const char* name, const glm::vec2& value) const
+  {
+    glUniform2fv(glGetUniformLocation(id_, name), 1, &value[0]);
+  }
+
   void Shader::setVec3(const char* name, const glm::vec3& value) const
   {
     glUniform3fv(glGetUniformLocation(id_, name), 1, &value[0]);
+  }
+
+  void Shader::setVec3(const std::string& name, const glm::vec3& value) const
+  {
+    glUniform3fv(glGetUniformLocation(id_, name.c_str()), 1, &value[0]);
   }
 
   void Shader::setVec4(const char* name, const glm::vec4& value) const

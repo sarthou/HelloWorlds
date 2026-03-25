@@ -13,8 +13,8 @@ namespace hws {
   {
   public:
     // constructor reads and builds the shader
-    ModelShader(const std::string& vertex_path, const std::string& fragment_path, const std::string& geometry_path = "");
-    ModelShader(const char* v_shader_code, const char* f_shader_code, const char* g_shader_code = nullptr);
+    ModelShader(const std::string& name, const std::string& vertex_path, const std::string& fragment_path, const std::string& geometry_path = "");
+    ModelShader(const std::string& name, const char* v_shader_code, const char* f_shader_code, const char* g_shader_code = nullptr);
 
     void setModel(const glm::mat4& value) const;
     void setView(const glm::mat4& value) const;
